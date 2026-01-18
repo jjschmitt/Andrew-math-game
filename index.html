@@ -35,6 +35,15 @@
                 <button class="difficulty-btn" data-mode="multiplication">✖️ Multiplication</button>
                 <button class="difficulty-btn" data-mode="mixed">🎯 Mixed Challenge</button>
             </div>
+            <div class="pokemon-section-divider">
+                <h3>⚡ OR ⚡</h3>
+            </div>
+            <div class="pokemon-start-button">
+                <button id="pokemon-mode-btn" class="pokemon-main-btn">
+                    🎮 Pokemon Math Adventures!
+                    <span class="subtitle">1st Grade Math Standards</span>
+                </button>
+            </div>
         </div>
 
         <div id="game-screen" class="screen">
@@ -59,6 +68,88 @@
             </div>
         </div>
 
+        <!-- Pokemon Math Adventures Section -->
+        <div id="pokemon-category-screen" class="screen">
+            <h2 class="pokemon-title">⚡ Pokemon Math Adventures! ⚡</h2>
+            <p class="pokemon-subtitle">Choose your math challenge, Trainer!</p>
+            <div class="pokemon-pokeball-counter">
+                <span>Pokeballs Earned: </span>
+                <span id="pokeball-count" class="pokeball-value">0</span> 🔴
+            </div>
+            <div class="pokemon-categories">
+                <button class="pokemon-category-btn" data-category="operations">
+                    <div class="category-icon">➕➖</div>
+                    <div class="category-title">Pokemon Counting & Addition</div>
+                    <div class="category-subtitle">Operations & Algebraic Thinking</div>
+                </button>
+                <button class="pokemon-category-btn" data-category="place-value">
+                    <div class="category-icon">🔢</div>
+                    <div class="category-title">Pokemon Counting & Place Value</div>
+                    <div class="category-subtitle">Number & Operations in Base Ten</div>
+                </button>
+                <button class="pokemon-category-btn" data-category="measurement">
+                    <div class="category-icon">📏📊</div>
+                    <div class="category-title">Pokemon Measurement & Data</div>
+                    <div class="category-subtitle">Measurement & Data</div>
+                </button>
+                <button class="pokemon-category-btn" data-category="geometry">
+                    <div class="category-icon">🔷🔶</div>
+                    <div class="category-title">Pokemon Shapes & Geometry</div>
+                    <div class="category-subtitle">Geometry</div>
+                </button>
+            </div>
+            <button id="pokemon-back-btn" class="control-btn quit">Back to Main Menu</button>
+        </div>
+
+        <!-- Pokemon Problem Screen -->
+        <div id="pokemon-problem-screen" class="screen">
+            <div class="pokemon-problem-header">
+                <div class="standard-tag" id="standard-tag">NC.1.OA.1</div>
+                <button id="pokemon-category-back-btn" class="back-arrow">← Back to Categories</button>
+            </div>
+
+            <div class="pokemon-problem-container">
+                <div class="problem-text" id="pokemon-problem-text">
+                    Problem will appear here
+                </div>
+
+                <div class="pokemon-visual" id="pokemon-visual">
+                    <!-- Visual elements will be inserted here -->
+                </div>
+
+                <div class="strategy-selector" id="strategy-selector">
+                    <p class="strategy-prompt">Choose your strategy:</p>
+                    <div class="strategy-buttons">
+                        <button class="strategy-btn" data-strategy="count-on">Count On</button>
+                        <button class="strategy-btn" data-strategy="number-line">Number Line</button>
+                        <button class="strategy-btn" data-strategy="make-ten">Make Ten</button>
+                        <button class="strategy-btn" data-strategy="draw">Draw a Picture</button>
+                    </div>
+                </div>
+
+                <div class="work-space" id="work-space">
+                    <h4>Show Your Work:</h4>
+                    <div class="work-area" id="work-area">
+                        <!-- Interactive work space -->
+                    </div>
+                </div>
+
+                <div class="answer-section">
+                    <label for="pokemon-answer">Your Answer:</label>
+                    <input type="number" id="pokemon-answer" class="pokemon-answer-input" placeholder="?">
+                    <button id="pokemon-check-btn" class="pokemon-check-btn">Check Answer!</button>
+                </div>
+
+                <div id="pokemon-feedback" class="pokemon-feedback"></div>
+
+                <div class="pokemon-problem-controls">
+                    <button id="pokemon-hint-btn" class="control-btn">💡 Hint</button>
+                    <button id="pokemon-skip-btn" class="control-btn">Skip</button>
+                    <button id="pokemon-next-btn" class="control-btn" style="display: none;">Next Problem</button>
+                </div>
+            </div>
+        </div>
+
         <div id="celebration" class="celebration hidden">
             <div class="celebration-content">
                 <h2>🎉 Amazing! 🎉</h2>
@@ -68,5 +159,6 @@
     </div>
 
     <script src="game.js"></script>
+    <script src="pokemon-math.js"></script>
 </body>
 </html>
