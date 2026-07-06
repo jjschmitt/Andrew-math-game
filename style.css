@@ -956,6 +956,160 @@ header h1 {
     fill: #9575cd;
 }
 
+/* Number line (fractions) */
+
+.nl-line {
+    stroke: #4a3b7a;
+    stroke-width: 3;
+    stroke-linecap: round;
+}
+
+.nl-tick {
+    stroke: #4a3b7a;
+    stroke-width: 2;
+}
+
+.nl-label {
+    font-size: 14px;
+    font-weight: bold;
+    fill: #4a3b7a;
+    font-family: inherit;
+}
+
+.nl-point {
+    fill: #e53935;
+    stroke: #fff;
+    stroke-width: 2;
+}
+
+/* Fraction pairs */
+
+.frac-pair {
+    display: flex;
+    gap: 26px;
+    justify-content: center;
+    align-items: flex-end;
+    flex-wrap: wrap;
+}
+
+.frac-pair .frac-svg {
+    width: 170px;
+    height: 64px;
+}
+
+.frac-caption {
+    font-weight: bold;
+    color: #4a3b7a;
+    margin-top: 4px;
+}
+
+/* Area grid */
+
+.area-grid {
+    display: inline-flex;
+    flex-direction: column;
+    border: 3px solid #4a2f8f;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.area-row {
+    display: flex;
+}
+
+.unit-square {
+    width: 30px;
+    height: 30px;
+    background: #d1c4e9;
+    border: 1px solid #7e57c2;
+}
+
+/* Perimeter rectangle */
+
+.peri-rect {
+    fill: #d1c4e9;
+    stroke: #4a2f8f;
+    stroke-width: 3;
+}
+
+.peri-label {
+    font-size: 15px;
+    font-weight: bold;
+    fill: #4a3b7a;
+    font-family: inherit;
+}
+
+/* Angles */
+
+.angle-ray {
+    stroke: #4a2f8f;
+    stroke-width: 4;
+    stroke-linecap: round;
+}
+
+.angle-arc {
+    fill: none;
+    stroke: #e53935;
+    stroke-width: 3;
+}
+
+.angle-vertex {
+    fill: #4a2f8f;
+}
+
+/* Coordinate plane */
+
+.cp-grid {
+    stroke: #ddd1f5;
+    stroke-width: 1;
+}
+
+.cp-axis {
+    stroke: #4a3b7a;
+    stroke-width: 3;
+    stroke-linecap: round;
+}
+
+.cp-label {
+    font-size: 11px;
+    font-weight: bold;
+    fill: #6a5a9a;
+    font-family: inherit;
+}
+
+.cp-point {
+    fill: #e53935;
+    stroke: #fff;
+    stroke-width: 2;
+}
+
+/* Volume box */
+
+.box-front {
+    fill: #b39ddb;
+    stroke: #4a2f8f;
+    stroke-width: 2.5;
+}
+
+.box-top {
+    fill: #d1c4e9;
+    stroke: #4a2f8f;
+    stroke-width: 2.5;
+}
+
+.box-side {
+    fill: #9575cd;
+    stroke: #4a2f8f;
+    stroke-width: 2.5;
+}
+
+.box-label {
+    font-size: 15px;
+    font-weight: bold;
+    fill: #4a3b7a;
+    font-family: inherit;
+}
+
 /* ---------- Celebration overlay ---------- */
 
 .celebration {
