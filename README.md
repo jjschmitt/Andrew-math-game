@@ -2,7 +2,9 @@
 
 An interactive math game built around how kids actually learn: **mastery before moving on**, **effortful retrieval**, and **the right cognitive load at the right moment**. Pick a Pokémon ⚡ or Mario 🍄 buddy and work through a learning path aligned to NC / Common Core standards.
 
-The game **starts at 2nd grade and secretly contains 3rd–5th grade too**: nothing about the higher grades is shown anywhere in the UI until every skill of the current grade is mastered — then a "GRADE LEVEL UP" celebration fires and the next grade's units simply appear on the map. From the child's point of view, the game just keeps growing as they conquer it.
+The game **starts at 2nd grade and secretly contains 3rd–5th grade too**: nothing about the higher grades is shown anywhere in the UI until every skill of the current grade is mastered — then a "LEVEL UP" celebration fires and the next grade's units simply appear on the map. From the child's point of view, the game just keeps growing as they conquer it.
+
+**Grades are never named on screen.** The child only ever sees "Level 2" through "Level 5" — the word "grade" doesn't appear anywhere in the game, so an advanced kid can race ahead (or take their time) without comparing themselves to a school grade. The only grade reference left is the small standards code on each problem (e.g. `NC.3.OA.7`), kept for grown-ups.
 
 ## 🚀 How to Play
 

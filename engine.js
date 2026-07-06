@@ -272,10 +272,9 @@ class MasteryEngine {
         const total = visible.length;
         const due = this.dueReviewIds().length;
         const grade = this.highestUnlockedGrade();
-        const ordinal = { 2: '2nd', 3: '3rd', 4: '4th', 5: '5th' }[grade];
         const allDone = mastered === total;
         document.getElementById('welcome-title').textContent =
-            allDone && grade === 5 ? 'Math Champion! 🏆' : `${ordinal} Grade Mastery Quest 🚀`;
+            allDone && grade === 5 ? 'Math Champion! 🏆' : `Level ${grade} Mastery Quest 🚀`;
         this.el['progress-summary'].innerHTML =
             `<div class="summary-line">⭐ Skills mastered: <strong>${mastered} / ${total}</strong></div>` +
             `<div class="summary-line">${theme.currencyIcon} ${theme.currencyName} earned: <strong>${this.state.stars}</strong></div>` +
@@ -762,15 +761,14 @@ class MasteryEngine {
         }
         actions.push({ label: 'Back to the Map 🗺️', handler: () => this.showPath() });
 
-        // Did this mastery finish the whole grade and reveal the next one?
+        // Did this mastery finish the whole tier and reveal the next one?
         const nextGrade = unit.grade + 1;
         const nextGradeExists = CURRICULUM.units.some(u => u.grade === nextGrade);
         if (nextGradeExists && this.gradeUnlocked(nextGrade)) {
-            const ordinal = { 3: '3rd', 4: '4th', 5: '5th' }[nextGrade];
             this.showCelebration(
-                '🎓 GRADE LEVEL UP!',
+                '🎓 LEVEL UP!',
                 `You mastered EVERY skill — incredible!<br>` +
-                `A whole new world of <strong>${ordinal} grade math</strong> just appeared on your map! +5 ${theme.currencyName} ${theme.currencyIcon}`,
+                `A whole new world of <strong>Level ${nextGrade} math</strong> just appeared on your map! +5 ${theme.currencyName} ${theme.currencyIcon}`,
                 actions
             );
             return;
@@ -778,7 +776,7 @@ class MasteryEngine {
         if (!nextGradeExists && this.masteredSkillIds().length === allSkillIds().length) {
             this.showCelebration(
                 '👑 MATH CHAMPION!',
-                `You mastered every single skill in the whole game — 2nd grade through 5th grade!<br>` +
+                `You mastered every single skill in the whole game — every level, every unit!<br>` +
                 `Keep your powers sharp with Flashback Warm-Ups. +5 ${theme.currencyName} ${theme.currencyIcon}`,
                 actions
             );
