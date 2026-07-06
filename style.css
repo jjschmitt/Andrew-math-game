@@ -15,7 +15,20 @@ body {
     display: flex;
     justify-content: center;
     padding: 16px;
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
     color: #333;
+}
+
+/* Touch friendliness: no tap-flash, no double-tap zoom on controls */
+button,
+input {
+    -webkit-tap-highlight-color: transparent;
+}
+
+button {
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
 }
 
 .container {
@@ -539,6 +552,49 @@ header h1 {
 }
 
 .submit-btn:hover { transform: scale(1.05); }
+
+/* In-game keypad (replaces the OS keyboard on tablets) */
+
+.keypad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    max-width: 290px;
+    margin: 12px auto 6px;
+}
+
+.keypad-key {
+    font-family: inherit;
+    font-size: 1.4em;
+    font-weight: bold;
+    min-height: 56px;
+    border-radius: 14px;
+    border: 2px solid #d3c6f1;
+    background: #fff;
+    color: #4a3b7a;
+    cursor: pointer;
+    box-shadow: 0 2px 0 #d3c6f1;
+}
+
+.keypad-key:active {
+    background: #ede7f6;
+    transform: translateY(2px);
+    box-shadow: none;
+}
+
+.keypad-key.extra {
+    background: #e3f2fd;
+    border-color: #90caf9;
+    box-shadow: 0 2px 0 #90caf9;
+    color: #1565c0;
+}
+
+.keypad-key.action {
+    background: #fff3e0;
+    border-color: #ffb74d;
+    box-shadow: 0 2px 0 #ffb74d;
+    color: #b35800;
+}
 
 .choice-buttons {
     display: flex;
@@ -1188,4 +1244,47 @@ header h1 {
         grid-template-columns: repeat(5, 26px);
         grid-template-rows: repeat(2, 26px);
     }
+}
+
+/* Short viewports (iPad landscape, small laptops): tighten everything
+   vertically so problem + keypad fit without scrolling. */
+@media (max-height: 860px) {
+    body { padding: 8px 12px; }
+    header { margin-bottom: 8px; }
+    header h1 { font-size: 1.25em; }
+    .home-btn { font-size: 1.1em; padding: 5px 10px; }
+    .star-pill { font-size: 1em; padding: 4px 12px; }
+    .screen { padding: 14px 18px; border-radius: 18px; }
+    .problem-topbar { margin-bottom: 6px; }
+    .skill-title-text { font-size: 1.05em; }
+    .mastery-meter { margin-bottom: 6px; }
+    .meter-seg { height: 9px; }
+    .strategy-card { font-size: 0.9em; padding: 8px 12px; margin-bottom: 8px; line-height: 1.4; }
+    .review-banner { padding: 7px 12px; margin-bottom: 8px; font-size: 0.95em; }
+    .problem-card { padding: 12px 16px; }
+    .problem-prompt { font-size: 1.25em; margin-bottom: 8px; }
+    .problem-visual { margin: 4px auto 10px; }
+    .input-row { margin-bottom: 4px; }
+    .input-row input { font-size: 1.3em; padding: 8px; width: 140px; }
+    .submit-btn { font-size: 1.05em; padding: 10px 18px; }
+    .keypad { gap: 6px; margin: 8px auto 4px; max-width: 260px; }
+    .keypad-key { min-height: 44px; font-size: 1.2em; border-radius: 11px; }
+    .feedback { min-height: 22px; font-size: 1.05em; margin: 6px 0; }
+    .hint-line { font-size: 0.92em; padding: 6px 10px; margin-bottom: 4px; }
+    .problem-controls { margin-top: 6px; }
+    .control-btn { padding: 7px 16px; font-size: 0.92em; }
+    .ten-frame {
+        grid-template-columns: repeat(5, 27px);
+        grid-template-rows: repeat(2, 27px);
+    }
+    .clock { width: 130px; height: 130px; }
+    .coin.quarter { width: 48px; height: 48px; font-size: 0.8em; }
+    .coin.nickel { width: 42px; height: 42px; font-size: 0.7em; }
+    .coin.dime { width: 36px; height: 36px; font-size: 0.65em; }
+    .coin.penny { width: 38px; height: 38px; font-size: 0.65em; }
+    .bt-hundred { width: 48px; height: 48px; }
+    .bt-ten { height: 48px; width: 12px; }
+    .unit-square { width: 24px; height: 24px; }
+    .coord-svg { width: 210px; height: 215px; }
+    .array-item { font-size: 1.3em; }
 }

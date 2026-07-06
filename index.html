@@ -2,7 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Math Adventure">
+    <meta name="theme-color" content="#667eea">
     <title>Math Adventure - Mastery Quest!</title>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -85,13 +90,14 @@
                 <div id="problem-visual" class="problem-visual" style="display:none"></div>
 
                 <div id="number-input-row" class="input-row" style="display:none">
-                    <input type="number" id="answer-number" inputmode="numeric" placeholder="?" autocomplete="off">
+                    <input type="text" id="answer-number" inputmode="numeric" pattern="[0-9.]*" placeholder="?" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
                     <button id="submit-btn" class="submit-btn">Check! ✅</button>
                 </div>
                 <div id="text-input-row" class="input-row" style="display:none">
-                    <input type="text" id="answer-text" placeholder="like 3:45" autocomplete="off">
+                    <input type="text" id="answer-text" placeholder="like 3:45" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
                     <button class="submit-btn" onclick="window.game.submit()">Check! ✅</button>
                 </div>
+                <div id="keypad" class="keypad" style="display:none"></div>
                 <div id="choice-buttons" class="choice-buttons" style="display:none"></div>
 
                 <div id="feedback" class="feedback"></div>

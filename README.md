@@ -15,6 +15,8 @@ The game **starts at 2nd grade and secretly contains 3rd–5th grade too**: noth
 
 Progress saves automatically in the browser (localStorage), so the game remembers where you left off.
 
+**iPad-friendly:** on touch devices the game shows its own big-button number pad (with `:`, `/`, and `.` keys when a problem needs them) and suppresses the iOS keyboard entirely, so the problem never gets covered or scrolled away. Everything fits one screen in both orientations. For the best experience use Safari's Share → "Add to Home Screen" — it launches full-screen without browser bars.
+
 ## 🧠 The Learning Science Inside
 
 ### 1. Mastery before moving on
