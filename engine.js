@@ -15,15 +15,23 @@
 
 const STORAGE_KEY = 'math-adventure-grade2-v1';
 
-const LEARN_TARGET = 2;      // correct answers to leave the Learn phase
-const PRACTICE_TARGET = 6;   // correct answers in Practice phase to master
-const STREAK_TO_MASTER = 3;  // ...and the last N must be consecutive
+const LEARN_TARGET = 3;      // correct answers to leave the Learn phase
+const PRACTICE_TARGET = 12;  // correct answers in Practice phase to master
+const STREAK_TO_MASTER = 4;  // ...and the last N must be consecutive
 const METER_TOTAL = LEARN_TARGET + PRACTICE_TARGET;
 const REVIEW_GAP = 4;        // every Nth question during practice is a review
 const REVIEW_FIRST_INTERVAL = 15;   // measured in total questions answered
 const REVIEW_GROWTH = 2.5;
 const REVIEW_MAX_INTERVAL = 250;
 const WARMUP_LENGTH = 5;
+
+// On touch devices (iPad!) the OS keyboard covers half the game, so we
+// suppress it and provide our own big-button keypad instead.
+const IS_TOUCH = (typeof navigator !== 'undefined') &&
+    (navigator.maxTouchPoints > 0 || 'ontouchstart' in window);
+
+// Skills whose numeric answers can be decimals — their keypad gets a "." key.
+const DECIMAL_PAD_SKILLS = new Set(['powers-of-ten', 'add-sub-decimals', 'multiply-decimals', 'divide-decimals']);
 
 const THEMES = {
     pokemon: {
@@ -198,7 +206,7 @@ class MasteryEngine {
             'path-btn', 'warmup-btn', 'home-btn', 'path-units',
             'skill-title', 'phase-badge', 'standard-tag', 'mastery-meter',
             'review-banner', 'strategy-card', 'problem-prompt', 'problem-visual',
-            'answer-number', 'answer-text', 'choice-buttons', 'submit-btn',
+            'answer-number', 'answer-text', 'choice-buttons', 'submit-btn', 'keypad',
             'hint-btn', 'hint-area', 'feedback', 'back-to-path-btn',
             'celebration', 'celebration-title', 'celebration-message', 'celebration-actions',
             'number-input-row', 'text-input-row'
@@ -223,6 +231,50 @@ class MasteryEngine {
         this.el['answer-text'].addEventListener('keydown', e => {
             if (e.key === 'Enter') this.submit();
         });
+        this.el['keypad'].addEventListener('click', e => {
+            const key = e.target.closest('.keypad-key');
+            if (key) this.pressKeypad(key.dataset.key);
+        });
+        if (IS_TOUCH) {
+            // Never summon the OS keyboard — the in-game keypad handles input.
+            [this.el['answer-number'], this.el['answer-text']].forEach(input => {
+                input.setAttribute('inputmode', 'none');
+            });
+        }
+    }
+
+    activeInput() {
+        const p = this.session && this.session.problem;
+        return p && p.answerType === 'number' ? this.el['answer-number'] : this.el['answer-text'];
+    }
+
+    pressKeypad(key) {
+        const input = this.activeInput();
+        if (!input) return;
+        if (key === 'back') {
+            input.value = input.value.slice(0, -1);
+        } else if (input.value.length < 8) {
+            input.value += key;
+        }
+    }
+
+    renderKeypad(p, skillId) {
+        const pad = this.el['keypad'];
+        if (p.answerType === 'choice') {
+            pad.style.display = 'none';
+            pad.innerHTML = '';
+            return;
+        }
+        const extras = [];
+        if (p.answerType === 'time') extras.push(':');
+        if (p.answerType === 'fraction') extras.push('/');
+        if (p.answerType === 'text') extras.push('.');
+        if (p.answerType === 'number' && DECIMAL_PAD_SKILLS.has(skillId)) extras.push('.');
+        const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', ...extras, '0'];
+        pad.innerHTML = keys.map(k =>
+            `<button type="button" class="keypad-key${'./:'.includes(k) ? ' extra' : ''}" data-key="${k}">${k}</button>`
+        ).join('') + '<button type="button" class="keypad-key action" data-key="back">⌫</button>';
+        pad.style.display = 'grid';
     }
 
     setTheme(themeId) {
@@ -509,14 +561,14 @@ class MasteryEngine {
         if (p.answerType === 'number') {
             this.el['number-input-row'].style.display = 'flex';
             this.el['answer-number'].value = '';
-            this.el['answer-number'].focus();
+            if (!IS_TOUCH) this.el['answer-number'].focus();
         } else if (p.answerType === 'time' || p.answerType === 'text' || p.answerType === 'fraction') {
             this.el['text-input-row'].style.display = 'flex';
             this.el['answer-text'].value = '';
             this.el['answer-text'].placeholder =
                 p.answerType === 'time' ? 'like 3:45' :
                 p.answerType === 'fraction' ? 'like 3/4' : 'type your answer';
-            this.el['answer-text'].focus();
+            if (!IS_TOUCH) this.el['answer-text'].focus();
         } else if (p.answerType === 'choice') {
             const box = this.el['choice-buttons'];
             box.style.display = 'flex';
@@ -528,6 +580,8 @@ class MasteryEngine {
                 box.appendChild(btn);
             });
         }
+
+        this.renderKeypad(p, activeSkillId);
 
         // Feedback & hints reset
         this.el['feedback'].textContent = '';
@@ -564,7 +618,9 @@ class MasteryEngine {
         const p = this.session.problem;
         if (p.answerType === 'number') {
             const v = this.el['answer-number'].value.trim();
-            return v === '' ? null : Number(v);
+            if (v === '') return null;
+            const n = Number(v);
+            return Number.isNaN(n) ? null : n;
         }
         const v = this.el['answer-text'].value.trim();
         return v === '' ? null : v;
@@ -690,8 +746,9 @@ class MasteryEngine {
             // First miss: encourage a second effortful attempt before revealing anything
             this.setFeedback(R.pick(theme.oops), 'incorrect');
             if (s.hintIndex === 0) this.revealHint();
-            if (p.answerType === 'number') { this.el['answer-number'].value = ''; this.el['answer-number'].focus(); }
-            else { this.el['answer-text'].value = ''; this.el['answer-text'].focus(); }
+            const input = p.answerType === 'number' ? this.el['answer-number'] : this.el['answer-text'];
+            input.value = '';
+            if (!IS_TOUCH) input.focus();
             return;
         }
 

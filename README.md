@@ -15,11 +15,13 @@ The game **starts at 2nd grade and secretly contains 3rd–5th grade too**: noth
 
 Progress saves automatically in the browser (localStorage), so the game remembers where you left off.
 
+**iPad-friendly:** on touch devices the game shows its own big-button number pad (with `:`, `/`, and `.` keys when a problem needs them) and suppresses the iOS keyboard entirely, so the problem never gets covered or scrolled away. Everything fits one screen in both orientations. For the best experience use Safari's Share → "Add to Home Screen" — it launches full-screen without browser bars.
+
 ## 🧠 The Learning Science Inside
 
 ### 1. Mastery before moving on
 - Skills unlock **sequentially** — the next skill (and the next unit) opens only after the current one is mastered.
-- Mastery is earned, not lucky: it takes **8 correct answers, and the last 3 in a row**, so a child can't guess their way forward.
+- Mastery is earned, not lucky: it takes **15 correct answers (3 in the scaffolded Learn phase + 12 in Practice), and the last 4 in a row**, so a child can't guess their way forward.
 - Mastery is also **maintained**: if a mastered skill is missed twice in review, it quietly reopens for re-practice.
 
 ### 2. Effortful retrieval
