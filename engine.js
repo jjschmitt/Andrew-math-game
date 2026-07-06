@@ -133,7 +133,29 @@ class MasteryEngine {
         return unit.skills.every(s => this.skillState(s.id).phase === 'mastered');
     }
 
+    // A grade tier stays completely hidden until every unit of the
+    // grades below it is mastered — then its units appear on the map.
+    gradeUnlocked(grade) {
+        return CURRICULUM.units
+            .filter(u => u.grade < grade)
+            .every(u => this.isUnitMastered(u.id));
+    }
+
+    highestUnlockedGrade() {
+        let g = 2;
+        const grades = [...new Set(CURRICULUM.units.map(u => u.grade))].sort();
+        for (const grade of grades) {
+            if (this.gradeUnlocked(grade)) g = grade;
+        }
+        return g;
+    }
+
+    visibleUnits() {
+        return CURRICULUM.units.filter(u => this.gradeUnlocked(u.grade));
+    }
+
     isUnitUnlocked(unit) {
+        if (!this.gradeUnlocked(unit.grade)) return false;
         return !unit.prereq || this.isUnitMastered(unit.prereq);
     }
 
@@ -243,9 +265,17 @@ class MasteryEngine {
         document.querySelectorAll('.theme-btn').forEach(btn => {
             btn.classList.toggle('selected', btn.dataset.theme === this.state.theme);
         });
-        const mastered = this.masteredSkillIds().length;
-        const total = allSkillIds().length;
+        // Show only the skills the child can currently see — future
+        // grades stay invisible until they unlock.
+        const visible = this.visibleUnits().flatMap(u => u.skills.map(s => s.id));
+        const mastered = visible.filter(id => this.skillState(id).phase === 'mastered').length;
+        const total = visible.length;
         const due = this.dueReviewIds().length;
+        const grade = this.highestUnlockedGrade();
+        const ordinal = { 2: '2nd', 3: '3rd', 4: '4th', 5: '5th' }[grade];
+        const allDone = mastered === total;
+        document.getElementById('welcome-title').textContent =
+            allDone && grade === 5 ? 'Math Champion! 🏆' : `${ordinal} Grade Mastery Quest 🚀`;
         this.el['progress-summary'].innerHTML =
             `<div class="summary-line">⭐ Skills mastered: <strong>${mastered} / ${total}</strong></div>` +
             `<div class="summary-line">${theme.currencyIcon} ${theme.currencyName} earned: <strong>${this.state.stars}</strong></div>` +
@@ -269,7 +299,7 @@ class MasteryEngine {
     renderPath() {
         const container = this.el['path-units'];
         container.innerHTML = '';
-        CURRICULUM.units.forEach(unit => {
+        this.visibleUnits().forEach(unit => {
             const unlocked = this.isUnitUnlocked(unit);
             const card = document.createElement('div');
             card.className = 'unit-card' + (unlocked ? '' : ' locked');
@@ -481,10 +511,12 @@ class MasteryEngine {
             this.el['number-input-row'].style.display = 'flex';
             this.el['answer-number'].value = '';
             this.el['answer-number'].focus();
-        } else if (p.answerType === 'time' || p.answerType === 'text') {
+        } else if (p.answerType === 'time' || p.answerType === 'text' || p.answerType === 'fraction') {
             this.el['text-input-row'].style.display = 'flex';
             this.el['answer-text'].value = '';
-            this.el['answer-text'].placeholder = p.answerType === 'time' ? 'like 3:45' : 'type your answer';
+            this.el['answer-text'].placeholder =
+                p.answerType === 'time' ? 'like 3:45' :
+                p.answerType === 'fraction' ? 'like 3/4' : 'type your answer';
             this.el['answer-text'].focus();
         } else if (p.answerType === 'choice') {
             const box = this.el['choice-buttons'];
@@ -547,7 +579,27 @@ class MasteryEngine {
             if (!m) return false;
             return Number(m[1]) === p.timeValue.h && Number(m[2]) === p.timeValue.m;
         }
-        return String(userAnswer).toLowerCase() === String(p.answer).toLowerCase();
+        if (p.answerType === 'fraction') {
+            // Accept any equivalent form: 3/4, 6/8, "1 1/2", or a whole number
+            const s = String(userAnswer).trim();
+            const { n, d } = p.fracValue;
+            let m = s.match(/^(\d+)\s*\/\s*(\d+)$/);
+            if (m) {
+                const un = Number(m[1]), ud = Number(m[2]);
+                return ud > 0 && un * d === n * ud;
+            }
+            m = s.match(/^(\d+)\s+(\d+)\s*\/\s*(\d+)$/);
+            if (m) {
+                const w = Number(m[1]), un = Number(m[2]), ud = Number(m[3]);
+                return ud > 0 && (w * ud + un) * d === n * ud;
+            }
+            m = s.match(/^(\d+)$/);
+            if (m) return Number(m[1]) * d === n;
+            return false;
+        }
+        const norm = String(userAnswer).toLowerCase().replace(/\s+/g, '');
+        if (norm === String(p.answer).toLowerCase()) return true;
+        return Array.isArray(p.accept) && p.accept.some(a => norm === String(a).toLowerCase());
     }
 
     submit() {
@@ -702,13 +754,36 @@ class MasteryEngine {
         this.renderMeter(skillId, false);
         this.renderHeader();
 
-        const { skill } = SKILL_INDEX[skillId];
+        const { skill, unit } = SKILL_INDEX[skillId];
         const nextId = this.nextUnlockedSkillId();
         const actions = [];
         if (nextId) {
             actions.push({ label: `Next: ${SKILL_INDEX[nextId].skill.title} →`, handler: () => this.openSkill(nextId) });
         }
         actions.push({ label: 'Back to the Map 🗺️', handler: () => this.showPath() });
+
+        // Did this mastery finish the whole grade and reveal the next one?
+        const nextGrade = unit.grade + 1;
+        const nextGradeExists = CURRICULUM.units.some(u => u.grade === nextGrade);
+        if (nextGradeExists && this.gradeUnlocked(nextGrade)) {
+            const ordinal = { 3: '3rd', 4: '4th', 5: '5th' }[nextGrade];
+            this.showCelebration(
+                '🎓 GRADE LEVEL UP!',
+                `You mastered EVERY skill — incredible!<br>` +
+                `A whole new world of <strong>${ordinal} grade math</strong> just appeared on your map! +5 ${theme.currencyName} ${theme.currencyIcon}`,
+                actions
+            );
+            return;
+        }
+        if (!nextGradeExists && this.masteredSkillIds().length === allSkillIds().length) {
+            this.showCelebration(
+                '👑 MATH CHAMPION!',
+                `You mastered every single skill in the whole game — 2nd grade through 5th grade!<br>` +
+                `Keep your powers sharp with Flashback Warm-Ups. +5 ${theme.currencyName} ${theme.currencyIcon}`,
+                actions
+            );
+            return;
+        }
         this.showCelebration(
             '🏆 Skill Mastered!',
             `You mastered <strong>${skill.title}</strong>! +5 ${theme.currencyName} ${theme.currencyIcon}<br>` +

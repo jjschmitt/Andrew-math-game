@@ -14,6 +14,7 @@
 
 const R = {
     int(min, max) {
+        if (max < min) [min, max] = [max, min];
         return Math.floor(Math.random() * (max - min + 1)) + min;
     },
     pick(arr) {
@@ -226,6 +227,119 @@ function fractionRect(parts, shaded) {
     return html;
 }
 
+function gcd(a, b) {
+    while (b) { [a, b] = [b, a % b]; }
+    return a;
+}
+
+function fracStr(n, d) {
+    const g = gcd(n, d);
+    return `${n / g}/${d / g}`;
+}
+
+function frac(n, d) {
+    // Standard fraction problem fields: canonical (reduced) answer string
+    // plus the raw value for equivalence checking in the engine.
+    return { answer: fracStr(n, d), fracValue: { n, d } };
+}
+
+function isPrime(n) {
+    if (n < 2) return false;
+    for (let i = 2; i * i <= n; i++) if (n % i === 0) return false;
+    return true;
+}
+
+function fractionNumberLine(b, k) {
+    const x0 = 20, x1 = 300, y = 34;
+    let ticks = '';
+    for (let i = 0; i <= b; i++) {
+        const x = x0 + (x1 - x0) * i / b;
+        ticks += `<line x1="${x.toFixed(1)}" y1="${y - 9}" x2="${x.toFixed(1)}" y2="${y + 9}" class="nl-tick"/>`;
+    }
+    const px = x0 + (x1 - x0) * k / b;
+    return `<svg class="numline" viewBox="0 0 320 66" width="320" height="66">
+        <line x1="${x0}" y1="${y}" x2="${x1}" y2="${y}" class="nl-line"/>
+        ${ticks}
+        <text x="${x0}" y="${y + 26}" text-anchor="middle" class="nl-label">0</text>
+        <text x="${x1}" y="${y + 26}" text-anchor="middle" class="nl-label">1</text>
+        <circle cx="${px.toFixed(1)}" cy="${y}" r="7" class="nl-point"/>
+    </svg>`;
+}
+
+function fractionPair(a, b, c, d) {
+    return `<div class="frac-pair">
+        <div class="frac-side">${fractionRect(b, a)}<div class="frac-caption">${a}/${b}</div></div>
+        <div class="frac-side">${fractionRect(d, c)}<div class="frac-caption">${c}/${d}</div></div>
+    </div>`;
+}
+
+function areaGrid(rows, cols) {
+    let html = '<div class="area-grid">';
+    for (let r = 0; r < rows; r++) {
+        html += '<div class="area-row">' + '<div class="unit-square"></div>'.repeat(cols) + '</div>';
+    }
+    html += '</div>';
+    return html;
+}
+
+function perimeterRectSVG(l, w) {
+    const s = 18, W = l * s, H = w * s, pad = 34;
+    return `<svg class="peri-svg" viewBox="0 0 ${W + pad * 2} ${H + pad * 2}" width="${W + pad * 2}" height="${H + pad * 2}">
+        <rect x="${pad}" y="${pad}" width="${W}" height="${H}" class="peri-rect"/>
+        <text x="${pad + W / 2}" y="${pad - 10}" text-anchor="middle" class="peri-label">${l} units</text>
+        <text x="${pad - 16}" y="${pad + H / 2 + 5}" text-anchor="middle" class="peri-label">${w}</text>
+    </svg>`;
+}
+
+function angleSVG(deg) {
+    const cx = 78, cy = 100, r = 64, ar = 22;
+    const rad = deg * Math.PI / 180;
+    const x2 = cx + r * Math.cos(rad), y2 = cy - r * Math.sin(rad);
+    const ax = cx + ar * Math.cos(rad), ay = cy - ar * Math.sin(rad);
+    const large = deg > 180 ? 1 : 0;
+    return `<svg class="angle-svg" viewBox="0 0 156 116" width="195" height="145">
+        <path d="M ${cx + ar} ${cy} A ${ar} ${ar} 0 ${large} 0 ${ax.toFixed(1)} ${ay.toFixed(1)}" class="angle-arc"/>
+        <line x1="${cx}" y1="${cy}" x2="${cx + r}" y2="${cy}" class="angle-ray"/>
+        <line x1="${cx}" y1="${cy}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" class="angle-ray"/>
+        <circle cx="${cx}" cy="${cy}" r="3" class="angle-vertex"/>
+    </svg>`;
+}
+
+function coordPlaneSVG(px, py) {
+    const s = 26, n = 9, pad = 26;
+    const size = n * s + pad * 2;
+    let grid = '', labels = '';
+    for (let i = 0; i <= n; i++) {
+        const p = pad + i * s;
+        grid += `<line x1="${p}" y1="${pad}" x2="${p}" y2="${pad + n * s}" class="cp-grid"/>`;
+        grid += `<line x1="${pad}" y1="${p}" x2="${pad + n * s}" y2="${p}" class="cp-grid"/>`;
+        labels += `<text x="${p}" y="${pad + n * s + 16}" text-anchor="middle" class="cp-label">${i}</text>`;
+        labels += `<text x="${pad - 10}" y="${pad + (n - i) * s + 4}" text-anchor="middle" class="cp-label">${i}</text>`;
+    }
+    const x = pad + px * s, y = pad + (n - py) * s;
+    return `<svg class="coord-svg" viewBox="0 0 ${size} ${size + 6}" width="${size}" height="${size + 6}">
+        ${grid}
+        <line x1="${pad}" y1="${pad + n * s}" x2="${pad + n * s}" y2="${pad + n * s}" class="cp-axis"/>
+        <line x1="${pad}" y1="${pad}" x2="${pad}" y2="${pad + n * s}" class="cp-axis"/>
+        ${labels}
+        <circle cx="${x}" cy="${y}" r="7" class="cp-point"/>
+    </svg>`;
+}
+
+function boxSVG(l, w, h) {
+    // Simple isometric-ish rectangular prism with labeled edges
+    const s = 16, L = l * s, H = h * s, D = w * 8;
+    const x0 = 26, y0 = 26 + D;
+    return `<svg class="box-svg" viewBox="0 0 ${L + D + 84} ${H + D + 60}" width="${L + D + 84}" height="${H + D + 60}">
+        <polygon points="${x0},${y0} ${x0 + L},${y0} ${x0 + L + D},${y0 - D} ${x0 + D},${y0 - D}" class="box-top"/>
+        <polygon points="${x0 + L},${y0} ${x0 + L + D},${y0 - D} ${x0 + L + D},${y0 - D + H} ${x0 + L},${y0 + H}" class="box-side"/>
+        <rect x="${x0}" y="${y0}" width="${L}" height="${H}" class="box-front"/>
+        <text x="${x0 + L / 2}" y="${y0 + H + 18}" text-anchor="middle" class="box-label">${l}</text>
+        <text x="${x0 - 12}" y="${y0 + H / 2 + 5}" text-anchor="middle" class="box-label">${h}</text>
+        <text x="${x0 + L + D / 2 + 26}" y="${y0 - D / 2 + 2}" text-anchor="middle" class="box-label">${w}</text>
+    </svg>`;
+}
+
 // ------------------------------------------------------------
 // The curriculum
 // ------------------------------------------------------------
@@ -235,6 +349,7 @@ const CURRICULUM = {
         // ============ UNIT 1 ============
         {
             id: 'facts20',
+            grade: 2,
             title: 'Fact Power to 20',
             icon: '⚡',
             standard: 'NC.2.OA.2',
@@ -369,6 +484,7 @@ const CURRICULUM = {
         // ============ UNIT 2 ============
         {
             id: 'placeValue',
+            grade: 2,
             title: 'Place Value to 1,000',
             icon: '🔢',
             standard: 'NC.2.NBT.1–4',
@@ -526,6 +642,7 @@ const CURRICULUM = {
         // ============ UNIT 3 ============
         {
             id: 'within100',
+            grade: 2,
             title: 'Add & Subtract Within 100',
             icon: '➕',
             standard: 'NC.2.NBT.5–8',
@@ -639,6 +756,7 @@ const CURRICULUM = {
         // ============ UNIT 4 ============
         {
             id: 'wordProblems',
+            grade: 2,
             title: 'Word Problem Power',
             icon: '📖',
             standard: 'NC.2.OA.1',
@@ -753,6 +871,7 @@ const CURRICULUM = {
         // ============ UNIT 5 ============
         {
             id: 'within1000',
+            grade: 2,
             title: 'Big Numbers to 1,000',
             icon: '💯',
             standard: 'NC.2.NBT.7–8',
@@ -857,6 +976,7 @@ const CURRICULUM = {
         // ============ UNIT 6 ============
         {
             id: 'timeMoney',
+            grade: 2,
             title: 'Time & Money',
             icon: '⏰',
             standard: 'NC.2.MD.7–8',
@@ -963,6 +1083,7 @@ const CURRICULUM = {
         // ============ UNIT 7 ============
         {
             id: 'measurement',
+            grade: 2,
             title: 'Measurement',
             icon: '📏',
             standard: 'NC.2.MD.1–5',
@@ -1046,6 +1167,7 @@ const CURRICULUM = {
         // ============ UNIT 8 ============
         {
             id: 'geometry',
+            grade: 2,
             title: 'Shapes, Sharing & Arrays',
             icon: '🔷',
             standard: 'NC.2.G.1–3, NC.2.OA.3–4',
@@ -1208,7 +1330,1597 @@ const CURRICULUM = {
                     }
                 }
             ]
-        }
+        },
+        // ============ GRADE 3 ============
+        {
+            id: 'g3-mult',
+            grade: 3,
+            title: 'Multiplication Power',
+            icon: '✖️',
+            standard: 'NC.3.OA.1–7',
+            prereq: null,
+            skills: [
+                {
+                    id: 'mult-facts-easy',
+                    title: 'Multiply by 2, 5 & 10',
+                    standard: 'NC.3.OA.7',
+                    learnIntro: '<strong>Multiplication = equal groups!</strong><br>5 × 4 means 4 groups of 5. Skip count: 5, 10, 15, <strong>20</strong>.',
+                    generate(level) {
+                        const a = R.pick(level === 1 ? [2, 5] : [2, 5, 10]);
+                        const b = R.int(2, 9);
+                        const [x, y] = level === 1 ? [a, b] : R.shuffle([a, b]);
+                        const skips = Array.from({ length: b }, (_, i) => a * (i + 1)).join(', ');
+                        return {
+                            prompt: `${x} × ${y} = ?`,
+                            visual: level === 1 ? dotArray(b, a, '🔵') : null,
+                            answerType: 'number',
+                            answer: a * b,
+                            hints: [
+                                `That means ${b} groups of ${a}.`,
+                                `Skip count by ${a}s, ${b} times.`,
+                                `${skips}`
+                            ],
+                            explain: `${a} × ${b}: skip count by ${a}s — ${skips}.`
+                        };
+                    }
+                },
+                {
+                    id: 'mult-facts-all',
+                    title: 'All the Times Tables',
+                    standard: 'NC.3.OA.7',
+                    learnIntro: '<strong>Use facts you know to find facts you don\'t!</strong><br>7 × 8 = 7 × 7 + 7 = 49 + 7 = <strong>56</strong>.<br>One fact away is one hop away.',
+                    generate(level) {
+                        const a = level === 1 ? R.pick([3, 4]) : level === 2 ? R.int(3, 7) : R.int(6, 9);
+                        const b = level === 1 ? R.int(2, 6) : level === 2 ? R.int(3, 8) : R.int(6, 9);
+                        return {
+                            prompt: `${a} × ${b} = ?`,
+                            visual: level === 1 ? dotArray(a, b, '🔵') : null,
+                            answerType: 'number',
+                            answer: a * b,
+                            hints: [
+                                `Think of a nearby fact you already know.`,
+                                `${a} × ${b - 1} = ${a * (b - 1)}. Now add one more ${a}.`,
+                                `${a * (b - 1)} + ${a} = ?`
+                            ],
+                            explain: `${a} × ${b} = ${a} × ${b - 1} + ${a} = ${a * (b - 1)} + ${a} = ${a * b}.`
+                        };
+                    }
+                },
+                {
+                    id: 'div-facts',
+                    title: 'Division Facts',
+                    standard: 'NC.3.OA.7',
+                    learnIntro: '<strong>Division is multiplication backwards!</strong><br>24 ÷ 6 = ? asks: 6 × ? = 24. You know it — it\'s <strong>4</strong>!',
+                    generate(level) {
+                        const d = level === 1 ? R.int(2, 5) : R.int(2, 9);
+                        const q = level === 1 ? R.int(2, 5) : R.int(3, 9);
+                        const n = d * q;
+                        return {
+                            prompt: `${n} ÷ ${d} = ?`,
+                            visual: level === 1 ? dotArray(d, q, '🔵') : null,
+                            answerType: 'number',
+                            answer: q,
+                            hints: [
+                                `Think multiplication: ${d} × ? = ${n}.`,
+                                `Split ${n} into ${d} equal rows — how many in each row?`,
+                                `Skip count by ${d}s up to ${n} and count the hops.`
+                            ],
+                            explain: `${n} ÷ ${d} = ${q}, because ${d} × ${q} = ${n}.`
+                        };
+                    }
+                },
+                {
+                    id: 'mult-div-stories',
+                    title: 'Equal-Group Stories',
+                    standard: 'NC.3.OA.3',
+                    learnIntro: '<strong>Spot the equal groups!</strong><br>"4 bags with 6 apples each" → 4 × 6.<br>"24 apples shared into bags of 6" → 24 ÷ 6.',
+                    generate(level) {
+                        const item = themeThing();
+                        const name = heroName();
+                        if (level === 3 && Math.random() < 0.5) {
+                            const m = R.int(3, 8), q = R.int(3, 9), n = m * q;
+                            return {
+                                prompt: `${name} puts ${n} ${item.name} ${item.icon} into rows of ${m}. How many rows does ${name} make?`,
+                                visual: null,
+                                answerType: 'number',
+                                answer: q,
+                                hints: [
+                                    `Each row uses ${m}. How many rows of ${m} make ${n}?`,
+                                    `Think: ${m} × ? = ${n}.`
+                                ],
+                                explain: `${n} ÷ ${m} = ${q} rows, because ${m} × ${q} = ${n}.`
+                            };
+                        }
+                        const a = level === 1 ? R.int(2, 5) : R.int(3, 9);
+                        const b = level === 1 ? R.int(2, 6) : R.int(4, 9);
+                        return {
+                            prompt: `${name} has ${a} bags with ${b} ${item.name} ${item.icon} in each bag. How many ${item.name} in all?`,
+                            visual: level === 1 ? dotArray(a, b, item.icon) : null,
+                            answerType: 'number',
+                            answer: a * b,
+                            hints: [
+                                `Equal groups! ${a} groups of ${b}.`,
+                                `${a} × ${b} = ?`
+                            ],
+                            explain: `${a} bags of ${b}: ${a} × ${b} = ${a * b}.`
+                        };
+                    }
+                }
+            ]
+        },
+        {
+            id: 'g3-numbers',
+            grade: 3,
+            title: 'Rounding & Bigger Moves',
+            icon: '🎯',
+            standard: 'NC.3.NBT, 3.OA.8',
+            prereq: 'g3-mult',
+            skills: [
+                {
+                    id: 'rounding',
+                    title: 'Rounding to 10s & 100s',
+                    standard: 'NC.3.NBT.1',
+                    learnIntro: '<strong>Which ten is closer?</strong><br>Rounding 47 to the nearest ten: 47 is between 40 and 50, closer to <strong>50</strong>.<br>The digit to the right decides: 5 or more rounds UP.',
+                    generate(level) {
+                        let n, target;
+                        if (level === 1) {
+                            n = R.int(11, 98);
+                            if (n % 10 === 0) n += 3;
+                            target = 10;
+                        } else if (level === 2) {
+                            n = R.int(101, 989);
+                            target = R.pick([10, 100]);
+                            if (n % target === 0) n += target === 10 ? 4 : 40;
+                        } else {
+                            n = R.int(105, 989);
+                            target = 100;
+                            if (n % 100 === 0) n += 51;
+                        }
+                        const answer = Math.round(n / target) * target;
+                        const decider = target === 10 ? n % 10 : Math.floor(n / 10) % 10;
+                        return {
+                            prompt: `Round ${n} to the nearest ${target === 10 ? 'ten' : 'hundred'}.`,
+                            visual: null,
+                            answerType: 'number',
+                            answer,
+                            hints: [
+                                `${n} is between ${Math.floor(n / target) * target} and ${Math.floor(n / target) * target + target}.`,
+                                `Look at the ${target === 10 ? 'ones' : 'tens'} digit: ${decider}. Is it 5 or more?`,
+                                `${decider} ${decider >= 5 ? 'is 5 or more → round UP' : 'is less than 5 → round DOWN'}.`
+                            ],
+                            explain: `The ${target === 10 ? 'ones' : 'tens'} digit is ${decider}, so ${n} rounds ${decider >= 5 ? 'up' : 'down'} to ${answer}.`
+                        };
+                    }
+                },
+                {
+                    id: 'multiply-tens',
+                    title: 'Multiply by Tens',
+                    standard: 'NC.3.NBT.3',
+                    learnIntro: '<strong>Use the fact, then think tens!</strong><br>4 × 60 = 4 × 6 tens = 24 tens = <strong>240</strong>.',
+                    generate(level) {
+                        const a = R.int(2, 9);
+                        const t = (level === 1 ? R.int(1, 4) : R.int(2, 9)) * 10;
+                        return {
+                            prompt: `${a} × ${t} = ?`,
+                            visual: null,
+                            answerType: 'number',
+                            answer: a * t,
+                            hints: [
+                                `${t} is ${t / 10} tens.`,
+                                `${a} × ${t / 10} = ${a * t / 10}. So the answer is ${a * t / 10} tens.`
+                            ],
+                            explain: `${a} × ${t} = ${a} × ${t / 10} tens = ${a * t / 10} tens = ${a * t}.`
+                        };
+                    }
+                },
+                {
+                    id: 'two-step-mult-stories',
+                    title: 'Two-Step Stories with ×',
+                    standard: 'NC.3.OA.8',
+                    learnIntro: '<strong>Multiply first, then add or subtract!</strong><br>"3 packs of 6, plus 4 loose" → 3 × 6 = 18, then 18 + 4 = <strong>22</strong>.',
+                    generate(level) {
+                        const item = themeThing();
+                        const name = heroName();
+                        const a = level === 1 ? R.int(2, 4) : R.int(3, 7);
+                        const b = level === 1 ? R.int(3, 6) : R.int(4, 9);
+                        if (Math.random() < 0.5) {
+                            const c = R.int(3, 12);
+                            return {
+                                prompt: `${name} buys ${a} packs of ${b} ${item.name} ${item.icon} and ${c} loose ones. How many ${item.name} in all?`,
+                                visual: null,
+                                answerType: 'number',
+                                answer: a * b + c,
+                                hints: [
+                                    `Step 1: how many are in the packs? ${a} × ${b} = ?`,
+                                    `Step 2: add the ${c} loose ones to ${a * b}.`
+                                ],
+                                explain: `${a} × ${b} = ${a * b}, then ${a * b} + ${c} = ${a * b + c}.`
+                            };
+                        }
+                        const s = a * b + R.int(6, 30);
+                        return {
+                            prompt: `${name} had ${s} ${item.name} ${item.icon} and gave away ${a} bags of ${b}. How many are left?`,
+                            visual: null,
+                            answerType: 'number',
+                            answer: s - a * b,
+                            hints: [
+                                `Step 1: how many were given away? ${a} × ${b} = ?`,
+                                `Step 2: ${s} − ${a * b} = ?`
+                            ],
+                            explain: `${a} × ${b} = ${a * b} given away. ${s} − ${a * b} = ${s - a * b} left.`
+                        };
+                    }
+                }
+            ]
+        },
+        {
+            id: 'g3-fractions',
+            grade: 3,
+            title: 'Fraction Foundations',
+            icon: '🍕',
+            standard: 'NC.3.NF',
+            prereq: 'g3-numbers',
+            skills: [
+                {
+                    id: 'fraction-of-shape',
+                    title: 'Name the Fraction',
+                    standard: 'NC.3.NF.1',
+                    learnIntro: '<strong>A fraction counts equal parts!</strong><br>The bottom number = how many equal parts in the whole.<br>The top number = how many you\'re talking about. 3 shaded of 4 → <strong>3/4</strong>.',
+                    generate(level) {
+                        const b = level === 1 ? R.pick([2, 3, 4]) : R.pick([3, 4, 6, 8]);
+                        const k = level === 1 ? 1 : R.int(1, b - 1);
+                        if (level === 3) {
+                            const name = heroName();
+                            return Object.assign({
+                                prompt: `A pizza is cut into ${b} equal slices. ${name} eats ${k} slice${k > 1 ? 's' : ''}. What fraction of the pizza did ${name} eat? (Type it like 3/4)`,
+                                visual: null,
+                                answerType: 'fraction',
+                                hints: [
+                                    `How many equal parts is the whole cut into? That's the bottom number.`,
+                                    `${k} out of ${b} equal parts.`
+                                ],
+                                explain: `${k} of the ${b} equal parts → ${k}/${b}.`
+                            }, frac(k, b));
+                        }
+                        return Object.assign({
+                            prompt: 'What fraction of the bar is shaded? (Type it like 3/4)',
+                            visual: fractionRect(b, k),
+                            answerType: 'fraction',
+                            hints: [
+                                `Count ALL the equal parts first — that's the bottom number.`,
+                                `There are ${b} parts, and ${k} ${k > 1 ? 'are' : 'is'} shaded.`
+                            ],
+                            explain: `${k} shaded out of ${b} equal parts → ${k}/${b}.`
+                        }, frac(k, b));
+                    }
+                },
+                {
+                    id: 'fraction-number-line',
+                    title: 'Fractions on the Number Line',
+                    standard: 'NC.3.NF.2',
+                    learnIntro: '<strong>Fractions live between 0 and 1!</strong><br>Cut the line from 0 to 1 into equal hops.<br>4 hops → each hop is 1/4. The 3rd mark is <strong>3/4</strong>.',
+                    generate(level) {
+                        const b = level === 1 ? R.pick([2, 3, 4]) : R.pick([3, 4, 6, 8]);
+                        const k = R.int(1, b - 1);
+                        return Object.assign({
+                            prompt: 'What fraction does the point show? (Type it like 3/4)',
+                            visual: fractionNumberLine(b, k),
+                            answerType: 'fraction',
+                            hints: [
+                                `Count the equal hops between 0 and 1 — that's the bottom number.`,
+                                `The line is cut into ${b} equal parts.`,
+                                `The point is ${k} hop${k > 1 ? 's' : ''} from 0.`
+                            ],
+                            explain: `The line has ${b} equal parts and the point is at hop ${k} → ${k}/${b}.`
+                        }, frac(k, b));
+                    }
+                },
+                {
+                    id: 'compare-fractions-3',
+                    title: 'Compare Fractions',
+                    standard: 'NC.3.NF.3',
+                    learnIntro: '<strong>Same bottom? Compare tops!</strong> 3/8 &lt; 5/8.<br><strong>Same top? Bigger bottom = smaller pieces!</strong> 1/8 &lt; 1/3.',
+                    generate(level) {
+                        let a1, d1, a2, d2;
+                        if (level < 3) {
+                            d1 = d2 = R.pick([3, 4, 6, 8]);
+                            a1 = R.int(1, d1 - 1);
+                            do { a2 = R.int(1, d2 - 1); } while (a2 === a1 && Math.random() > 0.15);
+                        } else {
+                            a1 = a2 = R.int(1, 3);
+                            d1 = R.pick([2, 3, 4]);
+                            do { d2 = R.pick([3, 4, 6, 8]); } while (d2 === d1);
+                            if (a1 >= d1) a1 = a2 = d1 - 1;
+                        }
+                        const cross1 = a1 * d2, cross2 = a2 * d1;
+                        const answer = cross1 < cross2 ? '<' : cross1 > cross2 ? '>' : '=';
+                        return {
+                            prompt: `Which symbol makes this true?<br><span class="compare-nums">${a1}/${d1} &nbsp; ? &nbsp; ${a2}/${d2}</span>`,
+                            visual: level === 1 ? fractionPair(a1, d1, a2, d2) : null,
+                            answerType: 'choice',
+                            choices: ['<', '>', '='],
+                            answer,
+                            hints: [
+                                d1 === d2
+                                    ? `The pieces are the same size (${d1}ths). Who has more pieces?`
+                                    : `The tops match! Which whole is cut into BIGGER pieces?`,
+                                d1 === d2
+                                    ? `Compare the top numbers: ${a1} and ${a2}.`
+                                    : `Cutting into ${Math.max(d1, d2)} parts makes SMALLER pieces than cutting into ${Math.min(d1, d2)}.`
+                            ],
+                            explain: `${a1}/${d1} ${answer === '=' ? 'equals' : answer === '<' ? 'is less than' : 'is greater than'} ${a2}/${d2}.`
+                        };
+                    }
+                },
+                {
+                    id: 'equivalent-fractions-3',
+                    title: 'Equivalent Fractions',
+                    standard: 'NC.3.NF.3',
+                    learnIntro: '<strong>Same amount, different cuts!</strong><br>1/2 = 2/4 = 3/6. Multiply the top AND bottom by the same number.',
+                    generate(level) {
+                        const [a, b] = R.pick([[1, 2], [1, 3], [2, 3], [1, 4], [3, 4]]);
+                        const k = level === 1 ? 2 : R.int(2, 4);
+                        if (level === 3 && Math.random() < 0.5) {
+                            return {
+                                prompt: `Fill in the blank: ${a}/${b} = ${a * k}/?`,
+                                visual: null,
+                                answerType: 'number',
+                                answer: b * k,
+                                hints: [
+                                    `The top was multiplied by ${k} (${a} → ${a * k}).`,
+                                    `Do the same to the bottom: ${b} × ${k} = ?`
+                                ],
+                                explain: `${a}/${b} = ${a * k}/${b * k} — top and bottom both × ${k}.`
+                            };
+                        }
+                        return {
+                            prompt: `Fill in the blank: ${a}/${b} = ?/${b * k}`,
+                            visual: level === 1 ? fractionPair(a, b, a * k, b * k) : null,
+                            answerType: 'number',
+                            answer: a * k,
+                            hints: [
+                                `The bottom was multiplied by ${k} (${b} → ${b * k}).`,
+                                `Do the same to the top: ${a} × ${k} = ?`
+                            ],
+                            explain: `${a}/${b} = ${a * k}/${b * k} — top and bottom both × ${k}.`
+                        };
+                    }
+                }
+            ]
+        },
+        {
+            id: 'g3-measure',
+            grade: 3,
+            title: 'Area, Perimeter & Time',
+            icon: '📐',
+            standard: 'NC.3.MD',
+            prereq: 'g3-fractions',
+            skills: [
+                {
+                    id: 'area',
+                    title: 'Area of Rectangles',
+                    standard: 'NC.3.MD.7',
+                    learnIntro: '<strong>Area = how many squares cover it!</strong><br>A 4-by-3 rectangle holds 4 × 3 = <strong>12</strong> square units. Rows × columns!',
+                    generate(level) {
+                        const rows = level === 1 ? R.int(2, 4) : R.int(3, 9);
+                        const cols = level === 1 ? R.int(2, 5) : R.int(3, 9);
+                        if (level === 3) {
+                            return {
+                                prompt: `A rectangle is ${cols} units long and ${rows} units wide. What is its AREA in square units?`,
+                                visual: null,
+                                answerType: 'number',
+                                answer: rows * cols,
+                                hints: [
+                                    `Picture it covered in unit squares: ${rows} rows of ${cols}.`,
+                                    `Area = length × width.`
+                                ],
+                                explain: `Area = ${cols} × ${rows} = ${rows * cols} square units.`
+                            };
+                        }
+                        return {
+                            prompt: 'Each small square is 1 square unit. What is the AREA of this rectangle?',
+                            visual: areaGrid(rows, cols),
+                            answerType: 'number',
+                            answer: rows * cols,
+                            hints: [
+                                `You could count every square... or be clever!`,
+                                `There are ${rows} rows with ${cols} squares in each.`,
+                                `${rows} × ${cols} = ?`
+                            ],
+                            explain: `${rows} rows × ${cols} columns = ${rows * cols} square units.`
+                        };
+                    }
+                },
+                {
+                    id: 'perimeter',
+                    title: 'Perimeter',
+                    standard: 'NC.3.MD.8',
+                    learnIntro: '<strong>Perimeter = the walk around the edge!</strong><br>A rectangle 6 long and 4 wide: 6 + 4 + 6 + 4 = <strong>20</strong> units around.',
+                    generate(level) {
+                        const l = R.int(3, 12);
+                        const w = R.int(2, Math.min(l, 8));
+                        if (level === 3 && Math.random() < 0.5) {
+                            const p = 2 * (l + w);
+                            return {
+                                prompt: `A rectangle has a perimeter of ${p} units. One side is ${l} units. How long is the shorter side?`,
+                                visual: null,
+                                answerType: 'number',
+                                answer: w,
+                                hints: [
+                                    `Two sides are ${l}, so those use up ${2 * l} units.`,
+                                    `${p} − ${2 * l} = ${p - 2 * l} is left for the other TWO sides.`,
+                                    `${p - 2 * l} ÷ 2 = ?`
+                                ],
+                                explain: `${p} − ${l} − ${l} = ${p - 2 * l}, shared by two sides → ${w} each.`
+                            };
+                        }
+                        return {
+                            prompt: 'What is the PERIMETER of this rectangle (the distance all the way around)?',
+                            visual: level < 3 ? perimeterRectSVG(l, w) : null,
+                            answerType: 'number',
+                            answer: 2 * (l + w),
+                            hints: [
+                                `Add all four sides: ${l} + ${w} + ${l} + ${w}.`,
+                                `Shortcut: (${l} + ${w}) × 2.`
+                            ],
+                            explain: `${l} + ${w} + ${l} + ${w} = ${2 * (l + w)} units.`
+                        };
+                    }
+                },
+                {
+                    id: 'elapsed-time',
+                    title: 'Elapsed Time',
+                    standard: 'NC.3.MD.1',
+                    learnIntro: '<strong>Hop along the clock!</strong><br>3:40 + 25 minutes → hop 20 to reach 4:00, then 5 more → <strong>4:05</strong>.',
+                    generate(level) {
+                        const h = R.int(1, 11);
+                        const m0 = R.int(0, 11) * 5;
+                        if (level === 3 && Math.random() < 0.5) {
+                            const dur = R.int(2, 10) * 5;
+                            const total = h * 60 + m0 + dur;
+                            const h2 = Math.floor(total / 60), m2 = total % 60;
+                            return {
+                                prompt: `A movie starts at ${h}:${pad2(m0)} and ends at ${h2}:${pad2(m2)}. How many minutes long is it?`,
+                                visual: null,
+                                answerType: 'number',
+                                answer: dur,
+                                hints: [
+                                    `Count up from ${h}:${pad2(m0)}.`,
+                                    `First hop to the next hour, then count the rest.`
+                                ],
+                                explain: `From ${h}:${pad2(m0)} to ${h2}:${pad2(m2)} is ${dur} minutes.`
+                            };
+                        }
+                        const dur = level === 1 ? R.pick([30, 60]) : R.pick([15, 20, 25, 30, 40, 45, 50]);
+                        const total = h * 60 + m0 + dur;
+                        const h2 = Math.floor(total / 60), m2 = total % 60;
+                        return {
+                            prompt: `It is ${h}:${pad2(m0)}. What time will it be in ${dur} minutes? (Type it like 3:45)`,
+                            visual: level === 1 ? clockSVG(h, m0) : null,
+                            answerType: 'time',
+                            answer: `${h2}:${pad2(m2)}`,
+                            timeValue: { h: h2, m: m2 },
+                            hints: [
+                                `Count by 5s or 10s from ${h}:${pad2(m0)}.`,
+                                `Hop to the next hour first if you can.`
+                            ],
+                            explain: `${h}:${pad2(m0)} + ${dur} minutes = ${h2}:${pad2(m2)}.`
+                        };
+                    }
+                }
+            ]
+        },
+        // ============ GRADE 4 ============
+        {
+            id: 'g4-mult',
+            grade: 4,
+            title: 'Multiply Big',
+            icon: '🚀',
+            standard: 'NC.4.NBT.5, 4.OA',
+            prereq: null,
+            skills: [
+                {
+                    id: 'multiply-2x1',
+                    title: '2-Digit × 1-Digit',
+                    standard: 'NC.4.NBT.5',
+                    learnIntro: '<strong>Break it apart!</strong><br>34 × 6 → (30 × 6) + (4 × 6) = 180 + 24 = <strong>204</strong>.',
+                    generate(level) {
+                        const a = level === 1 ? R.int(12, 25) : level === 2 ? R.int(13, 49) : R.int(24, 89);
+                        const b = level === 1 ? R.int(2, 4) : level === 2 ? R.int(3, 6) : R.int(3, 9);
+                        const tens = Math.floor(a / 10) * 10, ones = a % 10;
+                        return {
+                            prompt: `${a} × ${b} = ?`,
+                            visual: null,
+                            answerType: 'number',
+                            answer: a * b,
+                            hints: [
+                                `Break ${a} apart: ${tens} + ${ones}.`,
+                                `${tens} × ${b} = ${tens * b}, and ${ones} × ${b} = ${ones * b}.`,
+                                `${tens * b} + ${ones * b} = ?`
+                            ],
+                            explain: `${a} × ${b} = (${tens} × ${b}) + (${ones} × ${b}) = ${tens * b} + ${ones * b} = ${a * b}.`
+                        };
+                    }
+                },
+                {
+                    id: 'multiply-big',
+                    title: 'Bigger Multiplication',
+                    standard: 'NC.4.NBT.5',
+                    learnIntro: '<strong>Same trick, more pieces!</strong><br>213 × 3 → (200 × 3) + (10 × 3) + (3 × 3) = 600 + 30 + 9 = <strong>639</strong>.',
+                    generate(level) {
+                        if (level === 3) {
+                            const a = R.int(12, 39), b = R.int(12, 29);
+                            const bt = Math.floor(b / 10) * 10, bo = b % 10;
+                            return {
+                                prompt: `${a} × ${b} = ?`,
+                                visual: null,
+                                answerType: 'number',
+                                answer: a * b,
+                                hints: [
+                                    `Break ${b} apart: ${bt} + ${bo}.`,
+                                    `${a} × ${bt} = ${a * bt}, and ${a} × ${bo} = ${a * bo}.`,
+                                    `${a * bt} + ${a * bo} = ?`
+                                ],
+                                explain: `${a} × ${b} = (${a} × ${bt}) + (${a} × ${bo}) = ${a * bt} + ${a * bo} = ${a * b}.`
+                            };
+                        }
+                        const a = R.int(110, level === 1 ? 320 : 480);
+                        const b = level === 1 ? R.int(2, 3) : R.int(2, 6);
+                        const h = Math.floor(a / 100) * 100, t = Math.floor(a / 10) % 10 * 10, o = a % 10;
+                        const parts = [`${h} × ${b} = ${h * b}`];
+                        if (t) parts.push(`${t} × ${b} = ${t * b}`);
+                        if (o) parts.push(`${o} × ${b} = ${o * b}`);
+                        return {
+                            prompt: `${a} × ${b} = ?`,
+                            visual: null,
+                            answerType: 'number',
+                            answer: a * b,
+                            hints: [
+                                `Break ${a} into hundreds, tens, and ones.`,
+                                parts.join(', ') + '.',
+                                `Now add the pieces together.`
+                            ],
+                            explain: `${a} × ${b}: ${parts.join(', ')} → total ${a * b}.`
+                        };
+                    }
+                },
+                {
+                    id: 'factors-primes',
+                    title: 'Factors & Primes',
+                    standard: 'NC.4.OA.4',
+                    learnIntro: '<strong>Prime = exactly two factors (1 and itself).</strong><br>7 is prime — only 1 × 7 works.<br>12 is composite — 1×12, 2×6, 3×4 all work!',
+                    generate(level) {
+                        if (level === 3 && Math.random() < 0.5) {
+                            let n;
+                            do { n = R.int(24, 90); } while (isPrime(n));
+                            let f = 2;
+                            while (n % f !== 0) f++;
+                            return {
+                                prompt: `What is the SMALLEST prime factor of ${n}?`,
+                                visual: null,
+                                answerType: 'number',
+                                answer: f,
+                                hints: [
+                                    `Try the small primes in order: 2, 3, 5, 7...`,
+                                    `Is ${n} even? Then 2 divides it. If not, do its digits add to a multiple of 3?`
+                                ],
+                                explain: `${n} = ${f} × ${n / f}, and ${f} is prime — so ${f} is the smallest prime factor.`
+                            };
+                        }
+                        const n = level === 1 ? R.int(4, 20) : level === 2 ? R.int(21, 50) : R.int(30, 60);
+                        const answer = isPrime(n) ? 'Prime' : 'Composite';
+                        let f = 2;
+                        if (!isPrime(n)) { while (n % f !== 0) f++; }
+                        return {
+                            prompt: `Is ${n} prime or composite?`,
+                            visual: null,
+                            answerType: 'choice',
+                            choices: ['Prime', 'Composite'],
+                            answer,
+                            hints: [
+                                `Can you arrange ${n} dots into a rectangle with more than one row?`,
+                                `Check the small primes: does 2, 3, 5, or 7 divide ${n} evenly?`
+                            ],
+                            explain: isPrime(n)
+                                ? `Only 1 × ${n} makes ${n} — it is prime.`
+                                : `${n} = ${f} × ${n / f}, so it has extra factors — composite.`
+                        };
+                    }
+                },
+                {
+                    id: 'multi-step-stories-4',
+                    title: 'Multi-Step Stories',
+                    standard: 'NC.4.OA.3',
+                    learnIntro: '<strong>Big stories, small steps!</strong><br>Solve one piece at a time and hold your answer for the next step.',
+                    generate(level) {
+                        const item = themeThing();
+                        const name = heroName();
+                        const a = level === 1 ? R.int(2, 4) : R.int(3, 6);
+                        const b = level === 1 ? R.int(11, 15) : R.int(12, 25);
+                        if (level === 3 && Math.random() < 0.5) {
+                            const c = R.int(2, 4), d = R.int(11, 20);
+                            return {
+                                prompt: `${name} has ${a} boxes of ${b} ${item.name} ${item.icon} and ${c} boxes of ${d}. How many ${item.name} in all?`,
+                                visual: null,
+                                answerType: 'number',
+                                answer: a * b + c * d,
+                                hints: [
+                                    `Step 1: ${a} × ${b} = ?`,
+                                    `Step 2: ${c} × ${d} = ?`,
+                                    `Step 3: add ${a * b} + ${c * d}.`
+                                ],
+                                explain: `${a} × ${b} = ${a * b} and ${c} × ${d} = ${c * d}; together ${a * b + c * d}.`
+                            };
+                        }
+                        const c = R.int(8, Math.min(40, a * b - 5));
+                        return {
+                            prompt: `${name} has ${a} boxes of ${b} ${item.name} ${item.icon}. ${name} gives away ${c}. How many are left?`,
+                            visual: null,
+                            answerType: 'number',
+                            answer: a * b - c,
+                            hints: [
+                                `Step 1: how many to start? ${a} × ${b} = ?`,
+                                `Step 2: ${a * b} − ${c} = ?`
+                            ],
+                            explain: `${a} × ${b} = ${a * b}, then ${a * b} − ${c} = ${a * b - c}.`
+                        };
+                    }
+                }
+            ]
+        },
+        {
+            id: 'g4-div',
+            grade: 4,
+            title: 'Divide & Conquer',
+            icon: '➗',
+            standard: 'NC.4.NBT.6, 4.OA.3',
+            prereq: 'g4-mult',
+            skills: [
+                {
+                    id: 'divide-remainders',
+                    title: 'Division with Remainders',
+                    standard: 'NC.4.NBT.6',
+                    learnIntro: '<strong>Sometimes it doesn\'t come out even!</strong><br>17 ÷ 5: five goes in 3 times (15), with 2 left over.<br>Quotient 3, remainder <strong>2</strong>.',
+                    generate(level) {
+                        const d = level === 1 ? R.int(3, 5) : R.int(3, 9);
+                        const q = level === 1 ? R.int(2, 5) : R.int(3, 9);
+                        const r = R.int(1, d - 1);
+                        const n = d * q + r;
+                        const askRemainder = Math.random() < 0.5;
+                        return {
+                            prompt: askRemainder
+                                ? `What is the REMAINDER when ${n} is divided by ${d}?`
+                                : `How many whole groups of ${d} fit inside ${n}?`,
+                            visual: null,
+                            answerType: 'number',
+                            answer: askRemainder ? r : q,
+                            hints: [
+                                `Find the biggest multiple of ${d} that fits in ${n}.`,
+                                `${d} × ${q} = ${d * q}. How much of ${n} is left after that?`
+                            ],
+                            explain: `${n} ÷ ${d}: ${d} × ${q} = ${d * q}, remainder ${n} − ${d * q} = ${r}.`
+                        };
+                    }
+                },
+                {
+                    id: 'long-division',
+                    title: 'Divide Bigger Numbers',
+                    standard: 'NC.4.NBT.6',
+                    learnIntro: '<strong>Divide in chunks!</strong><br>84 ÷ 4 → 80 ÷ 4 = 20, and 4 ÷ 4 = 1. Together: <strong>21</strong>.',
+                    generate(level) {
+                        const d = R.int(2, 9);
+                        const qt = (level === 1 ? R.int(1, 2) : level === 2 ? R.int(1, 9) : R.int(2, 14)) * 10;
+                        const qo = R.int(1, 9);
+                        const q = qt + qo;
+                        const n = d * q;
+                        return {
+                            prompt: `${n} ÷ ${d} = ?`,
+                            visual: null,
+                            answerType: 'number',
+                            answer: q,
+                            hints: [
+                                `Divide in chunks: what big chunk of ${n} is easy to divide by ${d}?`,
+                                `${d} × ${qt} = ${d * qt}. That leaves ${n - d * qt}.`,
+                                `${n - d * qt} ÷ ${d} = ${qo}. Add your chunks: ${qt} + ${qo}.`
+                            ],
+                            explain: `${n} ÷ ${d}: ${d} × ${qt} = ${d * qt}, leaving ${n - d * qt}; ${n - d * qt} ÷ ${d} = ${qo}. Answer: ${qt} + ${qo} = ${q}.`
+                        };
+                    }
+                },
+                {
+                    id: 'division-stories',
+                    title: 'Division Stories',
+                    standard: 'NC.4.OA.3',
+                    learnIntro: '<strong>What does the remainder MEAN?</strong><br>26 kids, vans hold 6 → 26 ÷ 6 = 4 R2.<br>You need 5 vans — the 2 extra kids still need a ride!',
+                    generate(level) {
+                        const item = themeThing();
+                        const name = heroName();
+                        const d = R.int(3, 8);
+                        const q = R.int(3, 9);
+                        if (level === 1) {
+                            const n = d * q;
+                            return {
+                                prompt: `${name} shares ${n} ${item.name} ${item.icon} equally among ${d} friends. How many does each friend get?`,
+                                visual: null,
+                                answerType: 'number',
+                                answer: q,
+                                hints: [`Think: ${d} × ? = ${n}.`],
+                                explain: `${n} ÷ ${d} = ${q} each.`
+                            };
+                        }
+                        const r = R.int(1, d - 1);
+                        const n = d * q + r;
+                        if (level === 2 || Math.random() < 0.5) {
+                            return {
+                                prompt: `${name} packs ${n} ${item.name} ${item.icon} into boxes of ${d}. How many ${item.name} are LEFT OVER?`,
+                                visual: null,
+                                answerType: 'number',
+                                answer: r,
+                                hints: [
+                                    `Fill as many boxes as you can: ${d} × ${q} = ${d * q}.`,
+                                    `${n} − ${d * q} = ?`
+                                ],
+                                explain: `${q} full boxes hold ${d * q}; ${n} − ${d * q} = ${r} left over.`
+                            };
+                        }
+                        return {
+                            prompt: `${n} kids are going on a trip. Each van holds ${d} kids. How many vans do they NEED?`,
+                            visual: null,
+                            answerType: 'number',
+                            answer: q + 1,
+                            hints: [
+                                `${n} ÷ ${d} = ${q} remainder ${r}.`,
+                                `${q} full vans carry ${d * q} kids... but ${r} kids are still standing there!`
+                            ],
+                            explain: `${q} vans fit ${d * q} kids; the last ${r} kids need one more van → ${q + 1} vans.`
+                        };
+                    }
+                }
+            ]
+        },
+        {
+            id: 'g4-fractions',
+            grade: 4,
+            title: 'Fraction Action',
+            icon: '🧩',
+            standard: 'NC.4.NF.1–4',
+            prereq: 'g4-div',
+            skills: [
+                {
+                    id: 'equivalent-fractions-4',
+                    title: 'Equivalent Fractions Pro',
+                    standard: 'NC.4.NF.1',
+                    learnIntro: '<strong>Scale up or down — top and bottom together!</strong><br>3/4 = 9/12 (both × 3). 10/15 = 2/3 (both ÷ 5).',
+                    generate(level) {
+                        const [a, b] = R.pick([[1, 2], [2, 3], [3, 4], [2, 5], [3, 5], [5, 6]]);
+                        const k = level === 1 ? R.int(2, 3) : R.int(2, 6);
+                        if (Math.random() < 0.5) {
+                            return {
+                                prompt: `Fill in the blank: ${a}/${b} = ?/${b * k}`,
+                                visual: null,
+                                answerType: 'number',
+                                answer: a * k,
+                                hints: [
+                                    `${b} was multiplied by ${k} to get ${b * k}.`,
+                                    `Multiply the top by ${k} too: ${a} × ${k}.`
+                                ],
+                                explain: `${a}/${b} = ${a * k}/${b * k} — both × ${k}.`
+                            };
+                        }
+                        return {
+                            prompt: `Fill in the blank: ${a}/${b} = ${a * k}/?`,
+                            visual: null,
+                            answerType: 'number',
+                            answer: b * k,
+                            hints: [
+                                `${a} was multiplied by ${k} to get ${a * k}.`,
+                                `Multiply the bottom by ${k} too: ${b} × ${k}.`
+                            ],
+                            explain: `${a}/${b} = ${a * k}/${b * k} — both × ${k}.`
+                        };
+                    }
+                },
+                {
+                    id: 'add-sub-fractions-like',
+                    title: 'Add & Subtract Fractions',
+                    standard: 'NC.4.NF.3',
+                    learnIntro: '<strong>Same-size pieces just add up!</strong><br>3/8 + 2/8 = 5/8. The pieces (eighths) don\'t change — only the count.',
+                    generate(level) {
+                        const d = R.pick(level === 1 ? [4, 5, 6] : [5, 6, 8, 10, 12]);
+                        const add = Math.random() < 0.6;
+                        if (add) {
+                            const a = R.int(1, d - 2);
+                            const c = R.int(1, d - 1 - a);
+                            return Object.assign({
+                                prompt: `${a}/${d} + ${c}/${d} = ? (Type it like 3/4)`,
+                                visual: level === 1 ? fractionPair(a, d, c, d) : null,
+                                answerType: 'fraction',
+                                hints: [
+                                    `The pieces are the same size — ${d}ths.`,
+                                    `Just add the counts: ${a} + ${c}. The bottom stays ${d}.`
+                                ],
+                                explain: `${a}/${d} + ${c}/${d} = ${a + c}/${d}.`
+                            }, frac(a + c, d));
+                        }
+                        const a = R.int(2, d - 1);
+                        const c = R.int(1, a - 1);
+                        return Object.assign({
+                            prompt: `${a}/${d} − ${c}/${d} = ? (Type it like 3/4)`,
+                            visual: null,
+                            answerType: 'fraction',
+                            hints: [
+                                `Same-size pieces (${d}ths) — subtract the counts.`,
+                                `${a} − ${c} = ?. The bottom stays ${d}.`
+                            ],
+                            explain: `${a}/${d} − ${c}/${d} = ${a - c}/${d}.`
+                        }, frac(a - c, d));
+                    }
+                },
+                {
+                    id: 'compare-unlike-fractions',
+                    title: 'Compare Unlike Fractions',
+                    standard: 'NC.4.NF.2',
+                    learnIntro: '<strong>Use 1/2 as your measuring stick!</strong><br>3/8 is less than a half; 5/9 is more than a half → 3/8 &lt; 5/9.<br>Or rename both with the same denominator.',
+                    generate(level) {
+                        let a1, d1, a2, d2;
+                        if (level === 3 && Math.random() < 0.2) {
+                            [a1, d1] = R.pick([[1, 2], [2, 3], [3, 4]]);
+                            const k = R.int(2, 3);
+                            a2 = a1 * k; d2 = d1 * k;
+                        } else {
+                            do {
+                                d1 = R.pick([2, 3, 4, 5, 8]);
+                                do { d2 = R.pick([3, 4, 5, 6, 8]); } while (d2 === d1);
+                                a1 = R.int(1, d1 - 1);
+                                a2 = R.int(1, d2 - 1);
+                            } while (level < 3 && a1 * d2 === a2 * d1);
+                        }
+                        const c1 = a1 * d2, c2 = a2 * d1;
+                        const answer = c1 < c2 ? '<' : c1 > c2 ? '>' : '=';
+                        return {
+                            prompt: `Which symbol makes this true?<br><span class="compare-nums">${a1}/${d1} &nbsp; ? &nbsp; ${a2}/${d2}</span>`,
+                            visual: level === 1 ? fractionPair(a1, d1, a2, d2) : null,
+                            answerType: 'choice',
+                            choices: ['<', '>', '='],
+                            answer,
+                            hints: [
+                                `Is each fraction more or less than one half?`,
+                                `Rename with the same bottom: ${a1}/${d1} = ${c1}/${d1 * d2} and ${a2}/${d2} = ${c2}/${d1 * d2}.`
+                            ],
+                            explain: `${a1}/${d1} = ${c1}/${d1 * d2} and ${a2}/${d2} = ${c2}/${d1 * d2}, so ${a1}/${d1} ${answer} ${a2}/${d2}.`
+                        };
+                    }
+                },
+                {
+                    id: 'fraction-of-number',
+                    title: 'Fraction of a Number',
+                    standard: 'NC.4.NF.4',
+                    learnIntro: '<strong>Divide, then multiply!</strong><br>2/3 of 12 → 12 ÷ 3 = 4 (that\'s 1/3), then 4 × 2 = <strong>8</strong>.',
+                    generate(level) {
+                        const b = level === 1 ? R.pick([2, 3, 4]) : R.int(2, 6);
+                        const a = level === 1 ? 1 : R.int(1, b - 1);
+                        const m = R.int(2, level === 3 ? 9 : 5);
+                        const n = b * m;
+                        return {
+                            prompt: level === 3 && Math.random() < 0.5
+                                ? `${n} × ${a}/${b} = ?`
+                                : `What is ${a}/${b} of ${n}?`,
+                            visual: null,
+                            answerType: 'number',
+                            answer: a * m,
+                            hints: [
+                                `First find 1/${b} of ${n}: divide ${n} ÷ ${b}.`,
+                                `1/${b} of ${n} is ${m}. Now take ${a} of those.`,
+                                `${m} × ${a} = ?`
+                            ],
+                            explain: `${n} ÷ ${b} = ${m}, then ${m} × ${a} = ${a * m}.`
+                        };
+                    }
+                }
+            ]
+        },
+        {
+            id: 'g4-decimals',
+            grade: 4,
+            title: 'Decimals, Measures & Angles',
+            icon: '📊',
+            standard: 'NC.4.NF.6–7, 4.MD',
+            prereq: 'g4-fractions',
+            skills: [
+                {
+                    id: 'decimals-intro',
+                    title: 'Meet the Decimals',
+                    standard: 'NC.4.NF.6–7',
+                    learnIntro: '<strong>Decimals are fractions in disguise!</strong><br>7/10 = 0.7 and 43/100 = 0.43.<br>The first spot after the point is tenths, the second is hundredths.',
+                    generate(level) {
+                        if (level === 1) {
+                            const t = R.int(1, 9);
+                            return {
+                                prompt: `Write ${t}/10 as a decimal. (Type it like 0.7)`,
+                                visual: fractionRect(10, t),
+                                answerType: 'text',
+                                answer: `0.${t}`,
+                                accept: [`.${t}`, `0.${t}0`],
+                                hints: [
+                                    `Tenths go in the FIRST spot after the decimal point.`,
+                                    `${t} tenths → 0 point ${t}.`
+                                ],
+                                explain: `${t}/10 = 0.${t}.`
+                            };
+                        }
+                        if (level === 2) {
+                            const hh = R.int(1, 99);
+                            const s = hh < 10 ? `0.0${hh}` : `0.${hh}`;
+                            return {
+                                prompt: `Write ${hh}/100 as a decimal. (Type it like 0.43)`,
+                                visual: null,
+                                answerType: 'text',
+                                answer: s,
+                                accept: [s.slice(1), hh % 10 === 0 ? `0.${hh / 10}` : s],
+                                hints: [
+                                    `Hundredths fill TWO spots after the decimal point.`,
+                                    `${hh} hundredths → ${s}.`
+                                ],
+                                explain: `${hh}/100 = ${s}.`
+                            };
+                        }
+                        const t = R.int(1, 9);
+                        let hh;
+                        do { hh = R.int(11, 99); } while (hh === t * 10);
+                        const a100 = t * 10, b100 = hh;
+                        const answer = a100 < b100 ? '<' : a100 > b100 ? '>' : '=';
+                        return {
+                            prompt: `Which symbol makes this true?<br><span class="compare-nums">0.${t} &nbsp; ? &nbsp; 0.${hh}</span>`,
+                            visual: null,
+                            answerType: 'choice',
+                            choices: ['<', '>', '='],
+                            answer,
+                            hints: [
+                                `Careful — more digits does NOT mean bigger!`,
+                                `Rename: 0.${t} = ${a100} hundredths, and 0.${hh} = ${b100} hundredths.`
+                            ],
+                            explain: `0.${t} = ${a100}/100 and 0.${hh} = ${b100}/100, so 0.${t} ${answer} 0.${hh}.`
+                        };
+                    }
+                },
+                {
+                    id: 'unit-conversions',
+                    title: 'Unit Conversions',
+                    standard: 'NC.4.MD.1',
+                    learnIntro: '<strong>Big units → small units: multiply!</strong><br>3 m = 3 × 100 = 300 cm. 2 hours = 2 × 60 = 120 minutes.',
+                    generate(level) {
+                        if (level === 3 && Math.random() < 0.5) {
+                            const kind = R.pick([
+                                { a: R.int(1, 4), b: R.int(1, 11) * 5, big: 'hours', small: 'minutes', f: 60 },
+                                { a: R.int(1, 5), b: R.int(1, 9) * 10, big: 'm', small: 'cm', f: 100 },
+                                { a: R.int(1, 4), b: R.int(5, 55), big: 'minutes', small: 'seconds', f: 60 }
+                            ]);
+                            return {
+                                prompt: `${kind.a} ${kind.big} ${kind.b} ${kind.small} = ? ${kind.small}`,
+                                visual: null,
+                                answerType: 'number',
+                                answer: kind.a * kind.f + kind.b,
+                                hints: [
+                                    `Convert the big unit first: ${kind.a} ${kind.big} = ${kind.a * kind.f} ${kind.small}.`,
+                                    `Then add the extra ${kind.b}.`
+                                ],
+                                explain: `${kind.a} × ${kind.f} = ${kind.a * kind.f}, plus ${kind.b} = ${kind.a * kind.f + kind.b} ${kind.small}.`
+                            };
+                        }
+                        const conv = R.pick([
+                            ['meters', 'centimeters', 100],
+                            ['kilometers', 'meters', 1000],
+                            ['kilograms', 'grams', 1000],
+                            ['liters', 'milliliters', 1000],
+                            ['minutes', 'seconds', 60],
+                            ['hours', 'minutes', 60],
+                            ['feet', 'inches', 12]
+                        ]);
+                        const n = R.int(2, 9);
+                        if (level === 2 && Math.random() < 0.4) {
+                            return {
+                                prompt: `${n * conv[2]} ${conv[1]} = ? ${conv[0]}`,
+                                visual: null,
+                                answerType: 'number',
+                                answer: n,
+                                hints: [
+                                    `1 ${conv[0].replace(/s$/, '')} = ${conv[2]} ${conv[1]}.`,
+                                    `How many groups of ${conv[2]} are in ${n * conv[2]}?`
+                                ],
+                                explain: `${n * conv[2]} ÷ ${conv[2]} = ${n} ${conv[0]}.`
+                            };
+                        }
+                        return {
+                            prompt: `${n} ${conv[0]} = ? ${conv[1]}`,
+                            visual: null,
+                            answerType: 'number',
+                            answer: n * conv[2],
+                            hints: [
+                                `1 ${conv[0].replace(/s$/, '')} = ${conv[2]} ${conv[1]}.`,
+                                `${n} × ${conv[2]} = ?`
+                            ],
+                            explain: `${n} × ${conv[2]} = ${n * conv[2]} ${conv[1]}.`
+                        };
+                    }
+                },
+                {
+                    id: 'angles',
+                    title: 'Angles',
+                    standard: 'NC.4.MD.6–7, 4.G.1',
+                    learnIntro: '<strong>Angles measure the turn between two rays!</strong><br>Right angle = 90° (a perfect corner). Acute = smaller. Obtuse = bigger.<br>A straight line is 180°.',
+                    generate(level) {
+                        if (level === 3) {
+                            const total = R.pick([90, 180]);
+                            const x = R.int(15, total - 15);
+                            return {
+                                prompt: `Two angles fit together to make a ${total === 90 ? 'right angle (90°)' : 'straight line (180°)'}. One angle is ${x}°. What is the other?`,
+                                visual: null,
+                                answerType: 'number',
+                                answer: total - x,
+                                hints: [
+                                    `The two angles add up to ${total}°.`,
+                                    `${total} − ${x} = ?`
+                                ],
+                                explain: `${x}° + ${total - x}° = ${total}°.`
+                            };
+                        }
+                        const kind = R.pick(level === 1
+                            ? [['Acute', R.int(20, 70)], ['Right', 90], ['Obtuse', R.int(110, 160)]]
+                            : [['Acute', R.int(15, 75)], ['Right', 90], ['Obtuse', R.int(105, 170)], ['Straight', 180]]);
+                        const choices = level === 1 ? ['Acute', 'Right', 'Obtuse'] : ['Acute', 'Right', 'Obtuse', 'Straight'];
+                        return {
+                            prompt: 'What kind of angle is this?',
+                            visual: angleSVG(kind[1]),
+                            answerType: 'choice',
+                            choices,
+                            answer: kind[0],
+                            hints: [
+                                `Compare it to a square corner (90°).`,
+                                `Smaller than a corner = acute. Bigger = obtuse. Exactly a corner = right.`
+                            ],
+                            explain: `This angle is ${kind[1]}° — ${kind[0].toLowerCase()}.`
+                        };
+                    }
+                }
+            ]
+        },
+        // ============ GRADE 5 ============
+        {
+            id: 'g5-ops',
+            grade: 5,
+            title: 'Powers & Order of Operations',
+            icon: '🧮',
+            standard: 'NC.5.OA, 5.NBT',
+            prereq: null,
+            skills: [
+                {
+                    id: 'order-of-ops',
+                    title: 'Order of Operations',
+                    standard: 'NC.5.OA.1',
+                    learnIntro: '<strong>There\'s an order!</strong><br>Parentheses first, then × and ÷, then + and −.<br>2 + 3 × 4 = 2 + 12 = <strong>14</strong> (not 20!).',
+                    generate(level) {
+                        const b = R.int(2, 9), c = R.int(2, 9);
+                        if (level === 1) {
+                            const a = R.int(2, 20);
+                            return {
+                                prompt: `${a} + ${b} × ${c} = ?`,
+                                visual: null,
+                                answerType: 'number',
+                                answer: a + b * c,
+                                hints: [
+                                    `Multiplication comes BEFORE addition.`,
+                                    `${b} × ${c} = ${b * c}. Now add ${a}.`
+                                ],
+                                explain: `Multiply first: ${b} × ${c} = ${b * c}, then ${a} + ${b * c} = ${a + b * c}.`
+                            };
+                        }
+                        if (level === 2) {
+                            if (Math.random() < 0.5) {
+                                const a = R.int(2, 9);
+                                return {
+                                    prompt: `(${a} + ${b}) × ${c} = ?`,
+                                    visual: null,
+                                    answerType: 'number',
+                                    answer: (a + b) * c,
+                                    hints: [
+                                        `Parentheses FIRST: ${a} + ${b} = ${a + b}.`,
+                                        `Now multiply by ${c}.`
+                                    ],
+                                    explain: `(${a} + ${b}) = ${a + b}, then ${a + b} × ${c} = ${(a + b) * c}.`
+                                };
+                            }
+                            const a = R.int(3, 9), sub = R.int(2, a * b - 2);
+                            return {
+                                prompt: `${a} × ${b} − ${sub} = ?`,
+                                visual: null,
+                                answerType: 'number',
+                                answer: a * b - sub,
+                                hints: [
+                                    `Multiply first: ${a} × ${b} = ${a * b}.`,
+                                    `${a * b} − ${sub} = ?`
+                                ],
+                                explain: `${a} × ${b} = ${a * b}, then − ${sub} = ${a * b - sub}.`
+                            };
+                        }
+                        if (Math.random() < 0.5) {
+                            const a = R.int(2, 8), d = R.int(2, 8);
+                            return {
+                                prompt: `${a} × ${b} + ${c} × ${d} = ?`,
+                                visual: null,
+                                answerType: 'number',
+                                answer: a * b + c * d,
+                                hints: [
+                                    `Do BOTH multiplications first.`,
+                                    `${a} × ${b} = ${a * b} and ${c} × ${d} = ${c * d}.`
+                                ],
+                                explain: `${a * b} + ${c * d} = ${a * b + c * d}.`
+                            };
+                        }
+                        const a = R.int(2, 9);
+                        const base = (a + b) * c;
+                        const d2 = R.int(2, base - 2);
+                        return {
+                            prompt: `(${a} + ${b}) × ${c} − ${d2} = ?`,
+                            visual: null,
+                            answerType: 'number',
+                            answer: base - d2,
+                            hints: [
+                                `Parentheses first: ${a} + ${b} = ${a + b}.`,
+                                `Then multiply: ${a + b} × ${c} = ${base}.`,
+                                `Finally subtract ${d2}.`
+                            ],
+                            explain: `(${a}+${b}) = ${a + b}; × ${c} = ${base}; − ${d2} = ${base - d2}.`
+                        };
+                    }
+                },
+                {
+                    id: 'multiply-2x2',
+                    title: '2-Digit × 2-Digit',
+                    standard: 'NC.5.NBT.5',
+                    learnIntro: '<strong>Break one number apart!</strong><br>23 × 45 = 23 × 40 + 23 × 5 = 920 + 115 = <strong>1,035</strong>.',
+                    generate(level) {
+                        const a = level === 1 ? R.int(12, 25) : level === 2 ? R.int(13, 45) : R.int(22, 79);
+                        const b = level === 1 ? R.int(11, 15) : level === 2 ? R.int(12, 25) : R.int(13, 49);
+                        const bt = Math.floor(b / 10) * 10, bo = b % 10;
+                        return {
+                            prompt: `${a} × ${b} = ?`,
+                            visual: null,
+                            answerType: 'number',
+                            answer: a * b,
+                            hints: [
+                                `Break ${b} apart: ${bt} + ${bo}.`,
+                                `${a} × ${bt} = ${a * bt}, and ${a} × ${bo} = ${a * bo}.`,
+                                `${a * bt} + ${a * bo} = ?`
+                            ],
+                            explain: `${a} × ${b} = ${a} × ${bt} + ${a} × ${bo} = ${a * bt} + ${a * bo} = ${a * b}.`
+                        };
+                    }
+                },
+                {
+                    id: 'powers-of-ten',
+                    title: 'Multiply & Divide by 10, 100, 1000',
+                    standard: 'NC.5.NBT.2',
+                    learnIntro: '<strong>Digits shift, they don\'t change!</strong><br>× 10 makes every digit worth 10× more: 3.6 × 10 = 36.<br>÷ 10 does the opposite: 45 ÷ 10 = 4.5.',
+                    generate(level) {
+                        if (level === 1) {
+                            const n = R.int(3, 95), p = R.pick([10, 100]);
+                            return {
+                                prompt: `${n} × ${p} = ?`,
+                                visual: null,
+                                answerType: 'number',
+                                answer: n * p,
+                                hints: [`× ${p} shifts every digit ${p === 10 ? 'one place' : 'two places'} bigger.`],
+                                explain: `${n} × ${p} = ${n * p}.`
+                            };
+                        }
+                        if (level === 2) {
+                            const p = R.pick([10, 100]);
+                            const n = R.int(2, 90) * p;
+                            return {
+                                prompt: `${n} ÷ ${p} = ?`,
+                                visual: null,
+                                answerType: 'number',
+                                answer: n / p,
+                                hints: [`÷ ${p} shifts every digit ${p === 10 ? 'one place' : 'two places'} smaller.`],
+                                explain: `${n} ÷ ${p} = ${n / p}.`
+                            };
+                        }
+                        let k;
+                        do { k = R.int(11, 99); } while (k % 10 === 0);
+                        const form = R.pick(['dx10', 'dx100', 'div10', 'div100']);
+                        const map = {
+                            dx10: { prompt: `${k / 10} × 10 = ?`, answer: k, explain: `${k / 10} × 10 = ${k} — the decimal point hops one place right.` },
+                            dx100: { prompt: `${k / 10} × 100 = ?`, answer: k * 10, explain: `${k / 10} × 100 = ${k * 10} — two hops right.` },
+                            div10: { prompt: `${k} ÷ 10 = ?`, answer: k / 10, explain: `${k} ÷ 10 = ${k / 10} — one hop left.` },
+                            div100: { prompt: `${k} ÷ 100 = ?`, answer: k / 100, explain: `${k} ÷ 100 = ${k / 100} — two hops left.` }
+                        };
+                        const it = map[form];
+                        return {
+                            prompt: it.prompt,
+                            visual: null,
+                            answerType: 'number',
+                            answer: it.answer,
+                            hints: [
+                                `The digits stay the same — only their places change.`,
+                                `Multiplying hops the decimal point right; dividing hops it left.`
+                            ],
+                            explain: it.explain
+                        };
+                    }
+                }
+            ]
+        },
+        {
+            id: 'g5-decimals',
+            grade: 5,
+            title: 'Decimal Mastery',
+            icon: '💎',
+            standard: 'NC.5.NBT.7',
+            prereq: 'g5-ops',
+            skills: [
+                {
+                    id: 'add-sub-decimals',
+                    title: 'Add & Subtract Decimals',
+                    standard: 'NC.5.NBT.7',
+                    learnIntro: '<strong>Line up the decimal points!</strong><br>3.45 + 2.3 → think 3.45 + 2.30 = <strong>5.75</strong>.<br>Tenths with tenths, hundredths with hundredths.',
+                    generate(level) {
+                        const add = Math.random() < 0.6;
+                        let A, B, scale;
+                        if (level === 1) {
+                            scale = 10;
+                            do { A = R.int(add ? 12 : 25, 95); } while (A % 10 === 0);
+                            do { B = R.int(11, add ? 84 : A - 8); } while (B % 10 === 0);
+                        } else {
+                            scale = 100;
+                            do { A = R.int(120, 899); } while (A % 100 === 0);
+                            B = level === 2 ? R.int(11, 89) * 10 : (Math.random() < 0.5 ? R.int(11, 89) * 10 : R.int(105, 850));
+                            if (!add && B >= A) B = A - R.int(15, 100);
+                            if (B % 100 === 0) B = add ? B + 30 : B - 30;
+                        }
+                        const ans = add ? (A + B) / scale : (A - B) / scale;
+                        const dA = A / scale, dB = B / scale;
+                        return {
+                            prompt: `${dA} ${add ? '+' : '−'} ${dB} = ?`,
+                            visual: null,
+                            answerType: 'number',
+                            answer: ans,
+                            hints: [
+                                `Line up the decimal points before you ${add ? 'add' : 'subtract'}.`,
+                                `Give both numbers the same number of decimal places (add a zero if needed).`,
+                                `Think money: $${dA.toFixed(2)} ${add ? '+' : '−'} $${dB.toFixed(2)}.`
+                            ],
+                            explain: `${dA} ${add ? '+' : '−'} ${dB} = ${ans}. Lining up the points keeps tenths with tenths.`
+                        };
+                    }
+                },
+                {
+                    id: 'multiply-decimals',
+                    title: 'Multiply Decimals',
+                    standard: 'NC.5.NBT.7',
+                    learnIntro: '<strong>Multiply, then place the point!</strong><br>0.4 × 6: think 4 × 6 = 24. One decimal place in the problem → one in the answer: <strong>2.4</strong>.',
+                    generate(level) {
+                        if (level === 1) {
+                            const t = R.int(2, 9), b = R.int(2, 9);
+                            return {
+                                prompt: `0.${t} × ${b} = ?`,
+                                visual: null,
+                                answerType: 'number',
+                                answer: t * b / 10,
+                                hints: [
+                                    `First multiply like whole numbers: ${t} × ${b} = ${t * b}.`,
+                                    `The problem has ONE decimal place, so the answer needs one too.`
+                                ],
+                                explain: `${t} × ${b} = ${t * b}; one decimal place → ${t * b / 10}.`
+                            };
+                        }
+                        if (level === 2) {
+                            const t1 = R.int(2, 9), t2 = R.int(2, 9);
+                            return {
+                                prompt: `0.${t1} × 0.${t2} = ?`,
+                                visual: null,
+                                answerType: 'number',
+                                answer: t1 * t2 / 100,
+                                hints: [
+                                    `Multiply like whole numbers: ${t1} × ${t2} = ${t1 * t2}.`,
+                                    `Count decimal places in the problem: 1 + 1 = 2. The answer needs TWO.`
+                                ],
+                                explain: `${t1} × ${t2} = ${t1 * t2}; two decimal places → ${t1 * t2 / 100}.`
+                            };
+                        }
+                        let k;
+                        do { k = R.int(11, 49); } while (k % 10 === 0);
+                        const b = R.int(2, 8);
+                        return {
+                            prompt: `${k / 10} × ${b} = ?`,
+                            visual: null,
+                            answerType: 'number',
+                            answer: k * b / 10,
+                            hints: [
+                                `Think ${k} × ${b} = ${k * b} first.`,
+                                `One decimal place in the problem → one in the answer.`
+                            ],
+                            explain: `${k} × ${b} = ${k * b}; one decimal place → ${k * b / 10}.`
+                        };
+                    }
+                },
+                {
+                    id: 'divide-decimals',
+                    title: 'Divide Decimals',
+                    standard: 'NC.5.NBT.7',
+                    learnIntro: '<strong>Share it out evenly!</strong><br>6.4 ÷ 8: think 64 tenths ÷ 8 = 8 tenths = <strong>0.8</strong>.',
+                    generate(level) {
+                        if (level < 3) {
+                            const d = R.int(2, 9);
+                            let t;
+                            if (level === 1) t = R.int(2, 9);
+                            else do { t = R.int(11, 96); } while (t % 10 === 0);
+                            const n = t * d / 10;
+                            return {
+                                prompt: `${n} ÷ ${d} = ?`,
+                                visual: null,
+                                answerType: 'number',
+                                answer: t / 10,
+                                hints: [
+                                    `Think in tenths: ${n} is ${t * d} tenths.`,
+                                    `${t * d} tenths ÷ ${d} = ${t} tenths.`
+                                ],
+                                explain: `${t * d} tenths ÷ ${d} = ${t} tenths = ${t / 10}.`
+                            };
+                        }
+                        const d = R.pick([2, 4, 5]);
+                        let n;
+                        do { n = R.int(3, 42); } while (n % d === 0);
+                        return {
+                            prompt: `${n} ÷ ${d} = ?`,
+                            visual: null,
+                            answerType: 'number',
+                            answer: n / d,
+                            hints: [
+                                `It doesn't come out even — the answer is a decimal.`,
+                                `${d} × ${Math.floor(n / d)} = ${d * Math.floor(n / d)}, so the answer is ${Math.floor(n / d)} point something.`,
+                                `Think money: ${n} dollars shared by ${d} people.`
+                            ],
+                            explain: `${n} ÷ ${d} = ${n / d}, because ${d} × ${n / d} = ${n}.`
+                        };
+                    }
+                }
+            ]
+        },
+        {
+            id: 'g5-fractions',
+            grade: 5,
+            title: 'Fraction Pro',
+            icon: '🏆',
+            standard: 'NC.5.NF',
+            prereq: 'g5-decimals',
+            skills: [
+                {
+                    id: 'add-unlike-fractions',
+                    title: 'Add & Subtract Unlike Fractions',
+                    standard: 'NC.5.NF.1',
+                    learnIntro: '<strong>Different-size pieces? Rename first!</strong><br>1/2 + 1/4 → 1/2 = 2/4, so 2/4 + 1/4 = <strong>3/4</strong>.',
+                    generate(level) {
+                        if (level < 3) {
+                            const [d1, d2] = R.pick([[2, 4], [2, 6], [3, 6], [2, 8], [4, 8], [5, 10], [2, 10], [3, 9], [4, 12]]);
+                            const k = d2 / d1;
+                            if (level === 1) {
+                                const a2 = R.int(1, d2 - k - 1);
+                                return Object.assign({
+                                    prompt: `1/${d1} + ${a2}/${d2} = ? (Type it like 3/4)`,
+                                    visual: null,
+                                    answerType: 'fraction',
+                                    hints: [
+                                        `The pieces are different sizes! Rename 1/${d1} as ${d2}ths.`,
+                                        `1/${d1} = ${k}/${d2}.`,
+                                        `${k}/${d2} + ${a2}/${d2} = ?`
+                                    ],
+                                    explain: `1/${d1} = ${k}/${d2}, so ${k}/${d2} + ${a2}/${d2} = ${fracStr(k + a2, d2)}.`
+                                }, frac(k + a2, d2));
+                            }
+                            const a1 = R.int(1, d1 - 1);
+                            const a2 = R.int(1, d2 - 1);
+                            const add = Math.random() < 0.6;
+                            const n1 = a1 * k;
+                            if (add) {
+                                return Object.assign({
+                                    prompt: `${a1}/${d1} + ${a2}/${d2} = ? (Type it like 3/4)`,
+                                    visual: null,
+                                    answerType: 'fraction',
+                                    hints: [
+                                        `Rename ${a1}/${d1} as ${d2}ths first.`,
+                                        `${a1}/${d1} = ${n1}/${d2}.`,
+                                        `${n1}/${d2} + ${a2}/${d2} = ?`
+                                    ],
+                                    explain: `${a1}/${d1} = ${n1}/${d2}; ${n1}/${d2} + ${a2}/${d2} = ${fracStr(n1 + a2, d2)}.`
+                                }, frac(n1 + a2, d2));
+                            }
+                            const [big, small] = n1 >= a2 ? [n1, a2] : [a2, n1];
+                            const [bs, ss] = n1 >= a2 ? [`${a1}/${d1}`, `${a2}/${d2}`] : [`${a2}/${d2}`, `${a1}/${d1}`];
+                            if (big === small) return this.generate(level); // avoid zero answers
+                            return Object.assign({
+                                prompt: `${bs} − ${ss} = ? (Type it like 3/4)`,
+                                visual: null,
+                                answerType: 'fraction',
+                                hints: [
+                                    `Rename both as ${d2}ths first.`,
+                                    `That gives ${big}/${d2} − ${small}/${d2}.`
+                                ],
+                                explain: `As ${d2}ths: ${big}/${d2} − ${small}/${d2} = ${fracStr(big - small, d2)}.`
+                            }, frac(big - small, d2));
+                        }
+                        const [d1, d2] = R.pick([[2, 3], [3, 4], [2, 5], [3, 5], [4, 5], [2, 7]]);
+                        const a1 = R.int(1, d1 - 1), a2 = R.int(1, d2 - 1);
+                        const lcd = d1 * d2;
+                        const n1 = a1 * d2, n2 = a2 * d1;
+                        const add = Math.random() < 0.6 || n1 === n2;
+                        if (add) {
+                            return Object.assign({
+                                prompt: `${a1}/${d1} + ${a2}/${d2} = ? (Type it like 3/4)`,
+                                visual: null,
+                                answerType: 'fraction',
+                                hints: [
+                                    `Find a common denominator: ${d1} × ${d2} = ${lcd}.`,
+                                    `${a1}/${d1} = ${n1}/${lcd} and ${a2}/${d2} = ${n2}/${lcd}.`,
+                                    `${n1}/${lcd} + ${n2}/${lcd} = ?`
+                                ],
+                                explain: `${n1}/${lcd} + ${n2}/${lcd} = ${fracStr(n1 + n2, lcd)}.`
+                            }, frac(n1 + n2, lcd));
+                        }
+                        const [big, small] = n1 >= n2 ? [n1, n2] : [n2, n1];
+                        const [bs, ss] = n1 >= n2 ? [`${a1}/${d1}`, `${a2}/${d2}`] : [`${a2}/${d2}`, `${a1}/${d1}`];
+                        return Object.assign({
+                            prompt: `${bs} − ${ss} = ? (Type it like 3/4)`,
+                            visual: null,
+                            answerType: 'fraction',
+                            hints: [
+                                `Common denominator: ${d1} × ${d2} = ${lcd}.`,
+                                `That gives ${big}/${lcd} − ${small}/${lcd}.`
+                            ],
+                            explain: `${big}/${lcd} − ${small}/${lcd} = ${fracStr(big - small, lcd)}.`
+                        }, frac(big - small, lcd));
+                    }
+                },
+                {
+                    id: 'multiply-fractions',
+                    title: 'Multiply Fractions',
+                    standard: 'NC.5.NF.4',
+                    learnIntro: '<strong>Top × top, bottom × bottom!</strong><br>2/3 × 4/5 = (2×4)/(3×5) = <strong>8/15</strong>.<br>Multiplying by a fraction makes things SMALLER — you\'re taking a part of a part!',
+                    generate(level) {
+                        const b = level === 1 ? R.pick([2, 3, 4]) : R.int(2, level === 2 ? 5 : 6);
+                        const d = level === 1 ? R.pick([2, 3, 4]) : R.int(2, level === 2 ? 5 : 6);
+                        const a = level === 1 ? 1 : R.int(1, b - 1);
+                        const c = level === 1 ? 1 : R.int(1, d - 1);
+                        return Object.assign({
+                            prompt: `${a}/${b} × ${c}/${d} = ? (Type it like 3/4)`,
+                            visual: null,
+                            answerType: 'fraction',
+                            hints: [
+                                `Multiply the tops: ${a} × ${c} = ${a * c}.`,
+                                `Multiply the bottoms: ${b} × ${d} = ${b * d}.`
+                            ],
+                            explain: `${a}/${b} × ${c}/${d} = ${a * c}/${b * d}${fracStr(a * c, b * d) !== `${a * c}/${b * d}` ? ` = ${fracStr(a * c, b * d)}` : ''}.`
+                        }, frac(a * c, b * d));
+                    }
+                },
+                {
+                    id: 'divide-unit-fractions',
+                    title: 'Divide with Unit Fractions',
+                    standard: 'NC.5.NF.7',
+                    learnIntro: '<strong>Ask: how many pieces fit?</strong><br>3 ÷ 1/4 asks "how many quarter-pieces are in 3 wholes?"<br>Each whole holds 4 → 3 × 4 = <strong>12</strong>.',
+                    generate(level) {
+                        const n = R.int(2, 6);
+                        const b = R.int(2, 6);
+                        if (level < 3 || Math.random() < 0.5) {
+                            return {
+                                prompt: `${n} ÷ 1/${b} = ?`,
+                                visual: null,
+                                answerType: 'number',
+                                answer: n * b,
+                                hints: [
+                                    `How many 1/${b}-size pieces fit in ${n} wholes?`,
+                                    `Each whole holds ${b} pieces. There are ${n} wholes.`,
+                                    `${n} × ${b} = ?`
+                                ],
+                                explain: `Each whole has ${b} pieces of size 1/${b}; ${n} wholes → ${n} × ${b} = ${n * b}.`
+                            };
+                        }
+                        return Object.assign({
+                            prompt: `1/${b} ÷ ${n} = ? (Type it like 1/8)`,
+                            visual: null,
+                            answerType: 'fraction',
+                            hints: [
+                                `You are splitting 1/${b} into ${n} equal shares.`,
+                                `Each share is ${n} times smaller: the bottom becomes ${b} × ${n}.`
+                            ],
+                            explain: `1/${b} split ${n} ways → 1/${b * n}.`
+                        }, frac(1, b * n));
+                    }
+                }
+            ]
+        },
+        {
+            id: 'g5-space',
+            grade: 5,
+            title: 'Volume & the Coordinate Plane',
+            icon: '📦',
+            standard: 'NC.5.MD.4–5, 5.G.1',
+            prereq: 'g5-fractions',
+            skills: [
+                {
+                    id: 'volume',
+                    title: 'Volume of Boxes',
+                    standard: 'NC.5.MD.5',
+                    learnIntro: '<strong>Volume = layers of cubes!</strong><br>One layer holds length × width cubes. Stack the layers: × height.<br>4 × 3 × 2 = <strong>24</strong> cubic units.',
+                    generate(level) {
+                        const l = level === 3 ? R.int(3, 9) : R.int(2, 6);
+                        const w = level === 3 ? R.int(2, 9) : R.int(2, 4);
+                        const h = level === 3 ? R.int(2, 9) : R.int(2, 5);
+                        if (level === 3) {
+                            return {
+                                prompt: `A box is ${l} units long, ${w} units wide, and ${h} units tall. What is its VOLUME in cubic units?`,
+                                visual: null,
+                                answerType: 'number',
+                                answer: l * w * h,
+                                hints: [
+                                    `One layer of cubes: ${l} × ${w} = ${l * w}.`,
+                                    `There are ${h} layers: ${l * w} × ${h} = ?`
+                                ],
+                                explain: `${l} × ${w} × ${h} = ${l * w * h} cubic units.`
+                            };
+                        }
+                        return {
+                            prompt: `How many unit cubes fit inside this box (its volume)?`,
+                            visual: boxSVG(l, w, h),
+                            answerType: 'number',
+                            answer: l * w * h,
+                            hints: [
+                                `Start with the bottom layer: ${l} × ${w} cubes.`,
+                                `The bottom layer holds ${l * w}. Stack ${h} layers.`,
+                                `${l * w} × ${h} = ?`
+                            ],
+                            explain: `Each layer: ${l} × ${w} = ${l * w}; ${h} layers → ${l * w * h} cubic units.`
+                        };
+                    }
+                },
+                {
+                    id: 'coordinate-plane',
+                    title: 'The Coordinate Plane',
+                    standard: 'NC.5.G.1',
+                    learnIntro: '<strong>Over, then up!</strong><br>The point (3, 4) means: go 3 RIGHT, then 4 UP.<br>x comes first, y comes second — alphabetical order!',
+                    generate(level) {
+                        if (level === 3) {
+                            const x = R.int(1, 5), y = R.int(1, 5);
+                            const dx = R.int(1, 4), dy = R.int(1, 4);
+                            const askX = Math.random() < 0.5;
+                            return {
+                                prompt: `Start at the point (${x}, ${y}). Move ${dx} right and ${dy} up. What is the ${askX ? 'x' : 'y'}-coordinate of where you land?`,
+                                visual: null,
+                                answerType: 'number',
+                                answer: askX ? x + dx : y + dy,
+                                hints: [
+                                    `Moving right changes x. Moving up changes y.`,
+                                    askX ? `${x} + ${dx} = ?` : `${y} + ${dy} = ?`
+                                ],
+                                explain: `You land at (${x + dx}, ${y + dy}); the ${askX ? 'x' : 'y'}-coordinate is ${askX ? x + dx : y + dy}.`
+                            };
+                        }
+                        const x = R.int(1, 8), y = R.int(1, 8);
+                        const askX = Math.random() < 0.5;
+                        return {
+                            prompt: `What is the ${askX ? 'x' : 'y'}-coordinate of the point?`,
+                            visual: coordPlaneSVG(x, y),
+                            answerType: 'number',
+                            answer: askX ? x : y,
+                            hints: [
+                                `x tells how far RIGHT from 0. y tells how far UP.`,
+                                askX ? `Count the steps to the right.` : `Count the steps going up.`
+                            ],
+                            explain: `The point is at (${x}, ${y}) — ${askX ? 'x' : 'y'} is ${askX ? x : y}.`
+                        };
+                    }
+                }
+            ]
+        },
     ]
 };
 

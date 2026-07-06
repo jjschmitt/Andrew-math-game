@@ -1,6 +1,8 @@
-# 🌟 Math Adventure — 2nd Grade Mastery Quest
+# 🌟 Math Adventure — Mastery Quest (Grades 2–5)
 
-An interactive math game for 2nd graders, built around how kids actually learn: **mastery before moving on**, **effortful retrieval**, and **the right cognitive load at the right moment**. Pick a Pokémon ⚡ or Mario 🍄 buddy and work through a learning path aligned to NC / Common Core 2nd grade standards.
+An interactive math game built around how kids actually learn: **mastery before moving on**, **effortful retrieval**, and **the right cognitive load at the right moment**. Pick a Pokémon ⚡ or Mario 🍄 buddy and work through a learning path aligned to NC / Common Core standards.
+
+The game **starts at 2nd grade and secretly contains 3rd–5th grade too**: nothing about the higher grades is shown anywhere in the UI until every skill of the current grade is mastered — then a "GRADE LEVEL UP" celebration fires and the next grade's units simply appear on the map. From the child's point of view, the game just keeps growing as they conquer it.
 
 ## 🚀 How to Play
 
@@ -31,7 +33,9 @@ Progress saves automatically in the browser (localStorage), so the game remember
 - One problem, one screen, no timers — working memory goes to the math, not the interface.
 - Wrong answers end with a short **worked explanation** ("62 − 38: 62 − 30 = 32, 32 − 8 = 24"), then a *similar* problem — never the same one, so the child can't just copy the answer.
 
-## 📚 Curriculum (NC / CCSS Grade 2)
+## 📚 Curriculum (NC / CCSS, Grades 2–5)
+
+### Grade 2 (visible from the start)
 
 | Unit | Skills | Standards |
 |---|---|---|
@@ -44,7 +48,34 @@ Progress saves automatically in the browser (localStorage), so the game remember
 | 📏 Measurement | Comparing lengths, length word problems | 2.MD.4–5 |
 | 🔷 Shapes, Sharing & Arrays | Odd/even, arrays & repeated addition, shapes, halves/thirds/fourths | 2.G.1–3, 2.OA.3–4 |
 
-The standard being practiced is shown on every problem, and strategy hints teach the mental-math strategies 2nd grade teachers use (make a ten, think addition, add tens then ones, count up for change).
+### Grade 3 (appears when all of grade 2 is mastered)
+
+| Unit | Skills | Standards |
+|---|---|---|
+| ✖️ Multiplication Power | ×2/5/10 facts, all times tables, division facts, equal-group stories | 3.OA.1–7 |
+| 🎯 Rounding & Bigger Moves | Rounding to 10s/100s, multiply by tens, two-step stories with × | 3.NBT, 3.OA.8 |
+| 🍕 Fraction Foundations | Naming fractions, number line, comparing, equivalent fractions | 3.NF.1–3 |
+| 📐 Area, Perimeter & Time | Area of rectangles, perimeter, elapsed time | 3.MD.1, 3.MD.7–8 |
+
+### Grade 4 (appears when all of grade 3 is mastered)
+
+| Unit | Skills | Standards |
+|---|---|---|
+| 🚀 Multiply Big | 2-digit × 1-digit, bigger multiplication, factors & primes, multi-step stories | 4.NBT.5, 4.OA.3–4 |
+| ➗ Divide & Conquer | Remainders, dividing bigger numbers, interpreting-the-remainder stories | 4.NBT.6, 4.OA.3 |
+| 🧩 Fraction Action | Equivalents, add/subtract like fractions, compare unlike, fraction of a number | 4.NF.1–4 |
+| 📊 Decimals, Measures & Angles | Decimal notation & comparison, unit conversions, angle types & angle math | 4.NF.6–7, 4.MD |
+
+### Grade 5 (appears when all of grade 4 is mastered)
+
+| Unit | Skills | Standards |
+|---|---|---|
+| 🧮 Powers & Order of Operations | Order of operations, 2-digit × 2-digit, ×/÷ by 10/100/1000 | 5.OA.1, 5.NBT.2, 5.NBT.5 |
+| 💎 Decimal Mastery | Add/subtract, multiply, and divide decimals | 5.NBT.7 |
+| 🏆 Fraction Pro | Add/subtract unlike fractions, multiply fractions, divide with unit fractions | 5.NF.1, 5.NF.4, 5.NF.7 |
+| 📦 Volume & the Coordinate Plane | Volume of boxes, coordinates | 5.MD.5, 5.G.1 |
+
+The standard being practiced is shown on every problem, and strategy hints teach the mental-math strategies teachers use at each grade (make a ten, break numbers apart, common denominators, count up for change). Fraction answers accept any equivalent form (3/4, 6/8, or 1 1/2 for 3/2).
 
 ## 👨‍👩‍👧 For Parents
 
@@ -55,8 +86,8 @@ The standard being practiced is shown on every problem, and strategy hints teach
 ## 🛠️ Technical Details
 
 - Pure HTML, CSS, and JavaScript — no dependencies, no build step.
-- `curriculum.js` — 27 skill definitions with problem generators at three scaffold levels, hints, and worked explanations.
-- `engine.js` — mastery tracking, spaced-review scheduling, adaptive scaffolding, theming, and localStorage persistence.
+- `curriculum.js` — 66 skill definitions across grades 2–5, each with problem generators at three scaffold levels, hints, and worked explanations.
+- `engine.js` — mastery tracking, grade-tier gating, spaced-review scheduling, adaptive scaffolding, theming, and localStorage persistence.
 - To reset all progress, run `localStorage.removeItem('math-adventure-grade2-v1')` in the browser console.
 
 ## 📝 License
