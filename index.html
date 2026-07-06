@@ -3,259 +3,117 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Math Adventure - Fun Math Game!</title>
+    <title>Math Adventure - 2nd Grade Mastery Quest!</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
         <header>
+            <button id="home-btn" class="home-btn" title="Home">🏠</button>
             <h1>🌟 Math Adventure! 🌟</h1>
-            <div class="score-board">
-                <div class="score-item">
-                    <span class="label">Score:</span>
-                    <span id="score" class="value">0</span>
-                </div>
-                <div class="score-item">
-                    <span class="label">Streak:</span>
-                    <span id="streak" class="value">0</span>
-                </div>
-                <div class="score-item">
-                    <span class="label">Level:</span>
-                    <span id="level" class="value">1</span>
-                </div>
+            <div class="star-pill">
+                <span id="currency-icon">🔴</span>
+                <span id="star-count">0</span>
             </div>
         </header>
 
+        <!-- ============ START SCREEN ============ -->
         <div id="start-screen" class="screen active">
-            <h2>Welcome to Math Adventure! 🚀</h2>
-            <p>Choose your adventure:</p>
+            <h2 class="welcome-title">2nd Grade Mastery Quest 🚀</h2>
+            <p class="welcome-sub">Pick your adventure buddy:</p>
 
-            <!-- Themed Math Adventures -->
-            <div class="themed-adventures">
-                <div class="pokemon-start-button">
-                    <button id="pokemon-mode-btn" class="themed-btn pokemon-btn">
-                        ⚡ Pokemon Math Adventures!
-                        <span class="subtitle">1st Grade Math Standards</span>
-                    </button>
-                </div>
-                <div class="mario-start-button">
-                    <button id="mario-mode-btn" class="themed-btn mario-btn">
-                        🍄 Super Mario Math World!
-                        <span class="subtitle">1st Grade Math Standards</span>
-                    </button>
-                </div>
+            <div class="theme-row">
+                <button class="theme-btn pokemon" data-theme="pokemon">
+                    <span class="theme-icon">⚡</span>
+                    <span class="theme-name">Pokémon</span>
+                </button>
+                <button class="theme-btn mario" data-theme="mario">
+                    <span class="theme-icon">🍄</span>
+                    <span class="theme-name">Mario</span>
+                </button>
             </div>
 
-            <div class="section-divider">
-                <h3>⚡ OR ⚡</h3>
+            <div id="progress-summary" class="progress-summary"></div>
+
+            <div class="start-actions">
+                <button id="path-btn" class="big-btn primary">
+                    🗺️ Learning Path
+                    <span class="btn-sub">Master skills one at a time</span>
+                </button>
+                <button id="warmup-btn" class="big-btn secondary">
+                    🔥 Flashback Warm-Up
+                    <span class="btn-sub">Master a skill first to unlock</span>
+                </button>
             </div>
 
-            <!-- Original Practice Modes -->
-            <p style="font-size: 1.2em; margin-top: 20px;">Quick Practice:</p>
-            <div class="difficulty-buttons">
-                <button class="difficulty-btn" data-mode="addition">➕ Addition</button>
-                <button class="difficulty-btn" data-mode="subtraction">➖ Subtraction</button>
-                <button class="difficulty-btn" data-mode="multiplication">✖️ Multiplication</button>
-                <button class="difficulty-btn" data-mode="mixed">🎯 Mixed Challenge</button>
-            </div>
+            <details class="parent-note">
+                <summary>👨‍👩‍👧 For grown-ups: how this game teaches</summary>
+                <ul>
+                    <li><strong>Mastery before moving on</strong> — each skill unlocks only after the one before it is truly mastered (correct answers <em>plus</em> a finishing streak).</li>
+                    <li><strong>Effortful retrieval</strong> — answers are typed from memory, hints appear only on request, and mastered skills return as spaced "Flashback" questions on an expanding schedule.</li>
+                    <li><strong>The right cognitive load</strong> — new skills begin with a worked example and visual models (ten frames, base-ten blocks); the supports fade as your child succeeds and quietly return after repeated mistakes.</li>
+                    <li>Aligned to <strong>NC / Common Core 2nd grade standards</strong> (shown on every problem).</li>
+                </ul>
+            </details>
         </div>
 
-        <div id="game-screen" class="screen">
-            <div class="question-container">
-                <h2 id="question" class="question">5 + 3 = ?</h2>
-                <div class="answer-input-container">
-                    <input type="number" id="answer-input" placeholder="Type your answer" autocomplete="off">
-                    <button id="submit-btn" class="submit-btn">Check Answer!</button>
-                </div>
-            </div>
-
-            <div id="feedback" class="feedback"></div>
-
-            <div class="options-container" id="options-container">
-                <!-- Multiple choice buttons will be generated here -->
-            </div>
-
-            <div class="game-controls">
-                <button id="skip-btn" class="control-btn">Skip Question</button>
-                <button id="hint-btn" class="control-btn">Get Hint</button>
-                <button id="quit-btn" class="control-btn quit">Back to Menu</button>
-            </div>
+        <!-- ============ PATH SCREEN ============ -->
+        <div id="path-screen" class="screen">
+            <h2 class="path-title">🗺️ Your Learning Path</h2>
+            <p class="path-sub">Master each skill to unlock the next one!</p>
+            <div id="path-units" class="path-units"></div>
         </div>
 
-        <!-- Pokemon Math Adventures Section -->
-        <div id="pokemon-category-screen" class="screen">
-            <h2 class="pokemon-title">⚡ Pokemon Math Adventures! ⚡</h2>
-            <p class="pokemon-subtitle">Choose your math challenge, Trainer!</p>
-            <div class="pokemon-pokeball-counter">
-                <span>Pokeballs Earned: </span>
-                <span id="pokeball-count" class="pokeball-value">0</span> 🔴
-            </div>
-            <div class="pokemon-categories">
-                <button class="pokemon-category-btn" data-category="operations">
-                    <div class="category-icon">➕➖</div>
-                    <div class="category-title">Pokemon Counting & Addition</div>
-                    <div class="category-subtitle">Operations & Algebraic Thinking</div>
-                </button>
-                <button class="pokemon-category-btn" data-category="place-value">
-                    <div class="category-icon">🔢</div>
-                    <div class="category-title">Pokemon Counting & Place Value</div>
-                    <div class="category-subtitle">Number & Operations in Base Ten</div>
-                </button>
-                <button class="pokemon-category-btn" data-category="measurement">
-                    <div class="category-icon">📏📊</div>
-                    <div class="category-title">Pokemon Measurement & Data</div>
-                    <div class="category-subtitle">Measurement & Data</div>
-                </button>
-                <button class="pokemon-category-btn" data-category="geometry">
-                    <div class="category-icon">🔷🔶</div>
-                    <div class="category-title">Pokemon Shapes & Geometry</div>
-                    <div class="category-subtitle">Geometry</div>
-                </button>
-            </div>
-            <button id="pokemon-back-btn" class="control-btn quit">Back to Main Menu</button>
-        </div>
-
-        <!-- Pokemon Problem Screen -->
-        <div id="pokemon-problem-screen" class="screen">
-            <div class="pokemon-problem-header">
-                <div class="standard-tag" id="standard-tag">NC.1.OA.1</div>
-                <button id="pokemon-category-back-btn" class="back-arrow">← Back to Categories</button>
+        <!-- ============ PROBLEM SCREEN ============ -->
+        <div id="problem-screen" class="screen">
+            <div class="problem-topbar">
+                <button id="back-to-path-btn" class="back-arrow">← Map</button>
+                <div class="skill-heading">
+                    <span id="skill-title" class="skill-title-text">Skill</span>
+                    <span id="phase-badge" class="phase-badge learn">📖 Learning</span>
+                </div>
+                <div id="standard-tag" class="standard-tag">NC.2.OA.2</div>
             </div>
 
-            <div class="pokemon-problem-container">
-                <div class="problem-text" id="pokemon-problem-text">
-                    Problem will appear here
+            <div id="mastery-meter" class="mastery-meter"></div>
+
+            <div id="review-banner" class="review-banner" style="display:none"></div>
+            <div id="strategy-card" class="strategy-card" style="display:none"></div>
+
+            <div class="problem-card">
+                <div id="problem-prompt" class="problem-prompt">Problem appears here</div>
+                <div id="problem-visual" class="problem-visual" style="display:none"></div>
+
+                <div id="number-input-row" class="input-row" style="display:none">
+                    <input type="number" id="answer-number" inputmode="numeric" placeholder="?" autocomplete="off">
+                    <button id="submit-btn" class="submit-btn">Check! ✅</button>
                 </div>
-
-                <div class="pokemon-visual" id="pokemon-visual">
-                    <!-- Visual elements will be inserted here -->
+                <div id="text-input-row" class="input-row" style="display:none">
+                    <input type="text" id="answer-text" placeholder="like 3:45" autocomplete="off">
+                    <button class="submit-btn" onclick="window.game.submit()">Check! ✅</button>
                 </div>
+                <div id="choice-buttons" class="choice-buttons" style="display:none"></div>
 
-                <div class="strategy-selector" id="strategy-selector">
-                    <p class="strategy-prompt">Choose your strategy:</p>
-                    <div class="strategy-buttons">
-                        <button class="strategy-btn" data-strategy="count-on">Count On</button>
-                        <button class="strategy-btn" data-strategy="number-line">Number Line</button>
-                        <button class="strategy-btn" data-strategy="make-ten">Make Ten</button>
-                        <button class="strategy-btn" data-strategy="draw">Draw a Picture</button>
-                    </div>
-                </div>
+                <div id="feedback" class="feedback"></div>
+                <div id="hint-area" class="hint-area"></div>
 
-                <div class="work-space" id="work-space">
-                    <h4>Show Your Work:</h4>
-                    <div class="work-area" id="work-area">
-                        <!-- Interactive work space -->
-                    </div>
-                </div>
-
-                <div class="answer-section">
-                    <label for="pokemon-answer">Your Answer:</label>
-                    <input type="number" id="pokemon-answer" class="pokemon-answer-input" placeholder="?">
-                    <button id="pokemon-check-btn" class="pokemon-check-btn">Check Answer!</button>
-                </div>
-
-                <div id="pokemon-feedback" class="pokemon-feedback"></div>
-
-                <div class="pokemon-problem-controls">
-                    <button id="pokemon-hint-btn" class="control-btn">💡 Hint</button>
-                    <button id="pokemon-skip-btn" class="control-btn">Skip</button>
-                    <button id="pokemon-next-btn" class="control-btn" style="display: none;">Next Problem</button>
+                <div class="problem-controls">
+                    <button id="hint-btn" class="control-btn">💡 Hint</button>
                 </div>
             </div>
         </div>
 
-        <!-- Mario Math World Section -->
-        <div id="mario-category-screen" class="screen">
-            <h2 class="mario-title">🍄 Super Mario Math World! 🍄</h2>
-            <p class="mario-subtitle">Let's-a-go! Choose your math adventure!</p>
-            <div class="mario-star-counter">
-                <span>Stars Collected: </span>
-                <span id="star-count" class="star-value">0</span> ⭐
-            </div>
-            <div class="mario-categories">
-                <button class="mario-category-btn" data-category="operations">
-                    <div class="category-icon">🍄➕</div>
-                    <div class="category-title">Coin Counting & Addition</div>
-                    <div class="category-subtitle">Operations & Algebraic Thinking</div>
-                </button>
-                <button class="mario-category-btn" data-category="place-value">
-                    <div class="category-icon">💯</div>
-                    <div class="category-title">Power-Up Counting & Place Value</div>
-                    <div class="category-subtitle">Number & Operations in Base Ten</div>
-                </button>
-                <button class="mario-category-btn" data-category="measurement">
-                    <div class="category-icon">📏⏰</div>
-                    <div class="category-title">Level Measurement & Data</div>
-                    <div class="category-subtitle">Measurement & Data</div>
-                </button>
-                <button class="mario-category-btn" data-category="geometry">
-                    <div class="category-icon">🟦🟥</div>
-                    <div class="category-title">Block Shapes & Geometry</div>
-                    <div class="category-subtitle">Geometry</div>
-                </button>
-            </div>
-            <button id="mario-back-btn" class="control-btn quit">Back to Main Menu</button>
-        </div>
-
-        <!-- Mario Problem Screen -->
-        <div id="mario-problem-screen" class="screen">
-            <div class="mario-problem-header">
-                <div class="standard-tag" id="mario-standard-tag">NC.1.OA.1</div>
-                <button id="mario-category-back-btn" class="back-arrow">← Back to Categories</button>
-            </div>
-
-            <div class="mario-problem-container">
-                <div class="problem-text" id="mario-problem-text">
-                    Problem will appear here
-                </div>
-
-                <div class="mario-visual" id="mario-visual">
-                    <!-- Visual elements will be inserted here -->
-                </div>
-
-                <div class="strategy-selector" id="mario-strategy-selector">
-                    <p class="strategy-prompt">Choose your strategy:</p>
-                    <div class="strategy-buttons">
-                        <button class="strategy-btn mario-strategy-btn" data-strategy="count-on">Count On</button>
-                        <button class="strategy-btn mario-strategy-btn" data-strategy="number-line">Number Line</button>
-                        <button class="strategy-btn mario-strategy-btn" data-strategy="make-ten">Make Ten</button>
-                        <button class="strategy-btn mario-strategy-btn" data-strategy="draw">Draw a Picture</button>
-                    </div>
-                </div>
-
-                <div class="work-space" id="mario-work-space">
-                    <h4>Show Your Work:</h4>
-                    <div class="work-area" id="mario-work-area">
-                        <!-- Interactive work space -->
-                    </div>
-                </div>
-
-                <div class="answer-section">
-                    <label for="mario-answer">Your Answer:</label>
-                    <input type="number" id="mario-answer" class="mario-answer-input" placeholder="?">
-                    <button id="mario-check-btn" class="mario-check-btn">Check Answer!</button>
-                </div>
-
-                <div id="mario-feedback" class="mario-feedback"></div>
-
-                <div class="mario-problem-controls">
-                    <button id="mario-hint-btn" class="control-btn">💡 Hint</button>
-                    <button id="mario-skip-btn" class="control-btn">Skip</button>
-                    <button id="mario-next-btn" class="control-btn" style="display: none;">Next Problem</button>
-                </div>
-            </div>
-        </div>
-
+        <!-- ============ CELEBRATION OVERLAY ============ -->
         <div id="celebration" class="celebration hidden">
             <div class="celebration-content">
-                <h2>🎉 Amazing! 🎉</h2>
+                <h2 id="celebration-title">🎉 Amazing! 🎉</h2>
                 <p id="celebration-message"></p>
+                <div id="celebration-actions" class="celebration-actions"></div>
             </div>
         </div>
     </div>
 
-    <script src="game.js"></script>
-    <script src="pokemon-math.js"></script>
-    <script src="mario-math.js"></script>
+    <script src="curriculum.js"></script>
+    <script src="engine.js"></script>
 </body>
 </html>
