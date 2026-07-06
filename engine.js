@@ -15,9 +15,9 @@
 
 const STORAGE_KEY = 'math-adventure-grade2-v1';
 
-const LEARN_TARGET = 2;      // correct answers to leave the Learn phase
-const PRACTICE_TARGET = 6;   // correct answers in Practice phase to master
-const STREAK_TO_MASTER = 3;  // ...and the last N must be consecutive
+const LEARN_TARGET = 3;      // correct answers to leave the Learn phase
+const PRACTICE_TARGET = 12;  // correct answers in Practice phase to master
+const STREAK_TO_MASTER = 4;  // ...and the last N must be consecutive
 const METER_TOTAL = LEARN_TARGET + PRACTICE_TARGET;
 const REVIEW_GAP = 4;        // every Nth question during practice is a review
 const REVIEW_FIRST_INTERVAL = 15;   // measured in total questions answered

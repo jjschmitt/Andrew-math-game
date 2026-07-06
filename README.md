@@ -21,7 +21,7 @@ Progress saves automatically in the browser (localStorage), so the game remember
 
 ### 1. Mastery before moving on
 - Skills unlock **sequentially** — the next skill (and the next unit) opens only after the current one is mastered.
-- Mastery is earned, not lucky: it takes **8 correct answers, and the last 3 in a row**, so a child can't guess their way forward.
+- Mastery is earned, not lucky: it takes **15 correct answers (3 in the scaffolded Learn phase + 12 in Practice), and the last 4 in a row**, so a child can't guess their way forward.
 - Mastery is also **maintained**: if a mastered skill is missed twice in review, it quietly reopens for re-practice.
 
 ### 2. Effortful retrieval
