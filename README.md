@@ -1,87 +1,67 @@
-# 🌟 Math Adventure - Fun Math Game for Kids!
+# 🌟 Math Adventure — 2nd Grade Mastery Quest
 
-An interactive, colorful math game designed for advanced 6-year-olds to practice and improve their math skills while having fun!
-
-## 🎮 Features
-
-- **Multiple Game Modes:**
-  - ➕ Addition - Practice adding numbers
-  - ➖ Subtraction - Master subtraction skills
-  - ✖️ Multiplication - Learn multiplication tables
-  - 🎯 Mixed Challenge - Random mix of all operations
-
-- **Progressive Difficulty:**
-  - Starts easy and gets harder as you improve
-  - Level increases every 5 correct answers in a row
-  - Adaptive number ranges based on skill level
-
-- **Engaging Gameplay:**
-  - Colorful, kid-friendly interface
-  - Positive encouragement messages
-  - Score tracking and streak counter
-  - Achievement celebrations at milestones
-  - Both typed answers and multiple-choice questions
-
-- **Helpful Features:**
-  - Skip button if a question is too hard
-  - Hint system to help solve problems
-  - Real-time feedback on answers
+An interactive math game for 2nd graders, built around how kids actually learn: **mastery before moving on**, **effortful retrieval**, and **the right cognitive load at the right moment**. Pick a Pokémon ⚡ or Mario 🍄 buddy and work through a learning path aligned to NC / Common Core 2nd grade standards.
 
 ## 🚀 How to Play
 
-1. Open `index.html` in your web browser
-2. Choose a game mode (Addition, Subtraction, Multiplication, or Mixed)
-3. Solve the math problems by:
-   - Typing your answer in the input box and clicking "Check Answer!"
-   - Or selecting from multiple choice options (appears every 5 questions)
-4. Watch your score and streak grow!
-5. Try to reach milestone achievements at 10, 25, 50, and 100 points!
+1. Open `index.html` in any modern browser (no install, no dependencies).
+2. Pick your adventure buddy (Pokémon or Mario) — it flavors the word problems, praise, and rewards.
+3. Open the **Learning Path** and start the first skill. Master it to unlock the next!
+4. Once skills are mastered, run the **Flashback Warm-Up** at the start of each session to keep them strong.
 
-## 📚 Learning Goals
+Progress saves automatically in the browser (localStorage), so the game remembers where you left off.
 
-This game helps children:
-- Build mental math skills
-- Increase number sense and fluency
-- Develop problem-solving confidence
-- Practice addition, subtraction, and multiplication
-- Learn through positive reinforcement
+## 🧠 The Learning Science Inside
 
-## 🎯 Scoring System
+### 1. Mastery before moving on
+- Skills unlock **sequentially** — the next skill (and the next unit) opens only after the current one is mastered.
+- Mastery is earned, not lucky: it takes **8 correct answers, and the last 3 in a row**, so a child can't guess their way forward.
+- Mastery is also **maintained**: if a mastered skill is missed twice in review, it quietly reopens for re-practice.
 
-- **10 points** per correct answer at Level 1
-- Points multiply by current level (Level 2 = 20 points, Level 3 = 30 points, etc.)
-- **Streak counter** tracks consecutive correct answers
-- **Level up** every 5 correct answers in a row
-- **Milestones** at 10, 25, 50, and 100 points
+### 2. Effortful retrieval
+- Answers are **typed from memory** (free recall), not multiple choice, wherever possible.
+- Hints never appear automatically — the child must attempt first. A wrong answer earns a strategy cue and a **second effortful attempt** before anything is revealed.
+- Mastered skills return as **"Flashback" questions** interleaved into practice (every 4th question) on an **expanding spacing schedule** — quick at first, then further and further apart as memory strengthens.
+- The **Warm-Up** mode starts each session with 5 retrieval questions from previously mastered skills.
+
+### 3. The right cognitive load at the right moment
+- Every skill begins in a **Learn phase**: a worked example ("Make a Ten: 9 + 4 → 9 + 1 = 10, then 10 + 3 = 13") plus visual models — ten frames, base-ten blocks, arrays, clock faces.
+- Scaffolds **fade** as the child succeeds: Practice phase drops the worked example and visuals; Master-level and Flashback questions are pure retrieval with harder numbers.
+- Scaffolds **return automatically** after two missed problems in a row — the visual model and first hint come back until the child is succeeding again.
+- One problem, one screen, no timers — working memory goes to the math, not the interface.
+- Wrong answers end with a short **worked explanation** ("62 − 38: 62 − 30 = 32, 32 − 8 = 24"), then a *similar* problem — never the same one, so the child can't just copy the answer.
+
+## 📚 Curriculum (NC / CCSS Grade 2)
+
+| Unit | Skills | Standards |
+|---|---|---|
+| ⚡ Fact Power to 20 | Make a ten, doubles, add & subtract within 20 | 2.OA.2 |
+| 🔢 Place Value to 1,000 | Hundreds/tens/ones, expanded form, skip counting, comparing | 2.NBT.1–4 |
+| ➕ Add & Subtract Within 100 | 10 more/less, 2-digit add (with regrouping), 2-digit subtract | 2.NBT.5, 2.NBT.8 |
+| 📖 Word Problem Power | Addition, subtraction & comparison stories, two-step problems | 2.OA.1 |
+| 💯 Big Numbers to 1,000 | 100 more/less, 3-digit addition & subtraction | 2.NBT.7–8 |
+| ⏰ Time & Money | Clocks to 5 minutes, counting coins, making change | 2.MD.7–8 |
+| 📏 Measurement | Comparing lengths, length word problems | 2.MD.4–5 |
+| 🔷 Shapes, Sharing & Arrays | Odd/even, arrays & repeated addition, shapes, halves/thirds/fourths | 2.G.1–3, 2.OA.3–4 |
+
+The standard being practiced is shown on every problem, and strategy hints teach the mental-math strategies 2nd grade teachers use (make a ten, think addition, add tens then ones, count up for change).
+
+## 👨‍👩‍👧 For Parents
+
+- A good session: one **Warm-Up** (about 2 minutes) plus 10–15 minutes on the current skill.
+- The 🔄 icon on the path means a skill needs refreshing — the game noticed it slipping and scheduled it for review.
+- Struggle is part of the design: the game asks for a second try before showing anything. Resist the urge to jump in — retrieval effort is what builds the memory.
 
 ## 🛠️ Technical Details
 
-- Pure HTML, CSS, and JavaScript
-- No dependencies required
-- Works in all modern browsers
-- Responsive design for tablets and computers
-
-## 👨‍👩‍👧‍👦 For Parents and Teachers
-
-This game is designed specifically for advanced 6-year-olds who are ready to:
-- Add and subtract numbers beyond 10
-- Begin learning multiplication tables
-- Practice mental math without physical manipulatives
-- Build confidence in mathematical reasoning
-
-The difficulty automatically adjusts to keep children challenged but not frustrated. The positive reinforcement system encourages persistence and celebrates achievements.
-
-## 🎨 Customization
-
-Feel free to modify:
-- Number ranges in `game.js` (look for `getRandomNumber` calls)
-- Encouragement messages in the `encouragements` object
-- Colors and styles in `style.css`
-- Difficulty progression (currently levels up every 5 correct answers)
+- Pure HTML, CSS, and JavaScript — no dependencies, no build step.
+- `curriculum.js` — 27 skill definitions with problem generators at three scaffold levels, hints, and worked explanations.
+- `engine.js` — mastery tracking, spaced-review scheduling, adaptive scaffolding, theming, and localStorage persistence.
+- To reset all progress, run `localStorage.removeItem('math-adventure-grade2-v1')` in the browser console.
 
 ## 📝 License
 
-This is an educational project. Feel free to use and modify for personal or educational purposes.
+Educational project — use and modify freely for personal or educational purposes.
 
 ---
 
