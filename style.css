@@ -1287,4 +1287,253 @@ header h1 {
     .unit-square { width: 24px; height: 24px; }
     .coord-svg { width: 210px; height: 215px; }
     .array-item { font-size: 1.3em; }
+    .manip-cell { width: 40px; height: 40px; font-size: 1.25em; }
+    .manip-plate { min-width: 74px; min-height: 74px; }
+}
+
+/* ---------- Interactive manipulatives ---------- */
+
+.manip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin: 4px auto 8px;
+}
+
+.manip-count {
+    display: inline-block;
+    background: #ede7f6;
+    color: #5b3fa8;
+    border-radius: 20px;
+    padding: 4px 16px;
+    font-weight: bold;
+    font-size: 1.05em;
+}
+
+/* Build-array grid */
+
+.manip-grid {
+    display: grid;
+    gap: 6px;
+    justify-content: center;
+}
+
+.manip-cell {
+    width: 48px;
+    height: 48px;
+    border: 3px solid #b39ddb;
+    border-radius: 10px;
+    background: #faf8ff;
+    font-size: 1.5em;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.manip-cell.filled {
+    background: #ede7f6;
+    border-color: #7e57c2;
+}
+
+.manip-cell.manip-pulse {
+    animation: manip-pulse 0.4s ease;
+}
+
+/* Share-groups */
+
+.manip-pool {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px;
+    min-height: 40px;
+    max-width: 460px;
+    padding: 8px;
+    border: 2px dashed #b39ddb;
+    border-radius: 12px;
+}
+
+.manip-chip {
+    font-size: 1.4em;
+    line-height: 1;
+}
+
+.manip-plates {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+}
+
+.manip-plate {
+    min-width: 88px;
+    min-height: 88px;
+    border: 3px solid #b39ddb;
+    border-radius: 16px;
+    background: #faf8ff;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 6px;
+    gap: 2px;
+}
+
+.manip-plate-face {
+    font-size: 1.6em;
+}
+
+.manip-plate-items {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 2px;
+    max-width: 100px;
+}
+
+.manip-plate-items .manip-chip {
+    font-size: 1.1em;
+}
+
+.manip-plate.manip-wiggle {
+    animation: shake 0.4s;
+}
+
+/* Shade-fraction */
+
+.manip-frac-svg {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+}
+
+.manip-frac-part {
+    fill: #faf8ff;
+    stroke: #7e57c2;
+    stroke-width: 2;
+    cursor: pointer;
+}
+
+.manip-frac-part.shaded {
+    fill: #b39ddb;
+}
+
+.manip-frac-num {
+    fill: #4a3b7a;
+    font-size: 22px;
+    font-weight: bold;
+    text-anchor: middle;
+    dominant-baseline: central;
+    pointer-events: none;
+}
+
+/* Number-line */
+
+.manip-numline-wrap {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.manip-numline {
+    touch-action: none;
+    max-width: 100%;
+    height: auto;
+}
+
+.manip-nl-line {
+    stroke: #4a3b7a;
+    stroke-width: 3;
+    stroke-linecap: round;
+}
+
+.manip-nl-tick {
+    stroke: #4a3b7a;
+    stroke-width: 2;
+}
+
+.manip-nl-label {
+    fill: #4a3b7a;
+    font-size: 13px;
+    font-weight: bold;
+    text-anchor: middle;
+}
+
+.manip-nl-marker {
+    fill: #5b3fa8;
+    stroke: #fff;
+    stroke-width: 2;
+    cursor: grab;
+}
+
+.manip-nl-hit {
+    fill: transparent;
+    cursor: grab;
+}
+
+.manip-nl-ghost {
+    fill: #b39ddb;
+    opacity: 0.5;
+}
+
+.manip-nl-ref {
+    fill: #ff7043;
+}
+
+.manip-nl-ref-label {
+    fill: #ff7043;
+    font-size: 12px;
+    font-weight: bold;
+    text-anchor: middle;
+}
+
+/* Locked state */
+
+.manip-locked .manip-cell,
+.manip-locked .manip-plate,
+.manip-locked .manip-frac-part,
+.manip-locked .manip-numline,
+.manip-locked .manip-nl-hit {
+    pointer-events: none;
+    cursor: default;
+}
+
+.manip-locked {
+    opacity: 0.95;
+}
+
+/* Manipulative pulse animation */
+
+@keyframes manip-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.12); }
+}
+
+/* Coach hint variant */
+
+.hint-line.coach {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+/* Prompt sub-line */
+
+.prompt-sub {
+    display: block;
+    font-size: 0.72em;
+    font-weight: normal;
+    color: #7e57c2;
+    margin-top: 6px;
+}
+
+/* Small-screen manipulative adjustments */
+
+@media (max-width: 560px) {
+    .manip-cell { width: 40px; height: 40px; font-size: 1.25em; }
+    .manip-plate { min-width: 74px; min-height: 74px; }
 }

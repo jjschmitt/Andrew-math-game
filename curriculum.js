@@ -1209,7 +1209,22 @@ const CURRICULUM = {
                         const item = themeThing();
                         const rows = R.int(2, 5), cols = R.int(2, 5);
                         const addition = Array(rows).fill(cols).join(' + ');
-                        if (level < 3) {
+                        if (level === 1) {
+                            return {
+                                prompt: `Build ${rows} rows of ${cols} — tap the squares!<span class="prompt-sub">Then type how many in all.</span>`,
+                                visual: null,
+                                interactive: { type: 'build-array', rows, cols, icon: item.icon, done: `You built ${rows} rows of ${cols} — that's ${rows * cols}! Type it in ✏️` },
+                                answerType: 'number',
+                                answer: rows * cols,
+                                hints: [
+                                    `Each row has ${cols}. Add row by row.`,
+                                    `${addition} = ?`,
+                                    `Or skip count by ${cols}s, ${rows} times.`
+                                ],
+                                explain: `${rows} rows of ${cols}: ${addition} = ${rows * cols}.`
+                            };
+                        }
+                        if (level === 2) {
                             return {
                                 prompt: `${rows} rows of ${cols}. How many ${item.name} in all?`,
                                 visual: dotArray(rows, cols, item.icon),
@@ -1291,8 +1306,9 @@ const CURRICULUM = {
                         const word = { 2: 'halves', 3: 'thirds', 4: 'fourths' }[parts];
                         if (level === 1) {
                             return {
-                                prompt: 'This bar is cut into equal shares. How many equal shares do you see?',
-                                visual: fractionRect(parts, 0),
+                                prompt: 'Tap each piece to count the equal shares.<span class="prompt-sub">Then type how many shares there are.</span>',
+                                visual: null,
+                                interactive: { type: 'shade-fraction', parts, target: parts, mode: 'count', done: `You counted ${parts} equal shares! Type it in ✏️` },
                                 answerType: 'number',
                                 answer: parts,
                                 hints: [`Count each piece of the bar.`],
@@ -1354,9 +1370,24 @@ const CURRICULUM = {
                         const b = R.int(2, 9);
                         const [x, y] = level === 1 ? [a, b] : R.shuffle([a, b]);
                         const skips = Array.from({ length: b }, (_, i) => a * (i + 1)).join(', ');
+                        if (level === 1) {
+                            return {
+                                prompt: `${x} × ${y} = ?<span class="prompt-sub">Build ${b} rows of ${a}, then type the total.</span>`,
+                                visual: null,
+                                interactive: { type: 'build-array', rows: b, cols: a, icon: '🔵', done: `You built ${b} rows of ${a} — that's ${a * b}! Type it in ✏️` },
+                                answerType: 'number',
+                                answer: a * b,
+                                hints: [
+                                    `That means ${b} groups of ${a}.`,
+                                    `Skip count by ${a}s, ${b} times.`,
+                                    `${skips}`
+                                ],
+                                explain: `${a} × ${b}: skip count by ${a}s — ${skips}.`
+                            };
+                        }
                         return {
                             prompt: `${x} × ${y} = ?`,
-                            visual: level === 1 ? dotArray(b, a, '🔵') : null,
+                            visual: null,
                             answerType: 'number',
                             answer: a * b,
                             hints: [
@@ -1376,9 +1407,24 @@ const CURRICULUM = {
                     generate(level) {
                         const a = level === 1 ? R.pick([3, 4]) : level === 2 ? R.int(3, 7) : R.int(6, 9);
                         const b = level === 1 ? R.int(2, 6) : level === 2 ? R.int(3, 8) : R.int(6, 9);
+                        if (level === 1) {
+                            return {
+                                prompt: `${a} × ${b} = ?<span class="prompt-sub">Build ${a} rows of ${b}, then type the total.</span>`,
+                                visual: null,
+                                interactive: { type: 'build-array', rows: a, cols: b, icon: '🔵', done: `You built ${a} rows of ${b} — that's ${a * b}! Type it in ✏️` },
+                                answerType: 'number',
+                                answer: a * b,
+                                hints: [
+                                    `Think of a nearby fact you already know.`,
+                                    `${a} × ${b - 1} = ${a * (b - 1)}. Now add one more ${a}.`,
+                                    `${a * (b - 1)} + ${a} = ?`
+                                ],
+                                explain: `${a} × ${b} = ${a} × ${b - 1} + ${a} = ${a * (b - 1)} + ${a} = ${a * b}.`
+                            };
+                        }
                         return {
                             prompt: `${a} × ${b} = ?`,
-                            visual: level === 1 ? dotArray(a, b, '🔵') : null,
+                            visual: null,
                             answerType: 'number',
                             answer: a * b,
                             hints: [
@@ -1399,9 +1445,24 @@ const CURRICULUM = {
                         const d = level === 1 ? R.int(2, 5) : R.int(2, 9);
                         const q = level === 1 ? R.int(2, 5) : R.int(3, 9);
                         const n = d * q;
+                        if (level === 1) {
+                            return {
+                                prompt: `${n} ÷ ${d} = ?<span class="prompt-sub">Deal all ${n} onto the ${d} plates, then type how many are on each.</span>`,
+                                visual: null,
+                                interactive: { type: 'share-groups', total: n, groups: d, icon: '🔵', itemName: 'dots', done: `You shared ${n} into ${d} equal groups — ${q} on each plate! Type it in ✏️` },
+                                answerType: 'number',
+                                answer: q,
+                                hints: [
+                                    `Think multiplication: ${d} × ? = ${n}.`,
+                                    `Split ${n} into ${d} equal rows — how many in each row?`,
+                                    `Skip count by ${d}s up to ${n} and count the hops.`
+                                ],
+                                explain: `${n} ÷ ${d} = ${q}, because ${d} × ${q} = ${n}.`
+                            };
+                        }
                         return {
                             prompt: `${n} ÷ ${d} = ?`,
-                            visual: level === 1 ? dotArray(d, q, '🔵') : null,
+                            visual: null,
                             answerType: 'number',
                             answer: q,
                             hints: [
@@ -1437,9 +1498,23 @@ const CURRICULUM = {
                         }
                         const a = level === 1 ? R.int(2, 5) : R.int(3, 9);
                         const b = level === 1 ? R.int(2, 6) : R.int(4, 9);
+                        if (level === 1) {
+                            return {
+                                prompt: `${name} has ${a} bags with ${b} ${item.name} ${item.icon} in each bag. How many ${item.name} in all?<span class="prompt-sub">Build ${a} rows of ${b}, then type the total.</span>`,
+                                visual: null,
+                                interactive: { type: 'build-array', rows: a, cols: b, icon: item.icon, done: `You built ${a} rows of ${b} — that's ${a * b}! Type it in ✏️` },
+                                answerType: 'number',
+                                answer: a * b,
+                                hints: [
+                                    `Equal groups! ${a} groups of ${b}.`,
+                                    `${a} × ${b} = ?`
+                                ],
+                                explain: `${a} bags of ${b}: ${a} × ${b} = ${a * b}.`
+                            };
+                        }
                         return {
                             prompt: `${name} has ${a} bags with ${b} ${item.name} ${item.icon} in each bag. How many ${item.name} in all?`,
-                            visual: level === 1 ? dotArray(a, b, item.icon) : null,
+                            visual: null,
                             answerType: 'number',
                             answer: a * b,
                             hints: [
@@ -1482,6 +1557,22 @@ const CURRICULUM = {
                         }
                         const answer = Math.round(n / target) * target;
                         const decider = target === 10 ? n % 10 : Math.floor(n / 10) % 10;
+                        if (level === 1) {
+                            const lower = Math.floor(n / 10) * 10;
+                            return {
+                                prompt: `Round ${n} to the nearest ten.<span class="prompt-sub">Drag the dot to the closer ten, then type it.</span>`,
+                                visual: null,
+                                interactive: { type: 'number-line', ticks: 10, targetTick: answer - lower, endLabels: [String(lower), String(lower + 10)], refTick: n - lower, refLabel: String(n), done: `${n} is closer to ${answer}! Type it in ✏️` },
+                                answerType: 'number',
+                                answer,
+                                hints: [
+                                    `${n} is between ${Math.floor(n / target) * target} and ${Math.floor(n / target) * target + target}.`,
+                                    `Look at the ${target === 10 ? 'ones' : 'tens'} digit: ${decider}. Is it 5 or more?`,
+                                    `${decider} ${decider >= 5 ? 'is 5 or more → round UP' : 'is less than 5 → round DOWN'}.`
+                                ],
+                                explain: `The ${target === 10 ? 'ones' : 'tens'} digit is ${decider}, so ${n} rounds ${decider >= 5 ? 'up' : 'down'} to ${answer}.`
+                            };
+                        }
                         return {
                             prompt: `Round ${n} to the nearest ${target === 10 ? 'ten' : 'hundred'}.`,
                             visual: null,
@@ -1586,6 +1677,19 @@ const CURRICULUM = {
                                 explain: `${k} of the ${b} equal parts → ${k}/${b}.`
                             }, frac(k, b));
                         }
+                        if (level === 1) {
+                            return Object.assign({
+                                prompt: `Shade ${k} part of the bar, then type the fraction (like 3/4).`,
+                                visual: null,
+                                interactive: { type: 'shade-fraction', parts: b, target: k, mode: 'shade', done: `You shaded ${k} of ${b} — that's ${k}/${b}! Type it in ✏️` },
+                                answerType: 'fraction',
+                                hints: [
+                                    `Count ALL the equal parts first — that's the bottom number.`,
+                                    `There are ${b} parts, and ${k} ${k > 1 ? 'are' : 'is'} shaded.`
+                                ],
+                                explain: `${k} shaded out of ${b} equal parts → ${k}/${b}.`
+                            }, frac(k, b));
+                        }
                         return Object.assign({
                             prompt: 'What fraction of the bar is shaded? (Type it like 3/4)',
                             visual: fractionRect(b, k),
@@ -1606,6 +1710,20 @@ const CURRICULUM = {
                     generate(level) {
                         const b = level === 1 ? R.pick([2, 3, 4]) : R.pick([3, 4, 6, 8]);
                         const k = R.int(1, b - 1);
+                        if (level === 1) {
+                            return Object.assign({
+                                prompt: `Drag the dot to hop ${k}, then type the fraction it lands on (like 3/4).`,
+                                visual: null,
+                                interactive: { type: 'number-line', ticks: b, targetTick: k, endLabels: ['0', '1'], done: `You landed on hop ${k} of ${b} — that's ${k}/${b}! Type it in ✏️` },
+                                answerType: 'fraction',
+                                hints: [
+                                    `Count the equal hops between 0 and 1 — that's the bottom number.`,
+                                    `The line is cut into ${b} equal parts.`,
+                                    `The point is ${k} hop${k > 1 ? 's' : ''} from 0.`
+                                ],
+                                explain: `The line has ${b} equal parts and the point is at hop ${k} → ${k}/${b}.`
+                            }, frac(k, b));
+                        }
                         return Object.assign({
                             prompt: 'What fraction does the point show? (Type it like 3/4)',
                             visual: fractionNumberLine(b, k),
