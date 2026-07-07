@@ -1595,9 +1595,11 @@ const CURRICULUM = {
                     generate(level) {
                         const a = R.int(2, 9);
                         const t = (level === 1 ? R.int(1, 4) : R.int(2, 9)) * 10;
+                        const interactive = level === 1 ? { type: 'build-array', rows: a, cols: t / 10, icon: '🔟', done: `Each 🔟 is one ten. ${a} rows of ${t / 10} tens is ${a * t / 10} tens — that's ${a * t}! Type it in ✏️` } : null;
                         return {
-                            prompt: `${a} × ${t} = ?`,
+                            prompt: `${a} × ${t} = ?${level === 1 ? `<span class="prompt-sub">Build ${a} rows of ${t / 10} tens, then type the total.</span>` : ''}`,
                             visual: null,
+                            interactive,
                             answerType: 'number',
                             answer: a * t,
                             hints: [
@@ -1756,9 +1758,12 @@ const CURRICULUM = {
                         }
                         const cross1 = a1 * d2, cross2 = a2 * d1;
                         const answer = cross1 < cross2 ? '<' : cross1 > cross2 ? '>' : '=';
+                        const correct = answer === '<' ? 'bottom' : answer === '>' ? 'top' : 'equal';
+                        const interactive = level === 1 ? { type: 'compare-bars', top: { parts: d1, target: a1, label: `${a1}/${d1}` }, bottom: { parts: d2, target: a2, label: `${a2}/${d2}` }, correct, done: `You shaded both bars and saw which is bigger — now tap ${answer} below!` } : null;
                         return {
-                            prompt: `Which symbol makes this true?<br><span class="compare-nums">${a1}/${d1} &nbsp; ? &nbsp; ${a2}/${d2}</span>`,
+                            prompt: `Which symbol makes this true?<br><span class="compare-nums">${a1}/${d1} &nbsp; ? &nbsp; ${a2}/${d2}</span>${level === 1 ? '<span class="prompt-sub">Shade each bar to match its fraction, then tap the bigger one.</span>' : ''}`,
                             visual: level === 1 ? fractionPair(a1, d1, a2, d2) : null,
+                            interactive,
                             answerType: 'choice',
                             choices: ['<', '>', '='],
                             answer,
@@ -1795,9 +1800,11 @@ const CURRICULUM = {
                                 explain: `${a}/${b} = ${a * k}/${b * k} — top and bottom both × ${k}.`
                             };
                         }
+                        const interactive = level === 1 ? { type: 'equiv-bars', topParts: b, topShaded: a, bottomParts: b * k, done: `Same length shaded! ${a}/${b} = ${a * k}/${b * k}, so the missing number is ${a * k}. Type it in ✏️` } : null;
                         return {
-                            prompt: `Fill in the blank: ${a}/${b} = ?/${b * k}`,
+                            prompt: `Fill in the blank: ${a}/${b} = ?/${b * k}${level === 1 ? '<span class="prompt-sub">Shade the bottom bar until it matches the top bar.</span>' : ''}`,
                             visual: level === 1 ? fractionPair(a, b, a * k, b * k) : null,
+                            interactive,
                             answerType: 'number',
                             answer: a * k,
                             hints: [
@@ -1839,9 +1846,11 @@ const CURRICULUM = {
                                 explain: `Area = ${cols} × ${rows} = ${rows * cols} square units.`
                             };
                         }
+                        const interactive = level === 1 ? { type: 'build-array', rows, cols, icon: '🟩', done: `You covered the whole rectangle — ${rows} rows of ${cols} makes ${rows * cols} square units! Type it in ✏️` } : null;
                         return {
-                            prompt: 'Each small square is 1 square unit. What is the AREA of this rectangle?',
+                            prompt: `Each small square is 1 square unit. What is the AREA of this rectangle?${level === 1 ? '<span class="prompt-sub">Cover the rectangle with tiles, then type how many.</span>' : ''}`,
                             visual: areaGrid(rows, cols),
+                            interactive,
                             answerType: 'number',
                             answer: rows * cols,
                             hints: [
@@ -1878,9 +1887,11 @@ const CURRICULUM = {
                                 explain: `${p} − ${l} − ${l} = ${p - 2 * l}, shared by two sides → ${w} each.`
                             };
                         }
+                        const interactive = level === 1 ? { type: 'trace-sides', l, w, done: `You walked every side: ${l} + ${w} + ${l} + ${w} = ${2 * (l + w)}! Type it in ✏️` } : null;
                         return {
-                            prompt: 'What is the PERIMETER of this rectangle (the distance all the way around)?',
+                            prompt: `What is the PERIMETER of this rectangle (the distance all the way around)?${level === 1 ? '<span class="prompt-sub">Tap each side of the rectangle to add up the distance around.</span>' : ''}`,
                             visual: level < 3 ? perimeterRectSVG(l, w) : null,
+                            interactive,
                             answerType: 'number',
                             answer: 2 * (l + w),
                             hints: [
@@ -1918,9 +1929,11 @@ const CURRICULUM = {
                         const dur = level === 1 ? R.pick([30, 60]) : R.pick([15, 20, 25, 30, 40, 45, 50]);
                         const total = h * 60 + m0 + dur;
                         const h2 = Math.floor(total / 60), m2 = total % 60;
+                        const interactive = level === 1 ? { type: 'clock-adder', h, m: m0, addMinutes: dur, done: `You moved the clock forward ${dur} minutes — read the new time and type it like 3:45 ✏️` } : null;
                         return {
-                            prompt: `It is ${h}:${pad2(m0)}. What time will it be in ${dur} minutes? (Type it like 3:45)`,
+                            prompt: `It is ${h}:${pad2(m0)}. What time will it be in ${dur} minutes? (Type it like 3:45)${level === 1 ? `<span class="prompt-sub">Tap the buttons to move the clock forward ${dur} minutes.</span>` : ''}`,
                             visual: level === 1 ? clockSVG(h, m0) : null,
+                            interactive,
                             answerType: 'time',
                             answer: `${h2}:${pad2(m2)}`,
                             timeValue: { h: h2, m: m2 },
@@ -1952,9 +1965,11 @@ const CURRICULUM = {
                         const a = level === 1 ? R.int(12, 25) : level === 2 ? R.int(13, 49) : R.int(24, 89);
                         const b = level === 1 ? R.int(2, 4) : level === 2 ? R.int(3, 6) : R.int(3, 9);
                         const tens = Math.floor(a / 10) * 10, ones = a % 10;
+                        const interactive = level === 1 ? { type: 'partial-products', aParts: (a % 10 === 0 ? [a] : [tens, ones]), bParts: [b], done: `The pieces add up to ${a * b}! Type it in ✏️` } : null;
                         return {
-                            prompt: `${a} × ${b} = ?`,
+                            prompt: `${a} × ${b} = ?${level === 1 ? `<span class="prompt-sub">Break ${a} into tens and ones — tap each piece of the rectangle.</span>` : ''}`,
                             visual: null,
+                            interactive,
                             answerType: 'number',
                             answer: a * b,
                             hints: [
@@ -1994,9 +2009,11 @@ const CURRICULUM = {
                         const parts = [`${h} × ${b} = ${h * b}`];
                         if (t) parts.push(`${t} × ${b} = ${t * b}`);
                         if (o) parts.push(`${o} × ${b} = ${o * b}`);
+                        const interactive = level === 1 ? { type: 'partial-products', aParts: [h, t, o].filter(x => x), bParts: [b], done: `All the pieces together make ${a * b}! Type it in ✏️` } : null;
                         return {
-                            prompt: `${a} × ${b} = ?`,
+                            prompt: `${a} × ${b} = ?${level === 1 ? `<span class="prompt-sub">Break ${a} into hundreds, tens and ones — tap each piece.</span>` : ''}`,
                             visual: null,
+                            interactive,
                             answerType: 'number',
                             answer: a * b,
                             hints: [
@@ -2111,11 +2128,13 @@ const CURRICULUM = {
                         const r = R.int(1, d - 1);
                         const n = d * q + r;
                         const askRemainder = Math.random() < 0.5;
+                        const interactive = level === 1 ? { type: 'share-groups', total: n, groups: d, share: q, remainder: r, icon: '🔵', itemName: 'dots', done: askRemainder ? `Every plate got ${q}, and ${r} couldn't be shared — the remainder is ${r}! Type it in ✏️` : `Every plate got ${q}, with ${r} left over — each group gets ${q}! Type it in ✏️` } : null;
                         return {
-                            prompt: askRemainder
+                            prompt: (askRemainder
                                 ? `What is the REMAINDER when ${n} is divided by ${d}?`
-                                : `How many whole groups of ${d} fit inside ${n}?`,
+                                : `How many whole groups of ${d} fit inside ${n}?`) + (level === 1 ? `<span class="prompt-sub">Deal fairly onto the ${d} plates — some will be left over!</span>` : ''),
                             visual: null,
+                            interactive,
                             answerType: 'number',
                             answer: askRemainder ? r : q,
                             hints: [
@@ -2164,8 +2183,9 @@ const CURRICULUM = {
                         if (level === 1) {
                             const n = d * q;
                             return {
-                                prompt: `${name} shares ${n} ${item.name} ${item.icon} equally among ${d} friends. How many does each friend get?`,
+                                prompt: `${name} shares ${n} ${item.name} ${item.icon} equally among ${d} friends. How many does each friend get?${n <= 24 ? '<span class="prompt-sub">Deal them onto the plates to share fairly.</span>' : ''}`,
                                 visual: null,
+                                interactive: n <= 24 ? { type: 'share-groups', total: n, groups: d, icon: '🔵', itemName: 'items', done: `You shared ${n} equally — ${q} for each! Type it in ✏️` } : null,
                                 answerType: 'number',
                                 answer: q,
                                 hints: [`Think: ${d} × ? = ${n}.`],
@@ -2220,8 +2240,9 @@ const CURRICULUM = {
                         const k = level === 1 ? R.int(2, 3) : R.int(2, 6);
                         if (Math.random() < 0.5) {
                             return {
-                                prompt: `Fill in the blank: ${a}/${b} = ?/${b * k}`,
+                                prompt: `Fill in the blank: ${a}/${b} = ?/${b * k}${level === 1 ? '<span class="prompt-sub">Shade the bottom bar to match the top bar.</span>' : ''}`,
                                 visual: null,
+                                interactive: level === 1 ? { type: 'equiv-bars', topParts: b, topShaded: a, bottomParts: b * k, done: `Same length! ${a}/${b} = ${a * k}/${b * k} — the missing number is ${a * k}. Type it in ✏️` } : null,
                                 answerType: 'number',
                                 answer: a * k,
                                 hints: [
