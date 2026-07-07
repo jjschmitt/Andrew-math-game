@@ -3038,7 +3038,7 @@ const CURRICULUM = {
                         }
                         const interactive = level === 1 ? { type: 'cube-builder', l, w, h, done: `${h} layers of ${l * w} cubes each — ${l * w * h} cubes fill the box! Type it in ✏️` } : null;
                         return {
-                            prompt: `How many unit cubes fit inside this box (its volume)?${level === 1 ? '<span class="prompt-sub">Stack cubes to fill the box, then count them all.</span>' : ''}`,
+                            prompt: `How many unit cubes fit inside this box (its volume)?${level === 1 ? `<span class="prompt-sub">Stack layers until the box is ${h} high.</span>` : ''}`,
                             visual: boxSVG(l, w, h),
                             interactive,
                             answerType: 'number',
@@ -3076,9 +3076,11 @@ const CURRICULUM = {
                         }
                         const x = R.int(1, 8), y = R.int(1, 8);
                         const askX = Math.random() < 0.5;
+                        const interactive = level === 1 ? { type: 'coord-walk', x, y, done: `You walked over ${x} and up ${y} — the point is at (${x}, ${y})! Now type the ${askX ? 'x' : 'y'}-coordinate ✏️` } : null;
                         return {
-                            prompt: `What is the ${askX ? 'x' : 'y'}-coordinate of the point?`,
+                            prompt: `What is the ${askX ? 'x' : 'y'}-coordinate of the point?${level === 1 ? '<span class="prompt-sub">Walk the rocket from 0: first over ➡️, then up ⬆️.</span>' : ''}`,
                             visual: coordPlaneSVG(x, y),
+                            interactive,
                             answerType: 'number',
                             answer: askX ? x : y,
                             hints: [

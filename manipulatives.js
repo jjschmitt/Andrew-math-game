@@ -867,6 +867,270 @@
         };
     }
 
+    // ---------------------------------------------------------------
+    // 8. trace-sides — { type:'trace-sides', l, w, done }
+    // ---------------------------------------------------------------
+    function mountTraceSides(container, config, api) {
+        const { l, w, done: doneMessage } = config;
+        let done = false;
+        let countedSides = 0;
+        const terms = [];
+
+        // Geometry mirrors curriculum.js's perimeterRectSVG().
+        const s = 18, W = l * s, H = w * s, pad = 34;
+        const VW = W + pad * 2, VH = H + pad * 2;
+
+        const root = el('div', 'manip manip-trace');
+        const svg = svgEl('svg', {
+            class: 'manip-trace-svg',
+            viewBox: `0 0 ${VW} ${VH}`,
+            width: VW,
+            height: VH
+        });
+
+        // Filled face of the rectangle; the 4 sides are drawn on top so
+        // each can light up independently as the kid walks the perimeter.
+        svg.appendChild(svgEl('rect', {
+            class: 'manip-trace-rect',
+            x: pad, y: pad, width: W, height: H
+        }));
+
+        const sumLine = el('div', 'manip-trace-sum', 'Tap each side!');
+
+        function updateSum() {
+            const total = terms.reduce((a, b) => a + b, 0);
+            sumLine.textContent = terms.length < 2
+                ? terms.join(' + ')
+                : `${terms.join(' + ')} = ${total}`;
+        }
+
+        // Each side: length + endpoints + where its label sits (outside).
+        const sides = [
+            { len: l, x1: pad, y1: pad, x2: pad + W, y2: pad,
+              lx: pad + W / 2, ly: pad - 10, text: `${l} units` },
+            { len: w, x1: pad + W, y1: pad, x2: pad + W, y2: pad + H,
+              lx: pad + W + 16, ly: pad + H / 2 + 5, text: `${w}` },
+            { len: l, x1: pad, y1: pad + H, x2: pad + W, y2: pad + H,
+              lx: pad + W / 2, ly: pad + H + 22, text: `${l}` },
+            { len: w, x1: pad, y1: pad, x2: pad, y2: pad + H,
+              lx: pad - 16, ly: pad + H / 2 + 5, text: `${w}` }
+        ];
+
+        sides.forEach(side => {
+            const line = svgEl('line', {
+                class: 'manip-side',
+                x1: side.x1, y1: side.y1, x2: side.x2, y2: side.y2
+            });
+            const label = svgEl('text', {
+                class: 'manip-side-label',
+                x: side.lx, y: side.ly,
+                'text-anchor': 'middle'
+            });
+            label.textContent = side.text;
+            // Invisible wide hit line on top of the visible stroke, so a
+            // kid's finger doesn't need pixel accuracy.
+            const hit = svgEl('line', {
+                class: 'manip-side-hit',
+                x1: side.x1, y1: side.y1, x2: side.x2, y2: side.y2
+            });
+            hit.addEventListener('click', () => {
+                if (done) return;
+                if (line.classList.contains('counted')) return; // already walked
+                line.classList.add('counted');
+                label.classList.add('pop');
+                countedSides++;
+                terms.push(side.len);
+                updateSum();
+                if (countedSides === 4) {
+                    done = true;
+                    root.classList.add('manip-locked');
+                    api.complete(doneMessage);
+                }
+            });
+            svg.appendChild(line);
+            svg.appendChild(label);
+            svg.appendChild(hit);
+        });
+
+        root.appendChild(svg);
+        root.appendChild(sumLine);
+        container.appendChild(root);
+
+        return {
+            destroy() {
+                // No document-level listeners or timers to clean up.
+            }
+        };
+    }
+
+    // ---------------------------------------------------------------
+    // 9. frac-mult-grid — { type:'frac-mult-grid', aNum, aDen, bNum, bDen, done }
+    // ---------------------------------------------------------------
+    function mountFracMultGrid(container, config, api) {
+        const { aNum, aDen, bNum, bDen, done: doneMessage } = config;
+        let done = false;
+        let shadedRows = 0;
+
+        const W = Math.max(264, aDen * 44);
+        const H = Math.max(132, bDen * 44);
+        const cellW = W / aDen;
+        const cellH = H / bDen;
+
+        const root = el('div', 'manip manip-fmg');
+        root.appendChild(el('div', 'manip-fmg-label', `${aNum}/${aDen} shaded across`));
+
+        const svg = svgEl('svg', {
+            class: 'manip-fmg-svg',
+            viewBox: `0 0 ${W} ${H}`,
+            width: '100%'
+        });
+
+        const counter = el('div', 'manip-count');
+
+        function updateCounter() {
+            counter.textContent = `overlap: ${shadedRows * aNum} of ${aDen * bDen}`;
+        }
+
+        // Grid of cells: the first aNum COLUMNS are pre-shaded (first
+        // fraction, static); the kid toggles whole ROWS (second fraction).
+        // Where a shaded row crosses a shaded column = the product.
+        const rowCells = [];
+        const rowShaded = new Array(bDen).fill(false);
+        for (let r = 0; r < bDen; r++) {
+            const cells = [];
+            for (let c = 0; c < aDen; c++) {
+                const rect = svgEl('rect', {
+                    class: c < aNum ? 'manip-fmg-cell col-shaded' : 'manip-fmg-cell',
+                    x: (c * cellW).toFixed(1),
+                    y: (r * cellH).toFixed(1),
+                    width: cellW.toFixed(1),
+                    height: cellH.toFixed(1)
+                });
+                rect.addEventListener('click', () => {
+                    if (done) return;
+                    const row = rowCells[r];
+                    if (rowShaded[r]) {
+                        rowShaded[r] = false;
+                        row.forEach(cell => cell.classList.remove('row-shaded'));
+                        shadedRows--;
+                    } else {
+                        rowShaded[r] = true;
+                        row.forEach(cell => cell.classList.add('row-shaded'));
+                        shadedRows++;
+                    }
+                    updateCounter();
+                    if (shadedRows === bNum) {
+                        done = true;
+                        root.classList.add('manip-locked');
+                        api.complete(doneMessage);
+                    }
+                });
+                cells.push(rect);
+                svg.appendChild(rect);
+            }
+            rowCells.push(cells);
+        }
+
+        updateCounter();
+        root.appendChild(svg);
+        root.appendChild(counter);
+        container.appendChild(root);
+
+        return {
+            destroy() {
+                // No document-level listeners or timers to clean up.
+            }
+        };
+    }
+
+    // ---------------------------------------------------------------
+    // 10. split-wholes — { type:'split-wholes', wholes, per, done }
+    // ---------------------------------------------------------------
+    function mountSplitWholes(container, config, api) {
+        const { wholes, per, done: doneMessage } = config;
+        let done = false;
+        let splitCount = 0;
+        let pieces = 0;
+
+        const root = el('div', 'manip manip-split');
+        const counter = el('div', 'manip-count manip-split-count');
+        const row = el('div', 'manip-split-row');
+
+        // Pending pulse timers, tracked so destroy() can clear all of them.
+        const pulseTimers = new Set();
+
+        function updateCounter() {
+            counter.textContent = `${pieces} pieces`;
+        }
+
+        function pulseCounter() {
+            counter.classList.remove('manip-pulse');
+            void counter.offsetWidth; // restart the animation
+            counter.classList.add('manip-pulse');
+            const timer = setTimeout(() => {
+                counter.classList.remove('manip-pulse');
+                pulseTimers.delete(timer);
+            }, 450);
+            pulseTimers.add(timer);
+        }
+
+        // One big square per whole; tapping it slices it into `per` equal
+        // shaded pieces so the kid can SEE why wholes ÷ 1/per = wholes*per.
+        for (let i = 0; i < wholes; i++) {
+            const svg = svgEl('svg', {
+                class: 'manip-whole-svg',
+                viewBox: '0 0 72 72',
+                width: 72,
+                height: 72
+            });
+            const face = svgEl('rect', {
+                class: 'manip-whole-rect',
+                x: 2, y: 2, width: 68, height: 68
+            });
+            svg.appendChild(face);
+
+            let split = false;
+            svg.addEventListener('click', () => {
+                if (done) return;
+                if (split) return; // already sliced
+                split = true;
+                svg.classList.add('split');
+                const sliceW = 68 / per;
+                for (let k = 0; k < per; k++) {
+                    svg.appendChild(svgEl('rect', {
+                        class: 'manip-whole-slice',
+                        x: (2 + k * sliceW).toFixed(1),
+                        y: 2,
+                        width: sliceW.toFixed(1),
+                        height: 68
+                    }));
+                }
+                splitCount++;
+                pieces += per;
+                updateCounter();
+                pulseCounter();
+                if (splitCount === wholes) {
+                    done = true;
+                    root.classList.add('manip-locked');
+                    api.complete(doneMessage);
+                }
+            });
+            row.appendChild(svg);
+        }
+
+        updateCounter();
+        root.appendChild(counter);
+        root.appendChild(row);
+        container.appendChild(root);
+
+        return {
+            destroy() {
+                pulseTimers.forEach(t => clearTimeout(t));
+                pulseTimers.clear();
+            }
+        };
+    }
+
     window.Manipulatives = {
         'build-array': { mount: mountBuildArray },
         'share-groups': { mount: mountShareGroups },
@@ -874,6 +1138,9 @@
         'number-line': { mount: mountNumberLine },
         'compare-bars': { mount: mountCompareBars },
         'equiv-bars': { mount: mountEquivBars },
-        'shade-two': { mount: mountShadeTwo }
+        'shade-two': { mount: mountShadeTwo },
+        'trace-sides': { mount: mountTraceSides },
+        'frac-mult-grid': { mount: mountFracMultGrid },
+        'split-wholes': { mount: mountSplitWholes }
     };
 })();

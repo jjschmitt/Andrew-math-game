@@ -1492,13 +1492,278 @@ header h1 {
     text-anchor: middle;
 }
 
+/* Share-groups pool leftover counter */
+
+.manip-pool-count {
+    font-weight: bold;
+    color: #5b3fa8;
+    font-size: 0.95em;
+}
+
+/* Compare-bars */
+
+.manip-compare-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+}
+
+.manip-compare-label,
+.manip-equiv-label {
+    font-weight: bold;
+    color: #4a3b7a;
+    font-size: 1.1em;
+    min-width: 44px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.manip-compare-svg,
+.manip-equiv-svg {
+    flex: 1;
+    min-width: 0;
+    height: auto;
+    border-radius: 8px;
+}
+
+.manip-compare-row .manip-count {
+    white-space: nowrap;
+}
+
+.manip-row-locked .manip-frac-part {
+    pointer-events: none;
+    cursor: default;
+}
+
+.manip-frac-part.manip-pulse {
+    animation: manip-pulse 0.4s ease;
+    transform-box: fill-box;
+    transform-origin: center;
+}
+
+.manip-compare-question {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+}
+
+.manip-compare-btn {
+    min-height: 44px;
+    padding: 8px 14px;
+    border: 3px solid #b39ddb;
+    border-radius: 12px;
+    background: #faf8ff;
+    color: #4a3b7a;
+    font-family: inherit;
+    font-weight: bold;
+    font-size: 1em;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.manip-compare-btn.manip-wiggle {
+    animation: shake 0.4s;
+}
+
+/* Equiv-bars */
+
+.manip-equiv-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+}
+
+.manip-frac-part.pre-shaded {
+    fill: #b39ddb;
+    stroke: #5b3fa8;
+}
+
+.manip-equiv-guide {
+    stroke: #ff7043;
+    stroke-width: 3;
+    stroke-dasharray: 6 5;
+    stroke-linecap: round;
+    pointer-events: none;
+}
+
+/* Shade-two */
+
+.manip-shade-two-caption {
+    font-weight: bold;
+    color: #7e57c2;
+    font-size: 0.95em;
+}
+
+.manip-shade-two-svg {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+}
+
+.manip-frac-part.added-shaded {
+    fill: #81c784;
+    stroke: #43a047;
+}
+
+.manip-frac-part.crossed {
+    fill: #ede7f6;
+}
+
+.manip-cross-mark {
+    stroke: #e53935;
+    stroke-width: 5;
+    stroke-linecap: round;
+    pointer-events: none;
+    opacity: 0;
+}
+
+.manip-frac-part.crossed + .manip-cross-mark,
+.manip-frac-part.crossed + .manip-cross-mark + .manip-cross-mark {
+    opacity: 1;
+}
+
+/* Trace-sides (perimeter walk) */
+
+.manip-trace-svg {
+    max-width: 100%;
+    height: auto;
+}
+
+.manip-trace-rect {
+    fill: #d1c4e9;
+}
+
+.manip-side {
+    stroke: #4a2f8f;
+    stroke-width: 3;
+    stroke-linecap: round;
+    pointer-events: none;
+}
+
+.manip-side.counted {
+    stroke: #43a047;
+    stroke-width: 5;
+}
+
+.manip-side-hit {
+    stroke: transparent;
+    stroke-width: 30;
+    stroke-linecap: round;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.manip-side-label {
+    font-size: 15px;
+    font-weight: bold;
+    fill: #4a3b7a;
+    font-family: inherit;
+    pointer-events: none;
+}
+
+.manip-side-label.pop {
+    fill: #2e7d32;
+    animation: manip-pulse 0.4s ease;
+    transform-box: fill-box;
+    transform-origin: center;
+}
+
+.manip-trace-sum {
+    display: inline-block;
+    background: #e8f5e9;
+    color: #2e7d32;
+    border-radius: 20px;
+    padding: 4px 16px;
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+/* Frac-mult-grid (fraction × fraction area model) */
+
+.manip-fmg-label {
+    font-weight: bold;
+    color: #4a3b7a;
+    font-size: 1.05em;
+}
+
+.manip-fmg-svg {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+}
+
+.manip-fmg-cell {
+    fill: #faf8ff;
+    stroke: #7e57c2;
+    stroke-width: 2;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.manip-fmg-cell.col-shaded {
+    fill: #ffe082;
+}
+
+.manip-fmg-cell.row-shaded {
+    fill: rgba(126, 87, 194, 0.35);
+}
+
+.manip-fmg-cell.col-shaded.row-shaded {
+    fill: #7e57c2;
+}
+
+/* Split-wholes (whole ÷ unit fraction) */
+
+.manip-split-count {
+    font-size: 1.25em;
+}
+
+.manip-split-count.manip-pulse {
+    animation: manip-pulse 0.4s ease;
+}
+
+.manip-split-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+}
+
+.manip-whole-svg {
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.manip-whole-svg.split {
+    cursor: default;
+}
+
+.manip-whole-rect {
+    fill: #faf8ff;
+    stroke: #4a2f8f;
+    stroke-width: 3;
+}
+
+.manip-whole-slice {
+    fill: #b39ddb;
+    stroke: #4a2f8f;
+    stroke-width: 2;
+}
+
 /* Locked state */
 
 .manip-locked .manip-cell,
 .manip-locked .manip-plate,
 .manip-locked .manip-frac-part,
 .manip-locked .manip-numline,
-.manip-locked .manip-nl-hit {
+.manip-locked .manip-nl-hit,
+.manip-locked .manip-compare-btn,
+.manip-locked .manip-fmg-cell,
+.manip-locked .manip-side-hit,
+.manip-locked .manip-whole-svg {
     pointer-events: none;
     cursor: default;
 }
@@ -1536,4 +1801,8 @@ header h1 {
 @media (max-width: 560px) {
     .manip-cell { width: 40px; height: 40px; font-size: 1.25em; }
     .manip-plate { min-width: 74px; min-height: 74px; }
+    .manip-compare-btn { min-height: 40px; padding: 6px 10px; font-size: 0.92em; }
+    .manip-compare-label, .manip-equiv-label { font-size: 0.95em; min-width: 34px; }
+    .manip-compare-row, .manip-equiv-row { gap: 6px; }
+    .manip-whole-svg { width: 60px; height: 60px; }
 }
