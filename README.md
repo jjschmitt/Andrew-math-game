@@ -32,6 +32,7 @@ Progress saves automatically in the browser (localStorage), so the game remember
 
 ### 3. The right cognitive load at the right moment
 - Every skill begins in a **Learn phase**: a worked example ("Make a Ten: 9 + 4 → 9 + 1 = 10, then 10 + 3 = 13") plus visual models — ten frames, base-ten blocks, arrays, clock faces.
+- Through grade 5, most Learn-phase problems also open with a **hands-on manipulative**: the child builds the math by tapping and dragging — building arrays, dealing counters onto plates (with remainders), shading and comparing fraction bars, walking a rectangle's perimeter, advancing a clock, revealing area-model partial products, sliding digits ×10/÷10, building decimals, sweeping a ray to measure an angle, stacking cube layers for volume, and walking a rocket to a coordinate point — before typing the answer.
 - Scaffolds **fade** as the child succeeds: Practice phase drops the worked example and visuals; Master-level and Flashback questions are pure retrieval with harder numbers.
 - Scaffolds **return automatically** after two missed problems in a row — the visual model and first hint come back until the child is succeeding again.
 - One problem, one screen, no timers — working memory goes to the math, not the interface.
