@@ -4073,6 +4073,11 @@ const CURRICULUM = {
                         const target = chosen[idx];
                         const favorable = counts[idx];
                         const desc = chosen.map((c, i) => `${counts[i]} ${c}`).join(', ');
+                        const otherIdx = 1 - idx;
+                        const interactive = level === 1 ? { type: 'tap-count', groups: [{ chips: R.shuffle([
+                            ...Array.from({ length: favorable }, () => ({ text: colorEmoji(target), target: true })),
+                            ...Array.from({ length: counts[otherIdx] }, () => ({ text: colorEmoji(chosen[otherIdx]), target: false }))
+                        ]) }], done: `You counted ${favorable} ${target} out of ${total} marbles — P = ${favorable}/${total}. Type it like ${favorable}/${total} ✏️` } : null;
                         if (level === 3 && Math.random() < 0.5) {
                             return Object.assign({
                                 prompt: `A bag has ${desc} marbles. What is P(NOT ${target})? (Type it like 3/4)`,
@@ -4086,8 +4091,9 @@ const CURRICULUM = {
                             }, frac(total - favorable, total));
                         }
                         return Object.assign({
-                            prompt: `A bag has ${desc} marbles. What is P(${target})? (Type it like 3/4)`,
+                            prompt: `A bag has ${desc} marbles. What is P(${target})? (Type it like 3/4)${level === 1 ? `<span class="prompt-sub">Tap every ${target} marble to count them.</span>` : ''}`,
                             visual: null,
+                            interactive,
                             answerType: 'fraction',
                             hints: [
                                 `Probability = favorable outcomes ÷ total outcomes.`,
@@ -4146,9 +4152,11 @@ const CURRICULUM = {
                         }
                         const a = level === 1 ? R.int(2, 4) : R.int(2, 5);
                         const c = level === 1 ? R.int(2, 4) : R.int(2, 5);
+                        const interactive = level === 1 ? { type: 'tap-count', separator: '×', groups: [{ label: `${b}^${a}`, chips: Array.from({ length: a }, () => ({ text: String(b), target: true })) }, { label: `${b}^${c}`, chips: Array.from({ length: c }, () => ({ text: String(b), target: true })) }], done: `${a} factors and ${c} more — ${a + c} factors of ${b} in all, so the exponent is ${a + c}! Type it in ✏️` } : null;
                         return {
-                            prompt: `${b}<sup>${a}</sup> × ${b}<sup>${c}</sup> = ${b}<sup>?</sup>`,
+                            prompt: `${b}<sup>${a}</sup> × ${b}<sup>${c}</sup> = ${b}<sup>?</sup>${level === 1 ? `<span class="prompt-sub">Tap every ${b} to count the factors.</span>` : ''}`,
                             visual: null,
+                            interactive,
                             answerType: 'number',
                             answer: a + c,
                             hints: [
@@ -4205,9 +4213,11 @@ const CURRICULUM = {
                         }
                         const root = level === 1 ? R.int(2, 10) : R.int(2, 15);
                         const n = root * root;
+                        const interactive = level === 1 ? { type: 'square-builder', n, done: `A ${root} × ${root} square makes ${n} — so √${n} = ${root}! Type it in ✏️` } : null;
                         return {
-                            prompt: `√${n} = ?`,
+                            prompt: `√${n} = ?${level === 1 ? `<span class="prompt-sub">Grow the square until it has exactly ${n} small squares.</span>` : ''}`,
                             visual: null,
+                            interactive,
                             answerType: 'number',
                             answer: root,
                             hints: [
@@ -4247,9 +4257,11 @@ const CURRICULUM = {
                         const exp = R.int(2, 5);
                         const answer = lead * Math.pow(10, exp - 1);
                         const mantissa = `${Math.floor(lead / 10)}.${lead % 10}`;
+                        const interactive = level === 1 ? { type: 'place-shift', start: lead / 10, target: answer, done: `×10 done ${exp} times slid the digits ${exp} places — that's ${answer}! Type it in ✏️` } : null;
                         return {
-                            prompt: `${mantissa} × 10<sup>${exp}</sup> = ?`,
+                            prompt: `${mantissa} × 10<sup>${exp}</sup> = ?${level === 1 ? `<span class="prompt-sub">Tap ×10 exactly ${exp} times.</span>` : ''}`,
                             visual: null,
+                            interactive,
                             answerType: 'number',
                             answer,
                             hints: [
@@ -4280,8 +4292,9 @@ const CURRICULUM = {
                             const run = R.int(1, 6);
                             const rise = run * R.int(1, 5);
                             return {
-                                prompt: `A line rises ${rise} for every ${run} across. What is its slope?`,
+                                prompt: `A line rises ${rise} for every ${run} across. What is its slope?${rise <= 8 ? `<span class="prompt-sub">Walk the rocket: over ${run}, then up ${rise}.</span>` : ''}`,
                                 visual: null,
+                                interactive: rise <= 8 ? { type: 'coord-walk', x: run, y: rise, done: `Up ${rise}, over ${run} — slope = rise ÷ run = ${rise / run}! Type it in ✏️` } : null,
                                 answerType: 'number',
                                 answer: rise / run,
                                 hints: [
@@ -4324,9 +4337,11 @@ const CURRICULUM = {
                             const a = R.int(2, 6);
                             const c = R.int(1, 10);
                             const total = a * x + a * c;
+                            const interactive = level === 1 ? { type: 'balance-steps', order: 'divide-first', coef: a, constant: c, rhs: total, done: `Split both sides by ${a}, then take away ${c} — x = ${x}! Type it in ✏️` } : null;
                             return {
-                                prompt: `Solve for x: ${a}(x + ${c}) = ${total}`,
+                                prompt: `Solve for x: ${a}(x + ${c}) = ${total}${level === 1 ? `<span class="prompt-sub">First split both sides into ${a} groups, then undo the + ${c}.</span>` : ''}`,
                                 visual: null,
+                                interactive,
                                 answerType: 'number',
                                 allowNegative: allowNeg,
                                 answer: x,
@@ -4422,9 +4437,11 @@ const CURRICULUM = {
                                 explain: `${known}² + ?² = ${c}²; ${c * c} − ${known * known} = ${c * c - known * known}, and √${c * c - known * known} = ${answer}.`
                             };
                         }
+                        const interactive = level === 1 ? { type: 'pyth-squares', a, b, c, done: `${a * a} + ${b * b} = ${c * c}, and √${c * c} = ${c} — the hypotenuse is ${c}! Type it in ✏️` } : null;
                         return {
-                            prompt: `A right triangle has legs of ${a} and ${b}. What is the length of the hypotenuse?`,
+                            prompt: `A right triangle has legs of ${a} and ${b}. What is the length of the hypotenuse?${level === 1 ? `<span class="prompt-sub">Tap each leg's square, then the big square on the longest side.</span>` : ''}`,
                             visual: null,
+                            interactive,
                             answerType: 'number',
                             answer: c,
                             hints: [
@@ -4462,9 +4479,11 @@ const CURRICULUM = {
                         }
                         const r = R.int(2, 5), h = R.int(2, 6);
                         const coeff = r * r * h;
+                        const interactive = level === 1 ? { type: 'disk-stack', r, h, done: `${h} layers of ${r}² = ${r * r} each — that's ${r * r * h}π! Type ${r * r * h} ✏️` } : null;
                         return {
-                            prompt: `A cylinder has a radius of ${r} and a height of ${h}. What is its volume in terms of π? (V = ?π cubic units)`,
+                            prompt: `A cylinder has a radius of ${r} and a height of ${h}. What is its volume in terms of π? (V = ?π cubic units)${level === 1 ? `<span class="prompt-sub">Stack ${h} disk layers, each worth ${r}² = ${r * r}.</span>` : ''}`,
                             visual: null,
+                            interactive,
                             answerType: 'number',
                             answer: coeff,
                             hints: [
