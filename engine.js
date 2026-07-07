@@ -284,9 +284,11 @@ class MasteryEngine {
         if (p.answerType === 'fraction') extras.push('/');
         if (p.answerType === 'text') extras.push('.');
         if (p.answerType === 'number' && DECIMAL_PAD_SKILLS.has(skillId)) extras.push('.');
+        if (p.answerType === 'number' && p.allowDecimal && !extras.includes('.')) extras.push('.');
+        if (p.answerType === 'number' && p.allowNegative) extras.push('-');
         const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', ...extras, '0'];
         pad.innerHTML = keys.map(k =>
-            `<button type="button" class="keypad-key${'./:'.includes(k) ? ' extra' : ''}" data-key="${k}">${k}</button>`
+            `<button type="button" class="keypad-key${'./:-'.includes(k) ? ' extra' : ''}" data-key="${k}">${k}</button>`
         ).join('') + '<button type="button" class="keypad-key action" data-key="back">⌫</button>';
         pad.style.display = 'grid';
     }
@@ -339,8 +341,9 @@ class MasteryEngine {
         const due = this.dueReviewIds().length;
         const grade = this.highestUnlockedGrade();
         const allDone = mastered === total;
+        const maxGrade = Math.max(...CURRICULUM.units.map(u => u.grade));
         document.getElementById('welcome-title').textContent =
-            allDone && grade === 5 ? 'Math Champion! 🏆' : `Level ${grade} Mastery Quest 🚀`;
+            allDone && grade === maxGrade ? 'Math Champion! 🏆' : `Level ${grade} Mastery Quest 🚀`;
         this.el['progress-summary'].innerHTML =
             `<div class="summary-line">⭐ Skills mastered: <strong>${mastered} / ${total}</strong></div>` +
             `<div class="summary-line">${theme.currencyIcon} ${theme.currencyName} earned: <strong>${this.state.stars}</strong></div>` +
