@@ -1753,6 +1753,358 @@ header h1 {
     stroke-width: 2;
 }
 
+/* Clock-adder (elapsed time) */
+
+.manip-clock-readout {
+    font-size: 1.8em;
+    font-weight: bold;
+    color: #4a3b7a;
+}
+
+.manip-clock-readout.manip-pulse {
+    animation: manip-pulse 0.4s ease;
+}
+
+.manip-clock-btns {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+}
+
+.manip-clock-btn {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 8px 14px;
+    border: 3px solid #b39ddb;
+    border-radius: 12px;
+    background: #faf8ff;
+    color: #4a3b7a;
+    font-family: inherit;
+    font-weight: bold;
+    font-size: 0.98em;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.manip-clock-btn.manip-wiggle {
+    animation: shake 0.4s;
+}
+
+/* Partial-products (area-model multiplication) */
+
+.manip-pp-svg {
+    max-width: 100%;
+    height: auto;
+}
+
+.manip-pp-region {
+    fill: #faf8ff;
+    stroke: #7e57c2;
+    stroke-width: 2;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.manip-pp-region.revealed {
+    fill: #ede7f6;
+    cursor: default;
+    pointer-events: none;
+}
+
+.manip-pp-text {
+    fill: #4a3b7a;
+    font-size: 13px;
+    font-weight: bold;
+    font-family: inherit;
+    pointer-events: none;
+}
+
+.manip-pp-text.manip-pulse {
+    animation: manip-pulse 0.4s ease;
+    transform-box: fill-box;
+    transform-origin: center;
+}
+
+.manip-pp-toplabel,
+.manip-pp-sidelabel {
+    fill: #4a3b7a;
+    font-size: 14px;
+    font-weight: bold;
+    font-family: inherit;
+}
+
+.manip-pp-equation {
+    display: inline-block;
+    background: #ede7f6;
+    color: #5b3fa8;
+    border-radius: 20px;
+    padding: 4px 16px;
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+/* Place-shift (multiply/divide by powers of ten) */
+
+.manip-place-readout {
+    font-size: 2.1em;
+    font-weight: bold;
+    color: #4a3b7a;
+    letter-spacing: 0.02em;
+}
+
+.manip-place-readout.manip-pulse {
+    animation: manip-pulse 0.4s ease;
+}
+
+.manip-place-trail {
+    font-size: 0.95em;
+    font-weight: bold;
+    color: #7e57c2;
+    min-height: 1.2em;
+}
+
+.manip-place-btns {
+    display: flex;
+    gap: 12px;
+}
+
+.manip-place-btn {
+    min-height: 52px;
+    min-width: 84px;
+    padding: 10px 20px;
+    border: 3px solid #b39ddb;
+    border-radius: 14px;
+    background: #faf8ff;
+    color: #4a3b7a;
+    font-family: inherit;
+    font-weight: bold;
+    font-size: 1.2em;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.manip-place-btn.manip-wiggle {
+    animation: shake 0.4s;
+}
+
+/* Decimal-build (decimal +/-) */
+
+.manip-decimal-readout {
+    font-size: 2.1em;
+    font-weight: bold;
+    color: #4a3b7a;
+}
+
+.manip-decimal-readout.manip-pulse {
+    animation: manip-pulse 0.4s ease;
+}
+
+.manip-decimal-btns {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+}
+
+.manip-decimal-btn {
+    min-height: 44px;
+    min-width: 60px;
+    padding: 8px 14px;
+    border: 3px solid #b39ddb;
+    border-radius: 12px;
+    background: #faf8ff;
+    color: #4a3b7a;
+    font-family: inherit;
+    font-weight: bold;
+    font-size: 1em;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.manip-decimal-btn-primary {
+    border-color: #43a047;
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+/* Angle-drag (measuring an angle by sweeping) */
+
+.manip-angle-svg {
+    touch-action: none;
+    max-width: 100%;
+    height: auto;
+}
+
+.manip-angle-measure {
+    stroke: #43a047;
+    stroke-width: 4;
+    stroke-linecap: round;
+}
+
+.manip-angle-handle {
+    fill: #2e7d32;
+    stroke: #fff;
+    stroke-width: 2;
+    cursor: grab;
+}
+
+.manip-angle-hit {
+    fill: transparent;
+    cursor: grab;
+}
+
+.manip-angle-sweep {
+    fill: none;
+    stroke: #ff7043;
+    stroke-width: 3;
+    stroke-dasharray: 4 4;
+}
+
+.manip-angle-readout {
+    font-size: 1.6em;
+    font-weight: bold;
+    color: #4a3b7a;
+}
+
+.manip-angle-zone {
+    display: inline-block;
+    border-radius: 20px;
+    padding: 4px 16px;
+    font-weight: bold;
+    font-size: 1.05em;
+    text-transform: capitalize;
+}
+
+.manip-angle-zone-acute {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.manip-angle-zone-right {
+    background: #fff3e0;
+    color: #e65100;
+}
+
+.manip-angle-zone-obtuse {
+    background: #ede7f6;
+    color: #5b3fa8;
+}
+
+/* Cube-builder (volume as stacked layers) */
+
+.manip-cube-svg {
+    max-width: 100%;
+    height: auto;
+}
+
+.manip-cube-ghost {
+    fill: none;
+    stroke: #b39ddb;
+    stroke-width: 1.5;
+    stroke-dasharray: 4 3;
+}
+
+.manip-cube-front-cell {
+    fill: #b39ddb;
+    stroke: #4a2f8f;
+    stroke-width: 1.5;
+}
+
+.manip-cube-top-grid {
+    stroke: #4a2f8f;
+    stroke-width: 1;
+    opacity: 0.5;
+}
+
+.manip-cube-btns {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+}
+
+.manip-cube-btn {
+    min-height: 44px;
+    padding: 8px 16px;
+    border: 3px solid #b39ddb;
+    border-radius: 12px;
+    background: #faf8ff;
+    color: #4a3b7a;
+    font-family: inherit;
+    font-weight: bold;
+    font-size: 0.98em;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.manip-cube-btn.manip-wiggle {
+    animation: shake 0.4s;
+}
+
+/* Coord-walk (coordinate plane) */
+
+.manip-coord-svg {
+    max-width: 100%;
+    height: auto;
+}
+
+.manip-coord-target {
+    filter: drop-shadow(0 0 3px rgba(255, 112, 67, 0.7));
+}
+
+.manip-coord-walker {
+    font-size: 18px;
+    dominant-baseline: middle;
+}
+
+.manip-coord-crumb {
+    fill: #b39ddb;
+    opacity: 0.6;
+}
+
+.manip-coord-readout {
+    display: inline-block;
+    background: #ede7f6;
+    color: #5b3fa8;
+    border-radius: 20px;
+    padding: 4px 16px;
+    font-weight: bold;
+    font-size: 1.05em;
+}
+
+.manip-coord-btns {
+    display: grid;
+    grid-template-columns: 44px 44px 44px;
+    grid-template-rows: 44px 44px;
+    gap: 6px;
+    justify-content: center;
+}
+
+.manip-coord-up { grid-column: 2; grid-row: 1; }
+.manip-coord-left { grid-column: 1; grid-row: 2; }
+.manip-coord-down { grid-column: 2; grid-row: 2; }
+.manip-coord-right { grid-column: 3; grid-row: 2; }
+
+.manip-coord-btn {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0;
+    border: 3px solid #b39ddb;
+    border-radius: 12px;
+    background: #faf8ff;
+    font-size: 1.2em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.manip-coord-btn.manip-wiggle {
+    animation: shake 0.4s;
+}
+
 /* Locked state */
 
 .manip-locked .manip-cell,
@@ -1763,7 +2115,14 @@ header h1 {
 .manip-locked .manip-compare-btn,
 .manip-locked .manip-fmg-cell,
 .manip-locked .manip-side-hit,
-.manip-locked .manip-whole-svg {
+.manip-locked .manip-whole-svg,
+.manip-locked .manip-clock-btn,
+.manip-locked .manip-pp-region,
+.manip-locked .manip-place-btn,
+.manip-locked .manip-decimal-btn,
+.manip-locked .manip-angle-hit,
+.manip-locked .manip-cube-btn,
+.manip-locked .manip-coord-btn {
     pointer-events: none;
     cursor: default;
 }
@@ -1805,4 +2164,12 @@ header h1 {
     .manip-compare-label, .manip-equiv-label { font-size: 0.95em; min-width: 34px; }
     .manip-compare-row, .manip-equiv-row { gap: 6px; }
     .manip-whole-svg { width: 60px; height: 60px; }
+    .manip-clock-btn { padding: 6px 10px; font-size: 0.88em; }
+    .manip-place-readout, .manip-decimal-readout { font-size: 1.7em; }
+    .manip-place-btn { min-width: 68px; padding: 8px 14px; font-size: 1.05em; }
+    .manip-decimal-btn { min-width: 50px; padding: 6px 10px; font-size: 0.9em; }
+    .manip-angle-readout { font-size: 1.3em; }
+    .manip-cube-btn { padding: 6px 10px; font-size: 0.88em; }
+    .manip-coord-btns { grid-template-columns: 40px 40px 40px; grid-template-rows: 40px 40px; }
+    .manip-coord-btn { min-height: 40px; min-width: 40px; font-size: 1.05em; }
 }

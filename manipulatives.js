@@ -53,6 +53,10 @@
         return e;
     }
 
+    function pad2(n) {
+        return n < 10 ? '0' + n : String(n);
+    }
+
     // ---------------------------------------------------------------
     // 1. build-array — { type:'build-array', rows, cols, icon, done }
     // ---------------------------------------------------------------
@@ -1131,6 +1135,913 @@
         };
     }
 
+    // ---------------------------------------------------------------
+    // 11. clock-adder — { type:'clock-adder', h, m, addMinutes, done }
+    // ---------------------------------------------------------------
+    function mountClockAdder(container, config, api) {
+        const { h, m, addMinutes, done: doneMessage } = config;
+        let done = false;
+        let elapsed = 0;
+
+        const root = el('div', 'manip manip-clock');
+
+        const svg = svgEl('svg', {
+            class: 'clock manip-clock-svg',
+            viewBox: '0 0 120 120', width: 170, height: 170,
+            role: 'img', 'aria-label': 'analog clock'
+        });
+        svg.appendChild(svgEl('circle', { cx: 60, cy: 60, r: 56, class: 'clock-face' }));
+        for (let i = 0; i < 12; i++) {
+            const ang = (i * 30) * Math.PI / 180;
+            const nx = 60 + Math.sin(ang) * 44;
+            const ny = 60 - Math.cos(ang) * 44;
+            const numText = svgEl('text', {
+                x: nx.toFixed(1), y: (ny + 4).toFixed(1),
+                'text-anchor': 'middle', class: 'clock-num'
+            });
+            numText.textContent = String(i === 0 ? 12 : i);
+            svg.appendChild(numText);
+        }
+        // Hand endpoints are updated live by render(); start pointing at 12.
+        const hourHand = svgEl('line', { x1: 60, y1: 60, x2: 60, y2: 36, class: 'hand hour' });
+        const minuteHand = svgEl('line', { x1: 60, y1: 60, x2: 60, y2: 24, class: 'hand minute' });
+        svg.appendChild(hourHand);
+        svg.appendChild(minuteHand);
+        svg.appendChild(svgEl('circle', { cx: 60, cy: 60, r: 3.5, class: 'clock-center' }));
+
+        const readout = el('div', 'manip-clock-readout');
+        const counter = el('div', 'manip-count');
+        const btnRow = el('div', 'manip-clock-btns');
+
+        // Pending wiggle/pulse timers, tracked so destroy() can clear them.
+        const wiggleTimers = new Set();
+        const pulseTimers = new Set();
+
+        function wiggle(target) {
+            target.classList.add('manip-wiggle');
+            const timer = setTimeout(() => {
+                target.classList.remove('manip-wiggle');
+                wiggleTimers.delete(timer);
+            }, 500);
+            wiggleTimers.add(timer);
+        }
+
+        function pulse(target) {
+            target.classList.remove('manip-pulse');
+            void target.offsetWidth; // restart the animation
+            target.classList.add('manip-pulse');
+            const timer = setTimeout(() => {
+                target.classList.remove('manip-pulse');
+                pulseTimers.delete(timer);
+            }, 450);
+            pulseTimers.add(timer);
+        }
+
+        function currentTime() {
+            const total = h * 60 + m + elapsed;
+            const mm = total % 60;
+            let hh = Math.floor(total / 60) % 12;
+            if (hh <= 0) hh += 12; // 1-12, never 0
+            return { hh, mm };
+        }
+
+        function render() {
+            const { hh, mm } = currentTime();
+            // Mirrors curriculum.js's clockSVG() hand-angle math exactly.
+            const mAng = (mm * 6) * Math.PI / 180;
+            const hAng = ((hh % 12) * 30 + mm / 2) * Math.PI / 180;
+            const mx = 60 + Math.sin(mAng) * 36, my = 60 - Math.cos(mAng) * 36;
+            const hx = 60 + Math.sin(hAng) * 24, hy = 60 - Math.cos(hAng) * 24;
+            hourHand.setAttribute('x2', hx.toFixed(1));
+            hourHand.setAttribute('y2', hy.toFixed(1));
+            minuteHand.setAttribute('x2', mx.toFixed(1));
+            minuteHand.setAttribute('y2', my.toFixed(1));
+            readout.textContent = `${hh}:${pad2(mm)}`;
+            counter.textContent = `+${elapsed} minutes so far`;
+        }
+
+        function press(delta, btn) {
+            if (done) return;
+            const next = elapsed + delta;
+            if (next < 0) {
+                wiggle(btn);
+                return;
+            }
+            elapsed = next;
+            render();
+            pulse(readout);
+            if (elapsed === addMinutes) {
+                done = true;
+                root.classList.add('manip-locked');
+                api.complete(doneMessage);
+            }
+        }
+
+        [
+            { text: '+1 hour', delta: 60 },
+            { text: '+5 min', delta: 5 },
+            { text: '−5 min', delta: -5 },
+            { text: '−1 hour', delta: -60 }
+        ].forEach(spec => {
+            const btn = el('button', 'manip-clock-btn', spec.text);
+            btn.type = 'button';
+            btn.addEventListener('click', () => press(spec.delta, btn));
+            btnRow.appendChild(btn);
+        });
+
+        render();
+        root.appendChild(svg);
+        root.appendChild(readout);
+        root.appendChild(counter);
+        root.appendChild(btnRow);
+        container.appendChild(root);
+
+        return {
+            destroy() {
+                wiggleTimers.forEach(t => clearTimeout(t));
+                wiggleTimers.clear();
+                pulseTimers.forEach(t => clearTimeout(t));
+                pulseTimers.clear();
+            }
+        };
+    }
+
+    // ---------------------------------------------------------------
+    // 12. partial-products — { type:'partial-products', aParts, bParts, done }
+    // ---------------------------------------------------------------
+    function mountPartialProducts(container, config, api) {
+        const { aParts, bParts, done: doneMessage } = config;
+        let done = false;
+        let revealedCount = 0;
+        const totalRegions = aParts.length * bParts.length;
+
+        const root = el('div', 'manip manip-pp');
+
+        const PAD_L = 50, PAD_T = 34, W = 280, H = 200;
+        const VW = PAD_L + W + 10, VH = PAD_T + H + 10;
+
+        const svg = svgEl('svg', {
+            class: 'manip-pp-svg',
+            viewBox: `0 0 ${VW} ${VH}`,
+            width: '100%'
+        });
+
+        // Column/row sizes are proportional to their value, but floored at
+        // ~22% of the total so small parts (e.g. the ones digit) stay
+        // tappable. The model is schematic, not to scale.
+        function proportionalSizes(parts, total) {
+            const sum = parts.reduce((a, b) => a + b, 0);
+            const minSize = 0.22 * total;
+            const extra = total - parts.length * minSize;
+            return parts.map(v => minSize + (v / sum) * extra);
+        }
+
+        const colWidths = proportionalSizes(aParts, W);
+        const rowHeights = proportionalSizes(bParts, H);
+
+        const colX = [];
+        let cx = PAD_L;
+        colWidths.forEach(cw => { colX.push(cx); cx += cw; });
+
+        const rowY = [];
+        let ry = PAD_T;
+        rowHeights.forEach(rh => { rowY.push(ry); ry += rh; });
+
+        // Column labels across the top edge, row labels down the left edge.
+        aParts.forEach((val, i) => {
+            const label = svgEl('text', {
+                class: 'manip-pp-toplabel',
+                x: (colX[i] + colWidths[i] / 2).toFixed(1),
+                y: (PAD_T - 10).toFixed(1),
+                'text-anchor': 'middle'
+            });
+            label.textContent = String(val);
+            svg.appendChild(label);
+        });
+        bParts.forEach((val, j) => {
+            const label = svgEl('text', {
+                class: 'manip-pp-sidelabel',
+                x: (PAD_L - 10).toFixed(1),
+                y: (rowY[j] + rowHeights[j] / 2 + 5).toFixed(1),
+                'text-anchor': 'end'
+            });
+            label.textContent = String(val);
+            svg.appendChild(label);
+        });
+
+        // Fixed reading order (top-to-bottom, left-to-right) for the final
+        // equation line, independent of the order the kid taps regions in.
+        const allProducts = [];
+        bParts.forEach(bVal => aParts.forEach(aVal => allProducts.push(aVal * bVal)));
+
+        const equation = el('div', 'manip-pp-equation');
+
+        bParts.forEach((bVal, j) => {
+            aParts.forEach((aVal, i) => {
+                const rect = svgEl('rect', {
+                    class: 'manip-pp-region',
+                    x: colX[i].toFixed(1), y: rowY[j].toFixed(1),
+                    width: colWidths[i].toFixed(1), height: rowHeights[j].toFixed(1)
+                });
+                const text = svgEl('text', {
+                    class: 'manip-pp-text',
+                    x: (colX[i] + colWidths[i] / 2).toFixed(1),
+                    y: (rowY[j] + rowHeights[j] / 2 + 5).toFixed(1),
+                    'text-anchor': 'middle'
+                });
+                svg.appendChild(rect);
+                svg.appendChild(text);
+
+                rect.addEventListener('click', () => {
+                    if (done) return;
+                    if (rect.classList.contains('revealed')) return; // already revealed
+                    rect.classList.add('revealed');
+                    text.textContent = `${aVal} × ${bVal} = ${aVal * bVal}`;
+                    text.classList.add('manip-pulse');
+                    revealedCount++;
+                    if (revealedCount === totalRegions) {
+                        done = true;
+                        const total = allProducts.reduce((a, b) => a + b, 0);
+                        equation.textContent = `${allProducts.join(' + ')} = ${total}`;
+                        root.appendChild(equation);
+                        root.classList.add('manip-locked');
+                        api.complete(doneMessage);
+                    }
+                });
+            });
+        });
+
+        root.appendChild(svg);
+        container.appendChild(root);
+
+        return {
+            destroy() {
+                // No document-level listeners or timers to clean up.
+            }
+        };
+    }
+
+    // ---------------------------------------------------------------
+    // 13. place-shift — { type:'place-shift', start, target, done }
+    // ---------------------------------------------------------------
+    function mountPlaceShift(container, config, api) {
+        const { start, target, done: doneMessage } = config;
+        let done = false;
+        // Kept as an integer count of thousandths so ×10/÷10 never drifts
+        // via float error; ÷10 rounds defensively at the extreme edge of
+        // the allowed range (see MIN below).
+        let value = Math.round(start * 1000);
+        const targetValue = Math.round(target * 1000);
+        const MIN = 1, MAX = 9999999 * 1000; // real value bounds: 0.001 .. 9,999,999
+
+        const root = el('div', 'manip manip-place');
+        const readout = el('div', 'manip-place-readout');
+        const trail = el('div', 'manip-place-trail');
+        const btnRow = el('div', 'manip-place-btns');
+
+        const wiggleTimers = new Set();
+        const pulseTimers = new Set();
+        const history = [];
+
+        function wiggle(elm) {
+            elm.classList.add('manip-wiggle');
+            const timer = setTimeout(() => {
+                elm.classList.remove('manip-wiggle');
+                wiggleTimers.delete(timer);
+            }, 500);
+            wiggleTimers.add(timer);
+        }
+
+        function pulse(elm) {
+            elm.classList.remove('manip-pulse');
+            void elm.offsetWidth; // restart the animation
+            elm.classList.add('manip-pulse');
+            const timer = setTimeout(() => {
+                elm.classList.remove('manip-pulse');
+                pulseTimers.delete(timer);
+            }, 450);
+            pulseTimers.add(timer);
+        }
+
+        function format(v) {
+            let s = (v / 1000).toFixed(3);
+            s = s.replace(/0+$/, '').replace(/\.$/, '');
+            return s === '' ? '0' : s;
+        }
+
+        function render() {
+            readout.textContent = format(value);
+            trail.textContent = history.join(' → ');
+        }
+
+        history.push(format(value));
+
+        function press(op, btn) {
+            if (done) return;
+            const candidate = op === 'mul' ? value * 10 : Math.round(value / 10);
+            if (candidate > MAX || candidate < MIN) {
+                wiggle(btn);
+                return;
+            }
+            value = candidate;
+            history.push(format(value));
+            if (history.length > 4) history.shift();
+            render();
+            pulse(readout);
+            if (value === targetValue) {
+                done = true;
+                root.classList.add('manip-locked');
+                api.complete(doneMessage);
+            }
+        }
+
+        const mulBtn = el('button', 'manip-place-btn', '× 10');
+        mulBtn.type = 'button';
+        mulBtn.addEventListener('click', () => press('mul', mulBtn));
+        const divBtn = el('button', 'manip-place-btn', '÷ 10');
+        divBtn.type = 'button';
+        divBtn.addEventListener('click', () => press('div', divBtn));
+        btnRow.appendChild(mulBtn);
+        btnRow.appendChild(divBtn);
+
+        render();
+        root.appendChild(readout);
+        root.appendChild(trail);
+        root.appendChild(btnRow);
+        container.appendChild(root);
+
+        return {
+            destroy() {
+                wiggleTimers.forEach(t => clearTimeout(t));
+                wiggleTimers.clear();
+                pulseTimers.forEach(t => clearTimeout(t));
+                pulseTimers.clear();
+            }
+        };
+    }
+
+    // ---------------------------------------------------------------
+    // 14. decimal-build — { type:'decimal-build', startTenths, deltaTenths,
+    //                        op:'add'|'sub', done }
+    // ---------------------------------------------------------------
+    function mountDecimalBuild(container, config, api) {
+        const { startTenths, deltaTenths, op, done: doneMessage } = config;
+        let done = false;
+        let current = startTenths;
+
+        const root = el('div', 'manip manip-decimal');
+        const readout = el('div', 'manip-decimal-readout');
+        const progress = el('div', 'manip-count');
+        const btnRow = el('div', 'manip-decimal-btns');
+
+        const pulseTimers = new Set();
+
+        function pulse(elm) {
+            elm.classList.remove('manip-pulse');
+            void elm.offsetWidth; // restart the animation
+            elm.classList.add('manip-pulse');
+            const timer = setTimeout(() => {
+                elm.classList.remove('manip-pulse');
+                pulseTimers.delete(timer);
+            }, 450);
+            pulseTimers.add(timer);
+        }
+
+        function fmt(tenths) {
+            return (tenths / 10).toFixed(1);
+        }
+
+        function render() {
+            readout.textContent = fmt(current);
+            const change = current - startTenths;
+            const amount = fmt(Math.abs(change));
+            const target = fmt(deltaTenths);
+            progress.textContent = op === 'add'
+                ? `you've added ${amount} of ${target}`
+                : `you've taken away ${amount} of ${target}`;
+        }
+
+        function press(delta) {
+            if (done) return;
+            // Wrong-direction presses are allowed (they're how a kid
+            // corrects overshoot); only clamp so the value can't go
+            // negative.
+            current = Math.max(0, current + delta);
+            render();
+            pulse(readout);
+            const change = current - startTenths;
+            if ((op === 'add' && change === deltaTenths) ||
+                (op === 'sub' && change === -deltaTenths)) {
+                done = true;
+                root.classList.add('manip-locked');
+                api.complete(doneMessage);
+            }
+        }
+
+        [
+            { text: '+1', delta: 10, primary: op === 'add' },
+            { text: '+0.1', delta: 1, primary: op === 'add' },
+            { text: '−0.1', delta: -1, primary: op === 'sub' },
+            { text: '−1', delta: -10, primary: op === 'sub' }
+        ].forEach(spec => {
+            const btn = el('button', spec.primary ? 'manip-decimal-btn manip-decimal-btn-primary' : 'manip-decimal-btn', spec.text);
+            btn.type = 'button';
+            btn.addEventListener('click', () => press(spec.delta));
+            btnRow.appendChild(btn);
+        });
+
+        render();
+        root.appendChild(readout);
+        root.appendChild(progress);
+        root.appendChild(btnRow);
+        container.appendChild(root);
+
+        return {
+            destroy() {
+                pulseTimers.forEach(t => clearTimeout(t));
+                pulseTimers.clear();
+            }
+        };
+    }
+
+    // ---------------------------------------------------------------
+    // 15. angle-drag — { type:'angle-drag', deg, done }
+    // ---------------------------------------------------------------
+    function mountAngleDrag(container, config, api) {
+        const { deg: targetDeg, done: doneMessage } = config;
+
+        // Vertex/base-ray/target-ray geometry mirrors curriculum.js's
+        // angleSVG() exactly; the measuring ray uses a shorter radius so
+        // both it and the fixed rays stay visible at once.
+        const cx = 78, cy = 100, r = 64, mr = 48, sweepR = 34;
+        const VW = 156, VH = 116;
+
+        let done = false;
+        let activePointerId = null;
+        let currentDeg = 0;
+
+        const root = el('div', 'manip manip-angle');
+
+        const svg = svgEl('svg', {
+            class: 'angle-svg manip-angle-svg',
+            viewBox: `0 0 ${VW} ${VH}`, width: 195, height: 145
+        });
+        // Required so touch dragging works without the page hijacking the
+        // gesture (scroll, etc.).
+        svg.style.touchAction = 'none';
+
+        function pointAt(radius, degrees) {
+            const rad = degrees * Math.PI / 180;
+            return { x: cx + radius * Math.cos(rad), y: cy - radius * Math.sin(rad) };
+        }
+
+        // Sweep arc (base ray -> measuring ray), drawn first so it sits
+        // beneath the rays.
+        const sweep = svgEl('path', { class: 'manip-angle-sweep' });
+        svg.appendChild(sweep);
+
+        // Fixed base ray (0°).
+        const basePt = pointAt(r, 0);
+        svg.appendChild(svgEl('line', {
+            class: 'angle-ray',
+            x1: cx, y1: cy, x2: basePt.x.toFixed(1), y2: basePt.y.toFixed(1)
+        }));
+
+        // Fixed target ray — the angle actually being measured, drawn
+        // statically since the engine hides curriculum.js's own angleSVG
+        // visual whenever a manipulative is mounted.
+        const targetPt = pointAt(r, targetDeg);
+        svg.appendChild(svgEl('line', {
+            class: 'angle-ray',
+            x1: cx, y1: cy, x2: targetPt.x.toFixed(1), y2: targetPt.y.toFixed(1)
+        }));
+
+        svg.appendChild(svgEl('circle', { cx, cy, r: 3, class: 'angle-vertex' }));
+
+        // Draggable measuring ray, starting on top of the base ray (0°).
+        const measurePt0 = pointAt(mr, 0);
+        const measureRay = svgEl('line', {
+            class: 'manip-angle-measure',
+            x1: cx, y1: cy, x2: measurePt0.x.toFixed(1), y2: measurePt0.y.toFixed(1)
+        });
+        const handle = svgEl('circle', {
+            class: 'manip-angle-handle',
+            cx: measurePt0.x.toFixed(1), cy: measurePt0.y.toFixed(1), r: 7
+        });
+        const hit = svgEl('circle', {
+            class: 'manip-angle-hit',
+            cx: measurePt0.x.toFixed(1), cy: measurePt0.y.toFixed(1), r: 22,
+            fill: 'transparent'
+        });
+        svg.appendChild(measureRay);
+        svg.appendChild(handle);
+        svg.appendChild(hit);
+
+        const readout = el('div', 'manip-angle-readout');
+        const zone = el('div', 'manip-angle-zone');
+
+        function zoneWord(d) {
+            return d < 90 ? 'acute' : d === 90 ? 'right' : 'obtuse';
+        }
+
+        function setMeasuringAngle(d) {
+            currentDeg = d;
+            const pt = pointAt(mr, d);
+            measureRay.setAttribute('x2', pt.x.toFixed(1));
+            measureRay.setAttribute('y2', pt.y.toFixed(1));
+            handle.setAttribute('cx', pt.x.toFixed(1));
+            handle.setAttribute('cy', pt.y.toFixed(1));
+            hit.setAttribute('cx', pt.x.toFixed(1));
+            hit.setAttribute('cy', pt.y.toFixed(1));
+
+            const arcPt = pointAt(sweepR, d);
+            sweep.setAttribute('d',
+                `M ${(cx + sweepR).toFixed(1)} ${cy} A ${sweepR} ${sweepR} 0 0 0 ${arcPt.x.toFixed(1)} ${arcPt.y.toFixed(1)}`);
+
+            readout.textContent = `${d}°`;
+            const word = zoneWord(d);
+            zone.textContent = word;
+            zone.className = `manip-angle-zone manip-angle-zone-${word}`;
+        }
+
+        function clientToAngle(clientX, clientY) {
+            const rect = svg.getBoundingClientRect();
+            const px = (clientX - rect.left) / rect.width * VW;
+            const py = (clientY - rect.top) / rect.height * VH;
+            const dx = px - cx, dy = cy - py;
+            const a = Math.round(Math.atan2(dy, dx) * 180 / Math.PI);
+            return Math.max(0, Math.min(180, a));
+        }
+
+        function onPointerMove(event) {
+            if (done) return;
+            if (event.pointerId !== activePointerId) return;
+            setMeasuringAngle(clientToAngle(event.clientX, event.clientY));
+        }
+
+        function endDrag(event) {
+            if (event.pointerId !== activePointerId) return;
+            const finalDeg = clientToAngle(event.clientX, event.clientY);
+            setMeasuringAngle(finalDeg);
+
+            try {
+                hit.releasePointerCapture(activePointerId);
+            } catch (e) {
+                // Ignore — capture may already be released (e.g. after cancel).
+            }
+            hit.removeEventListener('pointermove', onPointerMove);
+            hit.removeEventListener('pointerup', endDrag);
+            hit.removeEventListener('pointercancel', endDrag);
+            activePointerId = null;
+
+            if (!done && Math.abs(finalDeg - targetDeg) <= 5) {
+                setMeasuringAngle(targetDeg);
+                done = true;
+                root.classList.add('manip-locked');
+                api.complete(doneMessage);
+            }
+        }
+
+        function onPointerDown(event) {
+            if (done) return;
+            if (activePointerId !== null) return; // ignore other pointers mid-drag
+            activePointerId = event.pointerId;
+            try {
+                hit.setPointerCapture(activePointerId);
+            } catch (e) {
+                // Some environments may not support capture; drag still
+                // works via the listeners below.
+            }
+            hit.addEventListener('pointermove', onPointerMove);
+            hit.addEventListener('pointerup', endDrag);
+            hit.addEventListener('pointercancel', endDrag);
+            setMeasuringAngle(clientToAngle(event.clientX, event.clientY));
+        }
+
+        hit.addEventListener('pointerdown', onPointerDown);
+
+        setMeasuringAngle(0);
+        root.appendChild(svg);
+        root.appendChild(readout);
+        root.appendChild(zone);
+        container.appendChild(root);
+
+        return {
+            destroy() {
+                // Listeners above are attached to `hit`, which lives inside
+                // `container` and is discarded by the engine — but clean up
+                // defensively in case a drag is mid-flight.
+                hit.removeEventListener('pointermove', onPointerMove);
+                hit.removeEventListener('pointerup', endDrag);
+                hit.removeEventListener('pointercancel', endDrag);
+                document.removeEventListener('pointermove', onPointerMove);
+                document.removeEventListener('pointerup', endDrag);
+                document.removeEventListener('pointercancel', endDrag);
+                activePointerId = null;
+            }
+        };
+    }
+
+    // ---------------------------------------------------------------
+    // 16. cube-builder — { type:'cube-builder', l, w, h, done }
+    // ---------------------------------------------------------------
+    function mountCubeBuilder(container, config, api) {
+        const { l, w, h, done: doneMessage } = config;
+        let done = false;
+        let layers = 0;
+
+        // Geometry mirrors curriculum.js's boxSVG() isometric projection.
+        const s = 16, L = l * s, H = h * s, D = w * 8;
+        const x0 = 26, y0 = 26 + D;
+        const VW = L + D + 84, VH = H + D + 60;
+
+        const root = el('div', 'manip manip-cube');
+        const svg = svgEl('svg', {
+            class: 'box-svg manip-cube-svg',
+            viewBox: `0 0 ${VW} ${VH}`, width: '100%'
+        });
+
+        // Dashed "ghost" outlines for every layer slot, bottom (index 0)
+        // to top (index h-1). Real layers get drawn on top of these and
+        // hide the matching ghost.
+        const ghosts = [];
+        for (let k = 0; k < h; k++) {
+            const top = y0 + H - (k + 1) * s;
+            const ghost = svgEl('rect', {
+                class: 'manip-cube-ghost',
+                x: x0, y: top.toFixed(1), width: L, height: s
+            });
+            ghosts.push(ghost);
+            svg.appendChild(ghost);
+        }
+
+        const layerGroups = [];
+        let topGroup = null;
+
+        function topFacePoint(u, v, top) {
+            return { x: x0 + u * L + v * D, y: top - v * D };
+        }
+
+        function buildTopGroup(top) {
+            // The l×w grid on the current topmost layer's top face —
+            // schematic, but reads clearly as "this layer has l×w cubes".
+            const g = svgEl('g', { class: 'manip-cube-topgroup' });
+            const corners = [
+                topFacePoint(0, 0, top), topFacePoint(1, 0, top),
+                topFacePoint(1, 1, top), topFacePoint(0, 1, top)
+            ];
+            g.appendChild(svgEl('polygon', {
+                class: 'box-top',
+                points: corners.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')
+            }));
+            for (let i = 1; i < l; i++) {
+                const a = topFacePoint(i / l, 0, top), b = topFacePoint(i / l, 1, top);
+                g.appendChild(svgEl('line', {
+                    class: 'manip-cube-top-grid',
+                    x1: a.x.toFixed(1), y1: a.y.toFixed(1), x2: b.x.toFixed(1), y2: b.y.toFixed(1)
+                }));
+            }
+            for (let j = 1; j < w; j++) {
+                const a = topFacePoint(0, j / w, top), b = topFacePoint(1, j / w, top);
+                g.appendChild(svgEl('line', {
+                    class: 'manip-cube-top-grid',
+                    x1: a.x.toFixed(1), y1: a.y.toFixed(1), x2: b.x.toFixed(1), y2: b.y.toFixed(1)
+                }));
+            }
+            return g;
+        }
+
+        function buildLayerGroup(k) {
+            const top = y0 + H - (k + 1) * s;
+            const bottom = top + s;
+            const g = svgEl('g', { class: 'manip-cube-layer' });
+            for (let i = 0; i < l; i++) {
+                g.appendChild(svgEl('rect', {
+                    class: 'manip-cube-front-cell',
+                    x: (x0 + i * s).toFixed(1), y: top.toFixed(1), width: s, height: s
+                }));
+            }
+            g.appendChild(svgEl('polygon', {
+                class: 'box-side',
+                points: `${(x0 + L).toFixed(1)},${bottom.toFixed(1)} ${(x0 + L + D).toFixed(1)},${(bottom - D).toFixed(1)} ${(x0 + L + D).toFixed(1)},${(top - D).toFixed(1)} ${(x0 + L).toFixed(1)},${top.toFixed(1)}`
+            }));
+            return g;
+        }
+
+        function refreshTopGroup() {
+            if (topGroup) {
+                svg.removeChild(topGroup);
+                topGroup = null;
+            }
+            if (layers > 0) {
+                topGroup = buildTopGroup(y0 + H - layers * s);
+                svg.appendChild(topGroup);
+            }
+        }
+
+        const counter = el('div', 'manip-count');
+        const btnRow = el('div', 'manip-cube-btns');
+        const wiggleTimers = new Set();
+
+        function wiggle(elm) {
+            elm.classList.add('manip-wiggle');
+            const timer = setTimeout(() => {
+                elm.classList.remove('manip-wiggle');
+                wiggleTimers.delete(timer);
+            }, 500);
+            wiggleTimers.add(timer);
+        }
+
+        function updateCounter() {
+            counter.textContent = `${layers} layer${layers === 1 ? '' : 's'} × ${l * w} cubes each = ${layers * l * w} cubes`;
+        }
+
+        function addLayer(btn) {
+            if (done) return;
+            if (layers >= h) {
+                wiggle(btn);
+                return;
+            }
+            const g = buildLayerGroup(layers);
+            svg.appendChild(g);
+            layerGroups.push(g);
+            ghosts[layers].style.display = 'none';
+            layers++;
+            refreshTopGroup();
+            updateCounter();
+            if (layers === h) {
+                done = true;
+                root.classList.add('manip-locked');
+                api.complete(doneMessage);
+            }
+        }
+
+        function removeLayer(btn) {
+            if (done) return;
+            if (layers <= 0) {
+                wiggle(btn);
+                return;
+            }
+            layers--;
+            svg.removeChild(layerGroups.pop());
+            ghosts[layers].style.display = '';
+            refreshTopGroup();
+            updateCounter();
+        }
+
+        const addBtn = el('button', 'manip-cube-btn', 'Add layer ➕');
+        addBtn.type = 'button';
+        addBtn.addEventListener('click', () => addLayer(addBtn));
+        const removeBtn = el('button', 'manip-cube-btn', 'Remove layer ➖');
+        removeBtn.type = 'button';
+        removeBtn.addEventListener('click', () => removeLayer(removeBtn));
+        btnRow.appendChild(addBtn);
+        btnRow.appendChild(removeBtn);
+
+        updateCounter();
+        root.appendChild(svg);
+        root.appendChild(counter);
+        root.appendChild(btnRow);
+        container.appendChild(root);
+
+        return {
+            destroy() {
+                wiggleTimers.forEach(t => clearTimeout(t));
+                wiggleTimers.clear();
+            }
+        };
+    }
+
+    // ---------------------------------------------------------------
+    // 17. coord-walk — { type:'coord-walk', x, y, done }
+    // ---------------------------------------------------------------
+    function mountCoordWalk(container, config, api) {
+        const { x: targetX, y: targetY, done: doneMessage } = config;
+        let done = false;
+        let wx = 0, wy = 0;
+
+        // Geometry mirrors curriculum.js's coordPlaneSVG() exactly.
+        const s = 26, n = 9, pad = 26;
+        const size = n * s + pad * 2;
+
+        const root = el('div', 'manip manip-coord');
+        const svg = svgEl('svg', {
+            class: 'coord-svg manip-coord-svg',
+            viewBox: `0 0 ${size} ${size + 6}`, width: '100%'
+        });
+
+        function toXY(px, py) {
+            return { x: pad + px * s, y: pad + (n - py) * s };
+        }
+
+        for (let i = 0; i <= n; i++) {
+            const p = pad + i * s;
+            svg.appendChild(svgEl('line', { class: 'cp-grid', x1: p, y1: pad, x2: p, y2: pad + n * s }));
+            svg.appendChild(svgEl('line', { class: 'cp-grid', x1: pad, y1: p, x2: pad + n * s, y2: p }));
+            const xl = svgEl('text', { class: 'cp-label', x: p, y: pad + n * s + 16, 'text-anchor': 'middle' });
+            xl.textContent = String(i);
+            svg.appendChild(xl);
+            const yl = svgEl('text', { class: 'cp-label', x: pad - 10, y: pad + (n - i) * s + 4, 'text-anchor': 'middle' });
+            yl.textContent = String(i);
+            svg.appendChild(yl);
+        }
+        svg.appendChild(svgEl('line', { class: 'cp-axis', x1: pad, y1: pad + n * s, x2: pad + n * s, y2: pad + n * s }));
+        svg.appendChild(svgEl('line', { class: 'cp-axis', x1: pad, y1: pad, x2: pad, y2: pad + n * s }));
+
+        // Target point: prominent, fixed.
+        const targetPos = toXY(targetX, targetY);
+        svg.appendChild(svgEl('circle', {
+            class: 'cp-point manip-coord-target',
+            cx: targetPos.x.toFixed(1), cy: targetPos.y.toFixed(1), r: 8
+        }));
+
+        const crumbLayer = svgEl('g', { class: 'manip-coord-crumbs' });
+        svg.appendChild(crumbLayer);
+        const crumbSeen = new Set();
+
+        function dropCrumb(px, py) {
+            const key = `${px},${py}`;
+            if (crumbSeen.has(key)) return;
+            crumbSeen.add(key);
+            const pos = toXY(px, py);
+            crumbLayer.appendChild(svgEl('circle', {
+                class: 'manip-coord-crumb',
+                cx: pos.x.toFixed(1), cy: pos.y.toFixed(1), r: 4
+            }));
+        }
+
+        const walkerPos0 = toXY(0, 0);
+        const walker = svgEl('text', {
+            class: 'manip-coord-walker',
+            x: walkerPos0.x.toFixed(1), y: (walkerPos0.y + 6).toFixed(1),
+            'text-anchor': 'middle'
+        });
+        walker.textContent = '\u{1F680}'; // 🚀
+        svg.appendChild(walker);
+
+        const readout = el('div', 'manip-coord-readout');
+        const btnRow = el('div', 'manip-coord-btns');
+        const wiggleTimers = new Set();
+
+        function wiggle(elm) {
+            elm.classList.add('manip-wiggle');
+            const timer = setTimeout(() => {
+                elm.classList.remove('manip-wiggle');
+                wiggleTimers.delete(timer);
+            }, 500);
+            wiggleTimers.add(timer);
+        }
+
+        function render() {
+            const pos = toXY(wx, wy);
+            walker.setAttribute('x', pos.x.toFixed(1));
+            walker.setAttribute('y', (pos.y + 6).toFixed(1));
+            readout.textContent = `over: ${wx} · up: ${wy}`;
+        }
+
+        function move(dx, dy, btn) {
+            if (done) return;
+            const nx = wx + dx, ny = wy + dy;
+            if (nx < 0 || nx > 8 || ny < 0 || ny > 8) {
+                wiggle(btn);
+                return;
+            }
+            wx = nx; wy = ny;
+            dropCrumb(wx, wy);
+            render();
+            if (wx === targetX && wy === targetY) {
+                done = true;
+                root.classList.add('manip-locked');
+                api.complete(doneMessage);
+            }
+        }
+
+        [
+            { text: '⬆️', dx: 0, dy: 1, cls: 'manip-coord-up' },
+            { text: '⬅️', dx: -1, dy: 0, cls: 'manip-coord-left' },
+            { text: '➡️', dx: 1, dy: 0, cls: 'manip-coord-right' },
+            { text: '⬇️', dx: 0, dy: -1, cls: 'manip-coord-down' }
+        ].forEach(spec => {
+            const btn = el('button', `manip-coord-btn ${spec.cls}`, spec.text);
+            btn.type = 'button';
+            btn.addEventListener('click', () => move(spec.dx, spec.dy, btn));
+            btnRow.appendChild(btn);
+        });
+
+        render();
+        root.appendChild(svg);
+        root.appendChild(readout);
+        root.appendChild(btnRow);
+        container.appendChild(root);
+
+        return {
+            destroy() {
+                wiggleTimers.forEach(t => clearTimeout(t));
+                wiggleTimers.clear();
+            }
+        };
+    }
+
     window.Manipulatives = {
         'build-array': { mount: mountBuildArray },
         'share-groups': { mount: mountShareGroups },
@@ -1141,6 +2052,13 @@
         'shade-two': { mount: mountShadeTwo },
         'trace-sides': { mount: mountTraceSides },
         'frac-mult-grid': { mount: mountFracMultGrid },
-        'split-wholes': { mount: mountSplitWholes }
+        'split-wholes': { mount: mountSplitWholes },
+        'clock-adder': { mount: mountClockAdder },
+        'partial-products': { mount: mountPartialProducts },
+        'place-shift': { mount: mountPlaceShift },
+        'decimal-build': { mount: mountDecimalBuild },
+        'angle-drag': { mount: mountAngleDrag },
+        'cube-builder': { mount: mountCubeBuilder },
+        'coord-walk': { mount: mountCoordWalk }
     };
 })();
