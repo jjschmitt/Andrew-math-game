@@ -2594,6 +2594,531 @@ header h1 {
     color: #c62828;
 }
 
+/* Balance-steps (equation balance scale) */
+
+.manip-balance-equation {
+    display: inline-block;
+    background: #ede7f6;
+    color: #4a3b7a;
+    border-radius: 20px;
+    padding: 6px 18px;
+    font-weight: bold;
+    font-size: 1.25em;
+}
+
+.manip-balance-scale {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 340px;
+}
+
+.manip-balance-beam {
+    width: 100%;
+    height: 6px;
+    background: #7e57c2;
+    border-radius: 3px;
+}
+
+.manip-balance-pans {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    width: 100%;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.manip-balance-fulcrum {
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: 14px solid #7e57c2;
+    margin-top: -6px;
+}
+
+.manip-balance-pan {
+    flex: 1;
+    min-height: 72px;
+    border: 3px solid #b39ddb;
+    border-radius: 14px;
+    background: #faf8ff;
+    display: flex;
+    flex-wrap: wrap;
+    align-content: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 8px;
+}
+
+.manip-balance-xbox {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: #7e57c2;
+    color: #fff;
+    font-weight: bold;
+    font-style: italic;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1em;
+}
+
+.manip-balance-chip {
+    min-width: 30px;
+    height: 26px;
+    padding: 0 4px;
+    border-radius: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 0.85em;
+}
+
+.manip-balance-chip-pos {
+    background: #e8f5e9;
+    color: #2e7d32;
+    border: 2px solid #81c784;
+}
+
+.manip-balance-chip-neg {
+    background: #ffebee;
+    color: #c62828;
+    border: 2px solid #ef9a9a;
+}
+
+.manip-balance-cluster {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 3px;
+    padding: 6px;
+    border: 2px dashed #b39ddb;
+    border-radius: 12px;
+}
+
+.manip-balance-card {
+    min-width: 56px;
+    min-height: 56px;
+    border-radius: 12px;
+    background: #4a3b7a;
+    color: #fff;
+    font-weight: bold;
+    font-size: 1.5em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.manip-balance-btn {
+    min-height: 44px;
+    padding: 10px 18px;
+    border: none;
+    border-radius: 22px;
+    background: #7e57c2;
+    color: #fff;
+    font-family: inherit;
+    font-weight: bold;
+    font-size: 1em;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Even-out (mean as evening out) */
+
+.manip-evenout-row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 16px;
+}
+
+.manip-evenout-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    min-width: 48px;
+    min-height: 44px;
+    padding: 6px 4px 4px;
+    border: 3px solid transparent;
+    border-radius: 10px;
+    background: transparent;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.manip-evenout-col.manip-evenout-selected {
+    border-color: #7e57c2;
+    background: #ede7f6;
+}
+
+.manip-evenout-stack {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 1px;
+}
+
+.manip-evenout-block {
+    width: 34px;
+    height: 7px;
+    background: #b39ddb;
+    border-radius: 2px;
+}
+
+.manip-evenout-col.manip-evenout-selected .manip-evenout-block {
+    background: #7e57c2;
+}
+
+.manip-evenout-label {
+    font-weight: bold;
+    color: #4a3b7a;
+}
+
+.manip-evenout-hint {
+    font-size: 0.9em;
+    color: #7e57c2;
+    text-align: center;
+}
+
+/* Distribute-grid (distributive property area model) */
+
+.manip-distgrid-svg {
+    max-width: 100%;
+    height: auto;
+}
+
+.manip-distgrid-outline {
+    fill: none;
+    stroke: #4a3b7a;
+    stroke-width: 3;
+}
+
+.manip-distgrid-divider {
+    stroke: #7e57c2;
+    stroke-width: 2;
+    stroke-dasharray: 5 4;
+}
+
+.manip-distgrid-region {
+    fill: #faf8ff;
+    stroke: none;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.manip-distgrid-region.revealed {
+    fill: #ede7f6;
+}
+
+.manip-distgrid-toplabel,
+.manip-distgrid-sidelabel {
+    font-size: 15px;
+    font-weight: bold;
+    fill: #4a3b7a;
+    font-family: inherit;
+}
+
+.manip-distgrid-value {
+    font-size: 17px;
+    font-weight: bold;
+    fill: #5b3fa8;
+    font-family: inherit;
+    pointer-events: none;
+}
+
+.manip-distgrid-value.manip-pulse {
+    animation: manip-pulse 0.4s ease;
+    transform-box: fill-box;
+    transform-origin: center;
+}
+
+.manip-distgrid-equation {
+    display: inline-block;
+    background: #ede7f6;
+    color: #4a3b7a;
+    border-radius: 20px;
+    padding: 4px 16px;
+    font-weight: bold;
+    font-size: 1.05em;
+}
+
+/* Wrap-circle (discover pi) */
+
+.manip-wrapcircle-svg {
+    max-width: 100%;
+    height: auto;
+}
+
+.manip-wrapcircle-circle {
+    fill: none;
+    stroke: #4a3b7a;
+    stroke-width: 3;
+}
+
+.manip-wrapcircle-diameter {
+    stroke: #b39ddb;
+    stroke-width: 2;
+    stroke-dasharray: 5 4;
+}
+
+.manip-wrapcircle-dlabel {
+    font-size: 13px;
+    font-weight: bold;
+    fill: #4a3b7a;
+    font-family: inherit;
+    text-anchor: middle;
+}
+
+.manip-wrapcircle-wrap {
+    fill: none;
+    stroke-width: 6;
+    stroke-linecap: round;
+}
+
+.manip-wrapcircle-w1 { stroke: #e53935; }
+.manip-wrapcircle-w2 { stroke: #43a047; }
+.manip-wrapcircle-w3 { stroke: #1e88e5; }
+
+.manip-wrapcircle-gap {
+    fill: none;
+    stroke: #9e9e9e;
+    stroke-width: 6;
+    stroke-linecap: round;
+    stroke-dasharray: 3 4;
+}
+
+.manip-wrapcircle-note {
+    font-size: 12px;
+    font-style: italic;
+    fill: #7e57c2;
+    font-family: inherit;
+}
+
+.manip-wrapcircle-readout {
+    display: inline-block;
+    background: #ede7f6;
+    color: #5b3fa8;
+    border-radius: 20px;
+    padding: 4px 16px;
+    font-weight: bold;
+    font-size: 1.05em;
+}
+
+.manip-wrapcircle-btn {
+    min-height: 44px;
+    padding: 10px 18px;
+    border: 3px solid #b39ddb;
+    border-radius: 22px;
+    background: #faf8ff;
+    color: #4a3b7a;
+    font-family: inherit;
+    font-weight: bold;
+    font-size: 1em;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Vertical-angles */
+
+.manip-vertangles-svg {
+    max-width: 100%;
+    height: auto;
+}
+
+.manip-vertangles-line {
+    stroke: #4a3b7a;
+    stroke-width: 3;
+    stroke-linecap: round;
+}
+
+.manip-vertangles-vertex {
+    fill: #4a3b7a;
+}
+
+.manip-vertangles-arc {
+    fill: #b39ddb;
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.manip-vertangles-arc-vertical {
+    opacity: 0;
+    fill: #ff7043;
+}
+
+.manip-vertangles-arc-vertical.revealed {
+    opacity: 0.65;
+}
+
+.manip-vertangles-wedge {
+    fill: transparent;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.manip-vertangles-label {
+    font-size: 15px;
+    font-weight: bold;
+    fill: #4a3b7a;
+    font-family: inherit;
+    pointer-events: none;
+}
+
+.manip-vertangles-label-given {
+    fill: #5b3fa8;
+}
+
+.manip-vertangles-label-revealed {
+    fill: #ff7043;
+}
+
+.manip-vertangles-label-adjacent {
+    fill: #9e9e9e;
+}
+
+.manip-vertangles-note {
+    font-size: 0.9em;
+    color: #7e57c2;
+    text-align: center;
+    min-height: 1.2em;
+}
+
+/* Pyth-squares (Pythagorean theorem) */
+
+.manip-pyth-svg {
+    max-width: 100%;
+    height: auto;
+}
+
+.manip-pyth-triangle {
+    fill: #d1c4e9;
+    stroke: #4a3b7a;
+    stroke-width: 2;
+}
+
+.manip-pyth-square {
+    stroke: #7e57c2;
+    stroke-width: 2;
+    fill: #ede7f6;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.manip-pyth-square-ghost {
+    fill: transparent;
+    stroke-dasharray: 6 5;
+    opacity: 0.6;
+}
+
+.manip-pyth-square-active {
+    fill: #faf8ff;
+    stroke-dasharray: none;
+    opacity: 1;
+}
+
+.manip-pyth-square-revealed {
+    fill: #b39ddb;
+}
+
+.manip-pyth-sidelabel {
+    font-size: 14px;
+    font-weight: bold;
+    fill: #4a3b7a;
+    font-family: inherit;
+    pointer-events: none;
+}
+
+.manip-pyth-value {
+    font-size: 14px;
+    font-weight: bold;
+    fill: #4a3b7a;
+    font-family: inherit;
+    pointer-events: none;
+}
+
+.manip-pyth-value.manip-pulse {
+    animation: manip-pulse 0.4s ease;
+    transform-box: fill-box;
+    transform-origin: center;
+}
+
+.manip-pyth-equation {
+    display: inline-block;
+    background: #ede7f6;
+    color: #4a3b7a;
+    border-radius: 20px;
+    padding: 4px 16px;
+    font-weight: bold;
+    font-size: 1.05em;
+}
+
+/* Disk-stack (cylinder volume as stacked disks) */
+
+.manip-disk-svg {
+    max-width: 100%;
+    height: auto;
+}
+
+.manip-disk-ghost {
+    fill: none;
+    stroke: #b39ddb;
+    stroke-width: 2;
+    stroke-dasharray: 5 4;
+}
+
+.manip-disk-face {
+    fill: #7e57c2;
+    stroke: #4a3b7a;
+    stroke-width: 1.5;
+}
+
+.manip-disk-wall {
+    fill: #9575cd;
+}
+
+.manip-disk-rim {
+    fill: none;
+    stroke: #d1c4e9;
+    stroke-width: 1.5;
+    opacity: 0.8;
+    pointer-events: none;
+}
+
+.manip-disk-baselabel {
+    font-size: 0.85em;
+    color: #7e57c2;
+    font-weight: bold;
+}
+
+.manip-disk-btns {
+    display: flex;
+    gap: 10px;
+}
+
+.manip-disk-btn {
+    min-height: 44px;
+    padding: 8px 16px;
+    border: 3px solid #b39ddb;
+    border-radius: 12px;
+    background: #faf8ff;
+    color: #4a3b7a;
+    font-family: inherit;
+    font-weight: bold;
+    font-size: 0.98em;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.manip-disk-btn.manip-wiggle {
+    animation: shake 0.4s;
+}
+
 /* Locked state */
 
 .manip-locked .manip-cell,
@@ -2619,7 +3144,14 @@ header h1 {
 .manip-locked .manip-tapcount-chip,
 .manip-locked .manip-square-btn,
 .manip-locked .manip-rowstack-btn,
-.manip-locked .manip-groupcheck-btn {
+.manip-locked .manip-groupcheck-btn,
+.manip-locked .manip-balance-btn,
+.manip-locked .manip-evenout-col,
+.manip-locked .manip-distgrid-region,
+.manip-locked .manip-wrapcircle-btn,
+.manip-locked .manip-vertangles-wedge,
+.manip-locked .manip-pyth-square,
+.manip-locked .manip-disk-btn {
     pointer-events: none;
     cursor: default;
 }
@@ -2683,4 +3215,16 @@ header h1 {
     .manip-groupcheck-label { font-size: 0.9em; min-width: 56px; }
     .manip-groupcheck-btn { padding: 6px 10px; font-size: 0.88em; }
     .manip-groupcheck-status { font-size: 0.9em; padding: 4px 10px; }
+    .manip-balance-equation { font-size: 1.05em; padding: 5px 12px; }
+    .manip-balance-xbox { width: 26px; height: 26px; font-size: 0.95em; }
+    .manip-balance-chip { min-width: 26px; height: 22px; font-size: 0.78em; }
+    .manip-balance-card { min-width: 46px; min-height: 46px; font-size: 1.25em; }
+    .manip-balance-btn { padding: 8px 14px; font-size: 0.9em; }
+    .manip-evenout-block { width: 26px; }
+    .manip-evenout-row { gap: 10px; }
+    .manip-distgrid-value { font-size: 14px; }
+    .manip-wrapcircle-btn { padding: 8px 14px; font-size: 0.9em; }
+    .manip-vertangles-note { font-size: 0.82em; }
+    .manip-pyth-value, .manip-pyth-sidelabel { font-size: 12px; }
+    .manip-disk-btn { padding: 6px 10px; font-size: 0.88em; }
 }

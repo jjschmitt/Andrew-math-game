@@ -2878,6 +2878,851 @@
         };
     }
 
+    // ---------------------------------------------------------------
+    // 26. balance-steps — { type:'balance-steps', coef, constant, rhs,
+    //                        order?:'subtract-first'|'divide-first', done }
+    //     Models solving coef*x + constant = rhs (or, for 'divide-first',
+    //     coef*(x + constant) = rhs) one legal move at a time.
+    // ---------------------------------------------------------------
+    function mountBalanceSteps(container, config, api) {
+        const { coef, constant, rhs, done: doneMessage } = config;
+        const order = config.order === 'divide-first' ? 'divide-first' : 'subtract-first';
+        let done = false;
+
+        // stageCoef: how many x's are currently shown (coef, or 1 once the
+        // "split into groups" step has happened).
+        // grouped: whether the left pan still shows the divide-first
+        // clustered form coef*(x + constant) rather than a flat pan.
+        // remConstant: the constant still attached to x (shrinks toward 0
+        // as unit chips are removed); right: the current right-side value.
+        let stageCoef = coef;
+        let remConstant = constant;
+        let right = rhs;
+        let grouped = order === 'divide-first' && coef !== 1;
+
+        // Queue of remaining legal moves, in the order this `order` variant
+        // presents them.
+        const queue = [];
+        if (order === 'divide-first') {
+            if (coef !== 1) queue.push('split');
+            if (constant !== 0) queue.push('units');
+        } else {
+            if (constant !== 0) queue.push('units');
+            if (coef !== 1) queue.push('split');
+        }
+
+        const root = el('div', 'manip manip-balance');
+        const equation = el('div', 'manip-balance-equation');
+
+        const scale = el('div', 'manip-balance-scale');
+        const beam = el('div', 'manip-balance-beam');
+        const pans = el('div', 'manip-balance-pans');
+        const leftPan = el('div', 'manip-balance-pan manip-balance-pan-left');
+        const fulcrum = el('div', 'manip-balance-fulcrum');
+        const rightPan = el('div', 'manip-balance-pan manip-balance-pan-right');
+        const card = el('div', 'manip-balance-card');
+        rightPan.appendChild(card);
+        pans.appendChild(leftPan);
+        pans.appendChild(fulcrum);
+        pans.appendChild(rightPan);
+        scale.appendChild(beam);
+        scale.appendChild(pans);
+
+        const btn = el('button', 'manip-balance-btn');
+        btn.type = 'button';
+
+        function constantTerm(v) {
+            return v >= 0 ? `+ ${v}` : `− ${Math.abs(v)}`;
+        }
+
+        function equationText() {
+            const term = constantTerm(remConstant);
+            if (grouped) return `${stageCoef}(x ${term}) = ${right}`;
+            if (stageCoef === 1 && remConstant === 0) return `x = ${right}`;
+            if (remConstant === 0) return `${stageCoef}x = ${right}`;
+            if (stageCoef === 1) return `x ${term} = ${right}`;
+            return `${stageCoef}x ${term} = ${right}`;
+        }
+
+        function buildXBox() {
+            return el('div', 'manip-balance-xbox', 'x');
+        }
+
+        function buildChip(sign) {
+            return el(
+                'div',
+                sign >= 0 ? 'manip-balance-chip manip-balance-chip-pos' : 'manip-balance-chip manip-balance-chip-neg',
+                sign >= 0 ? '+1' : '−1'
+            );
+        }
+
+        function renderLeft() {
+            while (leftPan.firstChild) leftPan.removeChild(leftPan.firstChild);
+            const sign = remConstant > 0 ? 1 : remConstant < 0 ? -1 : 0;
+            const chipCount = Math.abs(remConstant);
+            if (grouped) {
+                for (let i = 0; i < stageCoef; i++) {
+                    const cluster = el('div', 'manip-balance-cluster');
+                    cluster.appendChild(buildXBox());
+                    for (let c = 0; c < chipCount; c++) cluster.appendChild(buildChip(sign));
+                    leftPan.appendChild(cluster);
+                }
+            } else {
+                for (let i = 0; i < stageCoef; i++) leftPan.appendChild(buildXBox());
+                for (let c = 0; c < chipCount; c++) leftPan.appendChild(buildChip(sign));
+            }
+        }
+
+        function updateButton() {
+            if (queue.length === 0) {
+                btn.style.display = 'none';
+                return;
+            }
+            if (queue[0] === 'units') {
+                btn.textContent = remConstant > 0 ? 'Take 1 off both sides ➖' : 'Add 1 to both sides ➕';
+            } else {
+                btn.textContent = `Split both sides into ${stageCoef} groups ➗`;
+            }
+        }
+
+        function render() {
+            equation.textContent = equationText();
+            renderLeft();
+            card.textContent = String(right);
+            updateButton();
+        }
+
+        function finishIfDone() {
+            if (!done && queue.length === 0) {
+                done = true;
+                root.classList.add('manip-locked');
+                api.complete(doneMessage);
+            }
+        }
+
+        btn.addEventListener('click', () => {
+            if (done) return;
+            const phase = queue[0];
+            if (phase === 'units') {
+                if (remConstant > 0) { remConstant--; right--; }
+                else if (remConstant < 0) { remConstant++; right++; }
+                if (remConstant === 0) queue.shift();
+            } else if (phase === 'split') {
+                right = right / stageCoef;
+                stageCoef = 1;
+                grouped = false;
+                queue.shift();
+            }
+            render();
+            finishIfDone();
+        });
+
+        render();
+        root.appendChild(equation);
+        root.appendChild(scale);
+        root.appendChild(btn);
+        container.appendChild(root);
+
+        // Degenerate config (coef === 1 and constant === 0): nothing to do.
+        finishIfDone();
+
+        return {
+            destroy() {
+                // No document-level listeners or timers to clean up.
+            }
+        };
+    }
+
+    // ---------------------------------------------------------------
+    // 27. even-out — { type:'even-out', values:[4 ints], done }
+    //     Mean as "evening out": move blocks between columns until all
+    //     four columns match.
+    // ---------------------------------------------------------------
+    function mountEvenOut(container, config, api) {
+        const { done: doneMessage } = config;
+        const values = config.values.slice();
+        let done = false;
+        let selected = -1;
+
+        const root = el('div', 'manip manip-evenout');
+        const row = el('div', 'manip-evenout-row');
+        const hint = el('div', 'manip-evenout-hint', 'Move blocks from tall bars to short bars until all bars match.');
+
+        const cols = values.map((v, i) => {
+            const col = el('button', 'manip-evenout-col');
+            col.type = 'button';
+            const stack = el('div', 'manip-evenout-stack');
+            const label = el('div', 'manip-evenout-label');
+            col.appendChild(stack);
+            col.appendChild(label);
+            col.addEventListener('click', () => onTap(i));
+            row.appendChild(col);
+            return { col, stack, label };
+        });
+
+        function renderCol(i) {
+            const { col, stack, label } = cols[i];
+            while (stack.firstChild) stack.removeChild(stack.firstChild);
+            for (let b = 0; b < values[i]; b++) {
+                stack.appendChild(el('div', 'manip-evenout-block'));
+            }
+            label.textContent = String(values[i]);
+            col.classList.toggle('manip-evenout-selected', i === selected);
+        }
+
+        function renderAll() {
+            for (let i = 0; i < values.length; i++) renderCol(i);
+        }
+
+        function onTap(i) {
+            if (done) return;
+            if (selected === -1) {
+                if (values[i] > 0) selected = i;
+            } else if (selected === i) {
+                selected = -1;
+            } else {
+                values[selected]--;
+                values[i]++;
+                if (values.every(v => v === values[0])) {
+                    selected = -1;
+                    renderAll();
+                    done = true;
+                    root.classList.add('manip-locked');
+                    api.complete(doneMessage);
+                    return;
+                }
+            }
+            renderAll();
+        }
+
+        renderAll();
+        root.appendChild(row);
+        root.appendChild(hint);
+        container.appendChild(root);
+
+        return {
+            destroy() {
+                // No document-level listeners or timers to clean up.
+            }
+        };
+    }
+
+    // ---------------------------------------------------------------
+    // 28. distribute-grid — { type:'distribute-grid', a, c, done }
+    //     Distributive property area model: a(x + c) = ax + a*c.
+    // ---------------------------------------------------------------
+    function mountDistributeGrid(container, config, api) {
+        const { a, c, done: doneMessage } = config;
+        let done = false;
+        let xRevealed = false, cRevealed = false;
+
+        const PAD = 40, W = 280, H = 160;
+        const xColW = W * 0.45;
+        const cColW = W - xColW;
+        const VW = PAD + W + 16, VH = PAD + H + 16;
+
+        const root = el('div', 'manip manip-distgrid');
+        const svg = svgEl('svg', {
+            class: 'manip-distgrid-svg',
+            viewBox: `0 0 ${VW} ${VH}`,
+            width: '100%'
+        });
+
+        svg.appendChild(svgEl('rect', {
+            class: 'manip-distgrid-outline',
+            x: PAD, y: PAD, width: W, height: H
+        }));
+        svg.appendChild(svgEl('line', {
+            class: 'manip-distgrid-divider',
+            x1: PAD + xColW, y1: PAD, x2: PAD + xColW, y2: PAD + H
+        }));
+
+        const sideLabel = svgEl('text', {
+            class: 'manip-distgrid-sidelabel',
+            x: PAD - 10, y: PAD + H / 2 + 5,
+            'text-anchor': 'end'
+        });
+        sideLabel.textContent = 'a';
+        svg.appendChild(sideLabel);
+
+        const xTopLabel = svgEl('text', {
+            class: 'manip-distgrid-toplabel',
+            x: PAD + xColW / 2, y: PAD - 12,
+            'text-anchor': 'middle'
+        });
+        xTopLabel.textContent = 'x';
+        const cTopLabel = svgEl('text', {
+            class: 'manip-distgrid-toplabel',
+            x: PAD + xColW + cColW / 2, y: PAD - 12,
+            'text-anchor': 'middle'
+        });
+        cTopLabel.textContent = 'c';
+        svg.appendChild(xTopLabel);
+        svg.appendChild(cTopLabel);
+
+        const xValue = svgEl('text', {
+            class: 'manip-distgrid-value',
+            x: PAD + xColW / 2, y: PAD + H / 2 + 6,
+            'text-anchor': 'middle'
+        });
+        const cValue = svgEl('text', {
+            class: 'manip-distgrid-value',
+            x: PAD + xColW + cColW / 2, y: PAD + H / 2 + 6,
+            'text-anchor': 'middle'
+        });
+        svg.appendChild(xValue);
+        svg.appendChild(cValue);
+
+        const xRegion = svgEl('rect', {
+            class: 'manip-distgrid-region',
+            x: PAD, y: PAD, width: xColW, height: H
+        });
+        const cRegion = svgEl('rect', {
+            class: 'manip-distgrid-region',
+            x: PAD + xColW, y: PAD, width: cColW, height: H
+        });
+        svg.appendChild(xRegion);
+        svg.appendChild(cRegion);
+
+        const equation = el('div', 'manip-distgrid-equation');
+
+        function checkComplete() {
+            if (done || !(xRevealed && cRevealed)) return;
+            equation.textContent = `${a}(x + ${c}) = ${a}x + ${a * c}`;
+            done = true;
+            root.classList.add('manip-locked');
+            api.complete(doneMessage);
+        }
+
+        xRegion.addEventListener('click', () => {
+            if (done || xRevealed) return;
+            xRevealed = true;
+            xRegion.classList.add('revealed');
+            xValue.textContent = `${a}·x`;
+            xValue.classList.add('manip-pulse');
+            checkComplete();
+        });
+        cRegion.addEventListener('click', () => {
+            if (done || cRevealed) return;
+            cRevealed = true;
+            cRegion.classList.add('revealed');
+            cValue.textContent = String(a * c);
+            cValue.classList.add('manip-pulse');
+            checkComplete();
+        });
+
+        root.appendChild(svg);
+        root.appendChild(equation);
+        container.appendChild(root);
+
+        return {
+            destroy() {
+                // No document-level listeners or timers to clean up.
+            }
+        };
+    }
+
+    // ---------------------------------------------------------------
+    // 29. wrap-circle — { type:'wrap-circle', r, done }
+    //     Discover pi by wrapping the diameter around the circumference.
+    // ---------------------------------------------------------------
+    function mountWrapCircle(container, config, api) {
+        const { r, done: doneMessage } = config;
+        let done = false;
+        let wraps = 0;
+
+        const R = 70, PAD = 40;
+        const cx = PAD + R, cy = PAD + R;
+        const VW = 2 * R + PAD * 2, VH = 2 * R + PAD * 2 + 4;
+
+        const root = el('div', 'manip manip-wrapcircle');
+        const svg = svgEl('svg', {
+            class: 'manip-wrapcircle-svg',
+            viewBox: `0 0 ${VW} ${VH}`,
+            width: '100%'
+        });
+
+        svg.appendChild(svgEl('circle', {
+            class: 'manip-wrapcircle-circle',
+            cx, cy, r: R
+        }));
+        svg.appendChild(svgEl('line', {
+            class: 'manip-wrapcircle-diameter',
+            x1: cx - R, y1: cy, x2: cx + R, y2: cy
+        }));
+        const dLabel = svgEl('text', {
+            class: 'manip-wrapcircle-dlabel',
+            x: cx, y: cy + 18,
+            'text-anchor': 'middle'
+        });
+        dLabel.textContent = `d = ${2 * r}`;
+        svg.appendChild(dLabel);
+
+        const wrapLayer = svgEl('g', { class: 'manip-wrapcircle-wraps' });
+        svg.appendChild(wrapLayer);
+
+        const note = svgEl('text', {
+            class: 'manip-wrapcircle-note',
+            x: cx, y: PAD - 14,
+            'text-anchor': 'middle'
+        });
+        svg.appendChild(note);
+
+        // Angle convention: 0 rad points right, increasing angle sweeps
+        // clockwise (y grows downward in SVG space) — matches the SVG arc
+        // sweep flag used below. -PI/2 is the top of the circle.
+        function pointAt(theta) {
+            return { x: cx + R * Math.cos(theta), y: cy + R * Math.sin(theta) };
+        }
+
+        function addArc(startTheta, endTheta, className) {
+            const p0 = pointAt(startTheta);
+            const p1 = pointAt(endTheta);
+            wrapLayer.appendChild(svgEl('path', {
+                class: className,
+                d: `M ${p0.x.toFixed(1)} ${p0.y.toFixed(1)} A ${R} ${R} 0 0 1 ${p1.x.toFixed(1)} ${p1.y.toFixed(1)}`
+            }));
+        }
+
+        const wrapColors = ['manip-wrapcircle-w1', 'manip-wrapcircle-w2', 'manip-wrapcircle-w3'];
+        const readout = el('div', 'manip-wrapcircle-readout');
+        const btn = el('button', 'manip-wrapcircle-btn', 'Wrap the diameter around ➰');
+        btn.type = 'button';
+
+        function updateReadout() {
+            readout.textContent = `wrapped: ${wraps} diameter${wraps === 1 ? '' : 's'}`;
+        }
+        updateReadout();
+
+        btn.addEventListener('click', () => {
+            if (done) return;
+            const startTheta = -Math.PI / 2 + wraps * 2;
+            addArc(startTheta, startTheta + 2, `manip-wrapcircle-wrap ${wrapColors[wraps % wrapColors.length]}`);
+            wraps++;
+            updateReadout();
+            if (wraps === 3) {
+                const gapStart = -Math.PI / 2 + 6;
+                addArc(gapStart, gapStart + (Math.PI * 2 - 6), 'manip-wrapcircle-gap');
+                note.textContent = '…and a bit more ≈ 0.14';
+                readout.textContent = 'about 3.14 diameters!';
+                done = true;
+                root.classList.add('manip-locked');
+                api.complete(doneMessage);
+            }
+        });
+
+        root.appendChild(svg);
+        root.appendChild(readout);
+        root.appendChild(btn);
+        container.appendChild(root);
+
+        return {
+            destroy() {
+                // No document-level listeners or timers to clean up.
+            }
+        };
+    }
+
+    // ---------------------------------------------------------------
+    // 30. vertical-angles — { type:'vertical-angles', x, done }
+    //     Two crossing lines make 4 angles; tap the vertical (opposite)
+    //     angle to see it shares the labeled measure.
+    // ---------------------------------------------------------------
+    function mountVerticalAngles(container, config, api) {
+        const { x, done: doneMessage } = config;
+        let done = false;
+
+        const cx = 90, cy = 90, R = 66, WEDGE_R = 55, LABEL_R = 74, ARC_R = 26;
+        const VW = 180, VH = 180;
+
+        const root = el('div', 'manip manip-vertangles');
+        const svg = svgEl('svg', {
+            class: 'manip-vertangles-svg',
+            viewBox: `0 0 ${VW} ${VH}`, width: '100%'
+        });
+
+        function pointAt(radius, deg) {
+            const rad = deg * Math.PI / 180;
+            return { x: cx + radius * Math.cos(rad), y: cy - radius * Math.sin(rad) };
+        }
+
+        function wedgePath(a1, a2, radius) {
+            const q0 = pointAt(radius, a1), q1 = pointAt(radius, a2);
+            return `M ${cx} ${cy} L ${q0.x.toFixed(1)} ${q0.y.toFixed(1)} A ${radius} ${radius} 0 0 0 ${q1.x.toFixed(1)} ${q1.y.toFixed(1)} Z`;
+        }
+
+        // The two full lines through the center.
+        const p0 = pointAt(R, 0), p180 = pointAt(R, 180);
+        svg.appendChild(svgEl('line', {
+            class: 'manip-vertangles-line',
+            x1: p0.x.toFixed(1), y1: p0.y.toFixed(1), x2: p180.x.toFixed(1), y2: p180.y.toFixed(1)
+        }));
+        const px = pointAt(R, x), pxOpp = pointAt(R, x + 180);
+        svg.appendChild(svgEl('line', {
+            class: 'manip-vertangles-line',
+            x1: px.x.toFixed(1), y1: px.y.toFixed(1), x2: pxOpp.x.toFixed(1), y2: pxOpp.y.toFixed(1)
+        }));
+
+        const givenArc = svgEl('path', {
+            class: 'manip-vertangles-arc manip-vertangles-arc-given',
+            d: wedgePath(0, x, ARC_R)
+        });
+        const vertArc = svgEl('path', {
+            class: 'manip-vertangles-arc manip-vertangles-arc-vertical',
+            d: wedgePath(180, x + 180, ARC_R)
+        });
+        svg.appendChild(givenArc);
+        svg.appendChild(vertArc);
+
+        const note = el('div', 'manip-vertangles-note');
+        const wiggleTimers = new Set();
+
+        function wiggle(elm) {
+            elm.classList.add('manip-wiggle');
+            const timer = setTimeout(() => {
+                elm.classList.remove('manip-wiggle');
+                wiggleTimers.delete(timer);
+            }, 500);
+            wiggleTimers.add(timer);
+        }
+
+        // Sectors, in order around the circle: the labeled angle, then the
+        // two adjacent (180-x) angles, then the vertical (opposite) angle.
+        const sectors = [
+            { a1: 0, a2: x, kind: 'given' },
+            { a1: x, a2: 180, kind: 'adjacent' },
+            { a1: 180, a2: x + 180, kind: 'vertical' },
+            { a1: x + 180, a2: 360, kind: 'adjacent' }
+        ];
+
+        sectors.forEach(sector => {
+            const mid = (sector.a1 + sector.a2) / 2;
+            const labelPos = pointAt(LABEL_R, mid);
+            const label = svgEl('text', {
+                class: 'manip-vertangles-label',
+                x: labelPos.x.toFixed(1), y: (labelPos.y + 5).toFixed(1),
+                'text-anchor': 'middle'
+            });
+
+            if (sector.kind === 'given') {
+                label.textContent = `${x}°`;
+                label.classList.add('manip-vertangles-label-given');
+                svg.appendChild(label);
+                return; // static, not tappable
+            }
+
+            label.textContent = '?';
+            svg.appendChild(label);
+
+            const wedge = svgEl('path', {
+                class: 'manip-vertangles-wedge',
+                d: wedgePath(sector.a1, sector.a2, WEDGE_R)
+            });
+            wedge.addEventListener('click', () => {
+                if (done) return;
+                if (sector.kind === 'vertical') {
+                    label.textContent = `${x}°`;
+                    label.classList.add('manip-vertangles-label-revealed');
+                    vertArc.classList.add('revealed');
+                    done = true;
+                    root.classList.add('manip-locked');
+                    api.complete(doneMessage);
+                } else {
+                    wiggle(wedge);
+                    label.textContent = `${180 - x}°`;
+                    label.classList.add('manip-vertangles-label-adjacent');
+                    note.textContent = 'adjacent angles make 180° — not this one!';
+                }
+            });
+            svg.appendChild(wedge);
+        });
+
+        svg.appendChild(svgEl('circle', { cx, cy, r: 3, class: 'manip-vertangles-vertex' }));
+
+        root.appendChild(svg);
+        root.appendChild(note);
+        container.appendChild(root);
+
+        return {
+            destroy() {
+                wiggleTimers.forEach(t => clearTimeout(t));
+                wiggleTimers.clear();
+            }
+        };
+    }
+
+    // ---------------------------------------------------------------
+    // 31. pyth-squares — { type:'pyth-squares', a, b, c, done }
+    //     Pythagorean theorem: squares built on the two legs and the
+    //     hypotenuse of a right triangle.
+    // ---------------------------------------------------------------
+    function mountPythSquares(container, config, api) {
+        const { a, b, c, done: doneMessage } = config;
+        let done = false;
+        let aRevealed = false, bRevealed = false;
+
+        const S = 14, PAD = 46;
+
+        // Right angle at the origin; leg a horizontal, leg b vertical
+        // (math coordinates, y-up). Squares are built outward from the
+        // triangle; the hypotenuse square's outward vertices are the
+        // hypotenuse endpoints plus the hypotenuse's outward normal
+        // vector (b, a), which points away from the origin.
+        const triangle = [[0, 0], [a, 0], [0, b]];
+        const sqA = [[0, 0], [a, 0], [a, -a], [0, -a]];
+        const sqB = [[0, 0], [0, b], [-b, b], [-b, 0]];
+        const sqC = [[a, 0], [0, b], [b, a + b], [a + b, a]];
+
+        const allPts = [].concat(triangle, sqA, sqB, sqC);
+        const minX = Math.min.apply(null, allPts.map(p => p[0]));
+        const maxX = Math.max.apply(null, allPts.map(p => p[0]));
+        const minY = Math.min.apply(null, allPts.map(p => p[1]));
+        const maxY = Math.max.apply(null, allPts.map(p => p[1]));
+
+        const VW = (maxX - minX) * S + PAD * 2;
+        const VH = (maxY - minY) * S + PAD * 2;
+
+        function toSvg(pt) {
+            return { x: PAD + (pt[0] - minX) * S, y: PAD + (maxY - pt[1]) * S };
+        }
+        function pointsAttr(pts) {
+            return pts.map(p => { const q = toSvg(p); return `${q.x.toFixed(1)},${q.y.toFixed(1)}`; }).join(' ');
+        }
+        function centerOf(pts) {
+            const cs = pts.map(toSvg);
+            return {
+                x: cs.reduce((s, p) => s + p.x, 0) / cs.length,
+                y: cs.reduce((s, p) => s + p.y, 0) / cs.length
+            };
+        }
+
+        const root = el('div', 'manip manip-pyth');
+        const svg = svgEl('svg', {
+            class: 'manip-pyth-svg',
+            viewBox: `0 0 ${VW} ${VH}`, width: '100%'
+        });
+
+        svg.appendChild(svgEl('polygon', { class: 'manip-pyth-triangle', points: pointsAttr(triangle) }));
+
+        const sqAPoly = svgEl('polygon', { class: 'manip-pyth-square manip-pyth-square-a', points: pointsAttr(sqA) });
+        const sqBPoly = svgEl('polygon', { class: 'manip-pyth-square manip-pyth-square-b', points: pointsAttr(sqB) });
+        const sqCPoly = svgEl('polygon', { class: 'manip-pyth-square manip-pyth-square-c manip-pyth-square-ghost', points: pointsAttr(sqC) });
+        svg.appendChild(sqAPoly);
+        svg.appendChild(sqBPoly);
+        svg.appendChild(sqCPoly);
+
+        const aMid = toSvg([a / 2, 0]);
+        const aLabel = svgEl('text', { class: 'manip-pyth-sidelabel', x: aMid.x.toFixed(1), y: (aMid.y + 16).toFixed(1), 'text-anchor': 'middle' });
+        aLabel.textContent = 'a';
+        const bMid = toSvg([0, b / 2]);
+        const bLabel = svgEl('text', { class: 'manip-pyth-sidelabel', x: (bMid.x - 12).toFixed(1), y: bMid.y.toFixed(1), 'text-anchor': 'middle' });
+        bLabel.textContent = 'b';
+        svg.appendChild(aLabel);
+        svg.appendChild(bLabel);
+
+        const aCenter = centerOf(sqA), bCenter = centerOf(sqB), cCenter = centerOf(sqC);
+        const aValue = svgEl('text', { class: 'manip-pyth-value', x: aCenter.x.toFixed(1), y: (aCenter.y + 5).toFixed(1), 'text-anchor': 'middle' });
+        const bValue = svgEl('text', { class: 'manip-pyth-value', x: bCenter.x.toFixed(1), y: (bCenter.y + 5).toFixed(1), 'text-anchor': 'middle' });
+        const cValue = svgEl('text', { class: 'manip-pyth-value', x: cCenter.x.toFixed(1), y: (cCenter.y + 5).toFixed(1), 'text-anchor': 'middle' });
+        svg.appendChild(aValue);
+        svg.appendChild(bValue);
+        svg.appendChild(cValue);
+
+        const equation = el('div', 'manip-pyth-equation');
+        const wiggleTimers = new Set();
+
+        function wiggle(elm) {
+            elm.classList.add('manip-wiggle');
+            const timer = setTimeout(() => {
+                elm.classList.remove('manip-wiggle');
+                wiggleTimers.delete(timer);
+            }, 500);
+            wiggleTimers.add(timer);
+        }
+
+        function maybeUnlockHyp() {
+            if (aRevealed && bRevealed) {
+                sqCPoly.classList.remove('manip-pyth-square-ghost');
+                sqCPoly.classList.add('manip-pyth-square-active');
+            }
+        }
+
+        sqAPoly.addEventListener('click', () => {
+            if (done || aRevealed) return;
+            aRevealed = true;
+            aValue.textContent = `a² = ${a * a}`;
+            aValue.classList.add('manip-pulse');
+            sqAPoly.classList.add('manip-pyth-square-revealed');
+            maybeUnlockHyp();
+        });
+        sqBPoly.addEventListener('click', () => {
+            if (done || bRevealed) return;
+            bRevealed = true;
+            bValue.textContent = `b² = ${b * b}`;
+            bValue.classList.add('manip-pulse');
+            sqBPoly.classList.add('manip-pyth-square-revealed');
+            maybeUnlockHyp();
+        });
+        sqCPoly.addEventListener('click', () => {
+            if (done) return;
+            if (!(aRevealed && bRevealed)) {
+                wiggle(sqCPoly);
+                return;
+            }
+            cValue.textContent = `a² + b² = ${c * c}`;
+            cValue.classList.add('manip-pulse');
+            sqCPoly.classList.remove('manip-pyth-square-active');
+            sqCPoly.classList.add('manip-pyth-square-revealed');
+            equation.textContent = `${a * a} + ${b * b} = ${c * c}`;
+            done = true;
+            root.classList.add('manip-locked');
+            api.complete(doneMessage);
+        });
+
+        root.appendChild(svg);
+        root.appendChild(equation);
+        container.appendChild(root);
+
+        return {
+            destroy() {
+                wiggleTimers.forEach(t => clearTimeout(t));
+                wiggleTimers.clear();
+            }
+        };
+    }
+
+    // ---------------------------------------------------------------
+    // 32. disk-stack — { type:'disk-stack', r, h, done }
+    //     Cylinder volume as stacked elliptical disk layers (side view).
+    // ---------------------------------------------------------------
+    function mountDiskStack(container, config, api) {
+        const { r, h, done: doneMessage } = config;
+        let done = false;
+        let k = 0;
+
+        const RX = 60, RY = 14, BAND = 20, PAD = 30;
+        const VW = RX * 2 + PAD * 2;
+        const VH = h * BAND + PAD * 2 + RY;
+        const cx = VW / 2;
+        const baseY = VH - PAD;
+
+        function layerCy(i) {
+            return baseY - i * BAND;
+        }
+
+        const root = el('div', 'manip manip-disk');
+        const svg = svgEl('svg', {
+            class: 'manip-disk-svg',
+            viewBox: `0 0 ${VW} ${VH}`, width: '100%'
+        });
+
+        const ghosts = [];
+        for (let i = 0; i < h; i++) {
+            const ghost = svgEl('ellipse', {
+                class: 'manip-disk-ghost',
+                cx, cy: layerCy(i).toFixed(1), rx: RX, ry: RY
+            });
+            ghosts.push(ghost);
+            svg.appendChild(ghost);
+        }
+
+        const layerEls = [];
+
+        function buildLayer(i) {
+            const g = svgEl('g', { class: 'manip-disk-layer' });
+            const cy = layerCy(i);
+            if (i > 0) {
+                // Side wall filling the gap down to the disk below.
+                g.appendChild(svgEl('rect', {
+                    class: 'manip-disk-wall',
+                    x: (cx - RX).toFixed(1), y: cy.toFixed(1), width: RX * 2, height: BAND
+                }));
+            }
+            g.appendChild(svgEl('ellipse', {
+                class: 'manip-disk-face',
+                cx, cy: cy.toFixed(1), rx: RX, ry: RY
+            }));
+            // A slight 3D rim highlight along the front edge of the disk.
+            g.appendChild(svgEl('path', {
+                class: 'manip-disk-rim',
+                d: `M ${(cx - RX).toFixed(1)} ${cy.toFixed(1)} A ${RX} ${RY} 0 0 0 ${(cx + RX).toFixed(1)} ${cy.toFixed(1)}`
+            }));
+            return g;
+        }
+
+        const baseLabel = el('div', 'manip-disk-baselabel', `each layer = r² = ${r * r} (of π)`);
+        const counter = el('div', 'manip-count');
+        const btnRow = el('div', 'manip-disk-btns');
+        const wiggleTimers = new Set();
+
+        function wiggle(elm) {
+            elm.classList.add('manip-wiggle');
+            const timer = setTimeout(() => {
+                elm.classList.remove('manip-wiggle');
+                wiggleTimers.delete(timer);
+            }, 500);
+            wiggleTimers.add(timer);
+        }
+
+        function updateCounter() {
+            counter.textContent = `${k} layer${k === 1 ? '' : 's'} × r² = ${k * r * r} (of π)`;
+        }
+
+        function addLayer(btn) {
+            if (done) return;
+            if (k >= h) {
+                wiggle(btn);
+                return;
+            }
+            const g = buildLayer(k);
+            svg.appendChild(g);
+            layerEls.push(g);
+            ghosts[k].style.display = 'none';
+            k++;
+            updateCounter();
+            if (k === h) {
+                done = true;
+                root.classList.add('manip-locked');
+                api.complete(doneMessage);
+            }
+        }
+
+        function removeLayer(btn) {
+            if (done) return;
+            if (k <= 0) {
+                wiggle(btn);
+                return;
+            }
+            k--;
+            svg.removeChild(layerEls.pop());
+            ghosts[k].style.display = '';
+            updateCounter();
+        }
+
+        const addBtn = el('button', 'manip-disk-btn', 'Add layer ➕');
+        addBtn.type = 'button';
+        addBtn.addEventListener('click', () => addLayer(addBtn));
+        const removeBtn = el('button', 'manip-disk-btn', 'Remove layer ➖');
+        removeBtn.type = 'button';
+        removeBtn.addEventListener('click', () => removeLayer(removeBtn));
+        btnRow.appendChild(addBtn);
+        btnRow.appendChild(removeBtn);
+
+        updateCounter();
+        root.appendChild(svg);
+        root.appendChild(baseLabel);
+        root.appendChild(counter);
+        root.appendChild(btnRow);
+        container.appendChild(root);
+
+        return {
+            destroy() {
+                wiggleTimers.forEach(t => clearTimeout(t));
+                wiggleTimers.clear();
+            }
+        };
+    }
+
     window.Manipulatives = {
         'build-array': { mount: mountBuildArray },
         'share-groups': { mount: mountShareGroups },
@@ -2903,6 +3748,13 @@
         'tap-count': { mount: mountTapCount },
         'square-builder': { mount: mountSquareBuilder },
         'row-stack': { mount: mountRowStack },
-        'group-check': { mount: mountGroupCheck }
+        'group-check': { mount: mountGroupCheck },
+        'balance-steps': { mount: mountBalanceSteps },
+        'even-out': { mount: mountEvenOut },
+        'distribute-grid': { mount: mountDistributeGrid },
+        'wrap-circle': { mount: mountWrapCircle },
+        'vertical-angles': { mount: mountVerticalAngles },
+        'pyth-squares': { mount: mountPythSquares },
+        'disk-stack': { mount: mountDiskStack }
     };
 })();
