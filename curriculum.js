@@ -2277,8 +2277,9 @@ const CURRICULUM = {
                             const a = R.int(1, d - 2);
                             const c = R.int(1, d - 1 - a);
                             return Object.assign({
-                                prompt: `${a}/${d} + ${c}/${d} = ? (Type it like 3/4)`,
+                                prompt: `${a}/${d} + ${c}/${d} = ? (Type it like 3/4)${level === 1 ? `<span class="prompt-sub">Shade ${c} more pieces.</span>` : ''}`,
                                 visual: level === 1 ? fractionPair(a, d, c, d) : null,
+                                interactive: level === 1 ? { type: 'shade-two', parts: d, preShaded: a, change: c, mode: 'add', done: `${a} shaded plus ${c} more makes ${a + c} out of ${d} — type it like ${a + c}/${d} ✏️` } : null,
                                 answerType: 'fraction',
                                 hints: [
                                     `The pieces are the same size — ${d}ths.`,
@@ -2290,8 +2291,9 @@ const CURRICULUM = {
                         const a = R.int(2, d - 1);
                         const c = R.int(1, a - 1);
                         return Object.assign({
-                            prompt: `${a}/${d} − ${c}/${d} = ? (Type it like 3/4)`,
+                            prompt: `${a}/${d} − ${c}/${d} = ? (Type it like 3/4)${level === 1 ? `<span class="prompt-sub">Cross off ${c} pieces.</span>` : ''}`,
                             visual: null,
+                            interactive: level === 1 ? { type: 'shade-two', parts: d, preShaded: a, change: c, mode: 'remove', done: `You crossed off ${c}, leaving ${a - c} of ${d} — type it like ${a - c}/${d} ✏️` } : null,
                             answerType: 'fraction',
                             hints: [
                                 `Same-size pieces (${d}ths) — subtract the counts.`,
@@ -2322,9 +2324,12 @@ const CURRICULUM = {
                         }
                         const c1 = a1 * d2, c2 = a2 * d1;
                         const answer = c1 < c2 ? '<' : c1 > c2 ? '>' : '=';
+                        const correct = answer === '<' ? 'bottom' : answer === '>' ? 'top' : 'equal';
+                        const interactive = level === 1 ? { type: 'compare-bars', top: { parts: d1, target: a1, label: `${a1}/${d1}` }, bottom: { parts: d2, target: a2, label: `${a2}/${d2}` }, correct, done: `You shaded both bars and saw which is bigger — now tap ${answer} below!` } : null;
                         return {
-                            prompt: `Which symbol makes this true?<br><span class="compare-nums">${a1}/${d1} &nbsp; ? &nbsp; ${a2}/${d2}</span>`,
+                            prompt: `Which symbol makes this true?<br><span class="compare-nums">${a1}/${d1} &nbsp; ? &nbsp; ${a2}/${d2}</span>${level === 1 ? '<span class="prompt-sub">Shade each bar, then tap the bigger one.</span>' : ''}`,
                             visual: level === 1 ? fractionPair(a1, d1, a2, d2) : null,
+                            interactive,
                             answerType: 'choice',
                             choices: ['<', '>', '='],
                             answer,
@@ -2346,11 +2351,13 @@ const CURRICULUM = {
                         const a = level === 1 ? 1 : R.int(1, b - 1);
                         const m = R.int(2, level === 3 ? 9 : 5);
                         const n = b * m;
+                        const interactive = level === 1 ? { type: 'share-groups', total: n, groups: b, icon: '🔵', itemName: 'counters', done: `You split ${n} into ${b} equal groups — each group has ${m}. So 1/${b} of ${n} is ${m}! Type it in ✏️` } : null;
                         return {
-                            prompt: level === 3 && Math.random() < 0.5
+                            prompt: (level === 3 && Math.random() < 0.5
                                 ? `${n} × ${a}/${b} = ?`
-                                : `What is ${a}/${b} of ${n}?`,
+                                : `What is ${a}/${b} of ${n}?`) + (level === 1 ? `<span class="prompt-sub">Deal all ${n} onto the ${b} plates, then count one plate.</span>` : ''),
                             visual: null,
+                            interactive,
                             answerType: 'number',
                             answer: a * m,
                             hints: [
@@ -2381,8 +2388,9 @@ const CURRICULUM = {
                         if (level === 1) {
                             const t = R.int(1, 9);
                             return {
-                                prompt: `Write ${t}/10 as a decimal. (Type it like 0.7)`,
+                                prompt: `Write ${t}/10 as a decimal. (Type it like 0.7)<span class="prompt-sub">Shade ${t} of the 10 parts.</span>`,
                                 visual: fractionRect(10, t),
+                                interactive: { type: 'shade-fraction', parts: 10, target: t, mode: 'shade', done: `You shaded ${t} of 10 equal parts — ${t} tenths is written 0.${t}. Type it in ✏️` },
                                 answerType: 'text',
                                 answer: `0.${t}`,
                                 accept: [`.${t}`, `0.${t}0`],
@@ -2513,9 +2521,12 @@ const CURRICULUM = {
                             ? [['Acute', R.int(20, 70)], ['Right', 90], ['Obtuse', R.int(110, 160)]]
                             : [['Acute', R.int(15, 75)], ['Right', 90], ['Obtuse', R.int(105, 170)], ['Straight', 180]]);
                         const choices = level === 1 ? ['Acute', 'Right', 'Obtuse'] : ['Acute', 'Right', 'Obtuse', 'Straight'];
+                        const deg = kind[1];
+                        const interactive = level === 1 ? { type: 'angle-drag', deg, done: `You measured it — about ${deg}°! Now tap which kind of angle that is.` } : null;
                         return {
-                            prompt: 'What kind of angle is this?',
+                            prompt: `What kind of angle is this?${level === 1 ? '<span class="prompt-sub">Drag the measuring ray to match the angle.</span>' : ''}`,
                             visual: angleSVG(kind[1]),
+                            interactive,
                             answerType: 'choice',
                             choices,
                             answer: kind[0],
@@ -2627,9 +2638,12 @@ const CURRICULUM = {
                         const a = level === 1 ? R.int(12, 25) : level === 2 ? R.int(13, 45) : R.int(22, 79);
                         const b = level === 1 ? R.int(11, 15) : level === 2 ? R.int(12, 25) : R.int(13, 49);
                         const bt = Math.floor(b / 10) * 10, bo = b % 10;
+                        const at = Math.floor(a / 10) * 10, ao = a % 10;
+                        const interactive = level === 1 ? { type: 'partial-products', aParts: (a % 10 === 0 ? [a] : [at, ao]), bParts: (b % 10 === 0 ? [b] : [bt, bo]), done: `All four pieces add up to ${a * b}! Type it in ✏️` } : null;
                         return {
-                            prompt: `${a} × ${b} = ?`,
+                            prompt: `${a} × ${b} = ?${level === 1 ? '<span class="prompt-sub">Break both numbers into tens and ones — tap every piece.</span>' : ''}`,
                             visual: null,
+                            interactive,
                             answerType: 'number',
                             answer: a * b,
                             hints: [
@@ -2650,8 +2664,9 @@ const CURRICULUM = {
                         if (level === 1) {
                             const n = R.int(3, 95), p = R.pick([10, 100]);
                             return {
-                                prompt: `${n} × ${p} = ?`,
+                                prompt: `${n} × ${p} = ?<span class="prompt-sub">Tap ×10 until you've multiplied by ${p}.</span>`,
                                 visual: null,
+                                interactive: { type: 'place-shift', start: n, target: n * p, done: `Multiplying by ${p} slid every digit over — ${n} became ${n * p}! Type it in ✏️` },
                                 answerType: 'number',
                                 answer: n * p,
                                 hints: [`× ${p} shifts every digit ${p === 10 ? 'one place' : 'two places'} bigger.`],
@@ -2724,9 +2739,11 @@ const CURRICULUM = {
                         }
                         const ans = add ? (A + B) / scale : (A - B) / scale;
                         const dA = A / scale, dB = B / scale;
+                        const interactive = level === 1 ? { type: 'decimal-build', startTenths: A, deltaTenths: B, op: add ? 'add' : 'sub', done: add ? `You added ${dB} onto ${dA} and landed on ${ans}! Type it in ✏️` : `You took ${dB} away from ${dA} and landed on ${ans}! Type it in ✏️` } : null;
                         return {
-                            prompt: `${dA} ${add ? '+' : '−'} ${dB} = ?`,
+                            prompt: `${dA} ${add ? '+' : '−'} ${dB} = ?${level === 1 ? `<span class="prompt-sub">${add ? `Tap +1 and +0.1 to add ${dB}.` : `Tap −1 and −0.1 to take away ${dB}.`}</span>` : ''}`,
                             visual: null,
+                            interactive,
                             answerType: 'number',
                             answer: ans,
                             hints: [
@@ -2747,8 +2764,9 @@ const CURRICULUM = {
                         if (level === 1) {
                             const t = R.int(2, 9), b = R.int(2, 9);
                             return {
-                                prompt: `0.${t} × ${b} = ?`,
+                                prompt: `0.${t} × ${b} = ?<span class="prompt-sub">Each 🟧 is one tenth (0.1). Build ${b} rows of ${t}.</span>`,
                                 visual: null,
+                                interactive: { type: 'build-array', rows: b, cols: t, icon: '🟧', done: `${b} rows of ${t} tenths is ${t * b} tenths — that's ${t * b / 10}! Type it in ✏️` },
                                 answerType: 'number',
                                 answer: t * b / 10,
                                 hints: [
@@ -2851,8 +2869,9 @@ const CURRICULUM = {
                             if (level === 1) {
                                 const a2 = R.int(1, d2 - k - 1);
                                 return Object.assign({
-                                    prompt: `1/${d1} + ${a2}/${d2} = ? (Type it like 3/4)`,
+                                    prompt: `1/${d1} + ${a2}/${d2} = ? (Type it like 3/4)<span class="prompt-sub">The first fraction is already shaded — shade ${a2} more.</span>`,
                                     visual: null,
+                                    interactive: { type: 'shade-two', parts: d2, preShaded: k, change: a2, mode: 'add', preLabel: `1/${d1} = ${k}/${d2}`, done: `1/${d1} is the same as ${k}/${d2}; add ${a2} more to get ${k + a2}/${d2} — type it like ${k + a2}/${d2} ✏️` },
                                     answerType: 'fraction',
                                     hints: [
                                         `The pieces are different sizes! Rename 1/${d1} as ${d2}ths.`,
@@ -2935,9 +2954,11 @@ const CURRICULUM = {
                         const d = level === 1 ? R.pick([2, 3, 4]) : R.int(2, level === 2 ? 5 : 6);
                         const a = level === 1 ? 1 : R.int(1, b - 1);
                         const c = level === 1 ? 1 : R.int(1, d - 1);
+                        const interactive = level === 1 ? { type: 'frac-mult-grid', aNum: a, aDen: b, bNum: c, bDen: d, done: `The overlap is ${a * c} of ${b * d} little pieces — that's ${a * c}/${b * d}! Type it like ${a * c}/${b * d} ✏️` } : null;
                         return Object.assign({
-                            prompt: `${a}/${b} × ${c}/${d} = ? (Type it like 3/4)`,
+                            prompt: `${a}/${b} × ${c}/${d} = ? (Type it like 3/4)${level === 1 ? '<span class="prompt-sub">One fraction is shaded across — shade the other down and look at the overlap.</span>' : ''}`,
                             visual: null,
+                            interactive,
                             answerType: 'fraction',
                             hints: [
                                 `Multiply the tops: ${a} × ${c} = ${a * c}.`,
@@ -2956,9 +2977,11 @@ const CURRICULUM = {
                         const n = R.int(2, 6);
                         const b = R.int(2, 6);
                         if (level < 3 || Math.random() < 0.5) {
+                            const interactive = level === 1 ? { type: 'split-wholes', wholes: n, per: b, done: `You cut ${n} wholes into ${b} pieces each — ${n * b} pieces! Type it in ✏️` } : null;
                             return {
-                                prompt: `${n} ÷ 1/${b} = ?`,
+                                prompt: `${n} ÷ 1/${b} = ?${level === 1 ? `<span class="prompt-sub">Tap each whole to cut it into ${b} pieces, then count.</span>` : ''}`,
                                 visual: null,
+                                interactive,
                                 answerType: 'number',
                                 answer: n * b,
                                 hints: [
@@ -3013,9 +3036,11 @@ const CURRICULUM = {
                                 explain: `${l} × ${w} × ${h} = ${l * w * h} cubic units.`
                             };
                         }
+                        const interactive = level === 1 ? { type: 'cube-builder', l, w, h, done: `${h} layers of ${l * w} cubes each — ${l * w * h} cubes fill the box! Type it in ✏️` } : null;
                         return {
-                            prompt: `How many unit cubes fit inside this box (its volume)?`,
+                            prompt: `How many unit cubes fit inside this box (its volume)?${level === 1 ? '<span class="prompt-sub">Stack cubes to fill the box, then count them all.</span>' : ''}`,
                             visual: boxSVG(l, w, h),
+                            interactive,
                             answerType: 'number',
                             answer: l * w * h,
                             hints: [
