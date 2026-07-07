@@ -1913,15 +1913,22 @@
     }
 
     // ---------------------------------------------------------------
-    // 17. coord-walk — { type:'coord-walk', x, y, done }
+    // 17. coord-walk — { type:'coord-walk', x, y, min?, max?, done }
+    //     min/max default to 0/8 (first-quadrant grid, unchanged legacy
+    //     rendering). When min < 0, a full four-quadrant plane is drawn
+    //     instead, with the walker starting at the origin in the middle.
     // ---------------------------------------------------------------
     function mountCoordWalk(container, config, api) {
         const { x: targetX, y: targetY, done: doneMessage } = config;
+        const min = config.min !== undefined ? config.min : 0;
+        const max = config.max !== undefined ? config.max : 8;
+        const fourQuadrant = min < 0;
         let done = false;
         let wx = 0, wy = 0;
 
-        // Geometry mirrors curriculum.js's coordPlaneSVG() exactly.
-        const s = 26, n = 9, pad = 26;
+        // Geometry mirrors curriculum.js's coordPlaneSVG() exactly when
+        // min/max are omitted (the legacy 0-8 first-quadrant grid).
+        const s = 26, n = max - min, pad = 26;
         const size = n * s + pad * 2;
 
         const root = el('div', 'manip manip-coord');
@@ -1931,22 +1938,37 @@
         });
 
         function toXY(px, py) {
-            return { x: pad + px * s, y: pad + (n - py) * s };
+            return { x: pad + (px - min) * s, y: pad + (max - py) * s };
         }
 
-        for (let i = 0; i <= n; i++) {
-            const p = pad + i * s;
-            svg.appendChild(svgEl('line', { class: 'cp-grid', x1: p, y1: pad, x2: p, y2: pad + n * s }));
-            svg.appendChild(svgEl('line', { class: 'cp-grid', x1: pad, y1: p, x2: pad + n * s, y2: p }));
-            const xl = svgEl('text', { class: 'cp-label', x: p, y: pad + n * s + 16, 'text-anchor': 'middle' });
-            xl.textContent = String(i);
-            svg.appendChild(xl);
-            const yl = svgEl('text', { class: 'cp-label', x: pad - 10, y: pad + (n - i) * s + 4, 'text-anchor': 'middle' });
-            yl.textContent = String(i);
-            svg.appendChild(yl);
+        for (let i = min; i <= max; i++) {
+            const gx = pad + (i - min) * s;
+            const gy = pad + (max - i) * s;
+            svg.appendChild(svgEl('line', { class: 'cp-grid', x1: gx, y1: pad, x2: gx, y2: pad + n * s }));
+            svg.appendChild(svgEl('line', { class: 'cp-grid', x1: pad, y1: gy, x2: pad + n * s, y2: gy }));
+
+            // Legacy grid labels every tick; four-quadrant labels at least
+            // min, max, 0, ±1, and every other tick to stay readable.
+            const showLabel = !fourQuadrant || i === min || i === max || Math.abs(i) <= 1 || i % 2 === 0;
+            if (showLabel) {
+                const xl = svgEl('text', { class: 'cp-label', x: gx, y: pad + n * s + 16, 'text-anchor': 'middle' });
+                xl.textContent = String(i);
+                svg.appendChild(xl);
+                const yl = svgEl('text', { class: 'cp-label', x: pad - 10, y: gy + 4, 'text-anchor': 'middle' });
+                yl.textContent = String(i);
+                svg.appendChild(yl);
+            }
         }
-        svg.appendChild(svgEl('line', { class: 'cp-axis', x1: pad, y1: pad + n * s, x2: pad + n * s, y2: pad + n * s }));
-        svg.appendChild(svgEl('line', { class: 'cp-axis', x1: pad, y1: pad, x2: pad, y2: pad + n * s }));
+
+        if (fourQuadrant) {
+            // Axes cross through the origin in the middle of the plane.
+            const zero = toXY(0, 0);
+            svg.appendChild(svgEl('line', { class: 'cp-axis', x1: pad, y1: zero.y, x2: pad + n * s, y2: zero.y }));
+            svg.appendChild(svgEl('line', { class: 'cp-axis', x1: zero.x, y1: pad, x2: zero.x, y2: pad + n * s }));
+        } else {
+            svg.appendChild(svgEl('line', { class: 'cp-axis', x1: pad, y1: pad + n * s, x2: pad + n * s, y2: pad + n * s }));
+            svg.appendChild(svgEl('line', { class: 'cp-axis', x1: pad, y1: pad, x2: pad, y2: pad + n * s }));
+        }
 
         // Target point: prominent, fixed.
         const targetPos = toXY(targetX, targetY);
@@ -2002,7 +2024,7 @@
         function move(dx, dy, btn) {
             if (done) return;
             const nx = wx + dx, ny = wy + dy;
-            if (nx < 0 || nx > 8 || ny < 0 || ny > 8) {
+            if (nx < min || nx > max || ny < min || ny > max) {
                 wiggle(btn);
                 return;
             }
