@@ -91,6 +91,7 @@ const THEMES = {
 class MasteryEngine {
     constructor() {
         this.state = this.loadState();
+        this.reconcileUnlockedGrade();
         window.MathTheme = THEMES[this.state.theme];
         this.session = null;
         this.pendingTimeout = null;
@@ -106,6 +107,7 @@ class MasteryEngine {
             theme: 'pokemon',
             stars: 0,
             totalAnswered: 0,
+            unlockedGrade: 2, // highest level tier ever opened — never goes back down
             skills: {} // id -> {phase, learnCount, practiceCount, streak, wrongStreak, review:{due, interval}, refresh, reviewMisses}
         };
     }
@@ -142,20 +144,32 @@ class MasteryEngine {
     }
 
     // A grade tier stays completely hidden until every unit of the
-    // grades below it is mastered — then its units appear on the map.
-    gradeUnlocked(grade) {
+    // grades below it is mastered. Once opened it is persisted and never
+    // relocks — a rusty flashback can demote a skill back to practice
+    // without hiding levels the child already earned.
+    gradeRequirementsMet(grade) {
         return CURRICULUM.units
             .filter(u => u.grade < grade)
             .every(u => this.isUnitMastered(u.id));
     }
 
+    gradeUnlocked(grade) {
+        return grade <= this.state.unlockedGrade;
+    }
+
     highestUnlockedGrade() {
-        let g = 2;
-        const grades = [...new Set(CURRICULUM.units.map(u => u.grade))].sort();
-        for (const grade of grades) {
-            if (this.gradeUnlocked(grade)) g = grade;
+        return this.state.unlockedGrade;
+    }
+
+    // Sync the persisted tier with mastery state (covers saves from
+    // before unlockedGrade existed).
+    reconcileUnlockedGrade() {
+        const grades = [...new Set(CURRICULUM.units.map(u => u.grade))].sort((a, b) => a - b);
+        for (const g of grades) {
+            if (g > this.state.unlockedGrade && this.gradeRequirementsMet(g)) {
+                this.state.unlockedGrade = g;
+            }
         }
-        return g;
     }
 
     visibleUnits() {
@@ -821,7 +835,9 @@ class MasteryEngine {
         // Did this mastery finish the whole tier and reveal the next one?
         const nextGrade = unit.grade + 1;
         const nextGradeExists = CURRICULUM.units.some(u => u.grade === nextGrade);
-        if (nextGradeExists && this.gradeUnlocked(nextGrade)) {
+        if (nextGradeExists && nextGrade > this.state.unlockedGrade && this.gradeRequirementsMet(nextGrade)) {
+            this.state.unlockedGrade = nextGrade;
+            this.save();
             this.showCelebration(
                 '🎓 LEVEL UP!',
                 `You mastered EVERY skill — incredible!<br>` +

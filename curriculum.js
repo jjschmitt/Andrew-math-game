@@ -1737,8 +1737,10 @@ const CURRICULUM = {
                     standard: 'NC.3.MD.8',
                     learnIntro: '<strong>Perimeter = the walk around the edge!</strong><br>A rectangle 6 long and 4 wide: 6 + 4 + 6 + 4 = <strong>20</strong> units around.',
                     generate(level) {
+                        // keep w strictly shorter than l — the Master-level
+                        // variant asks for "the shorter side"
                         const l = R.int(3, 12);
-                        const w = R.int(2, Math.min(l, 8));
+                        const w = R.int(2, Math.min(l - 1, 8));
                         if (level === 3 && Math.random() < 0.5) {
                             const p = 2 * (l + w);
                             return {
