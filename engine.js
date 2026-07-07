@@ -95,6 +95,7 @@ class MasteryEngine {
         window.MathTheme = THEMES[this.state.theme];
         this.session = null;
         this.pendingTimeout = null;
+        this.activeManipulative = null;
         this.cacheDom();
         this.bindEvents();
         this.showStart();
@@ -307,8 +308,16 @@ class MasteryEngine {
         }
     }
 
+    destroyManipulative() {
+        if (this.activeManipulative) {
+            try { this.activeManipulative.destroy(); } catch (e) { /* ignore */ }
+            this.activeManipulative = null;
+        }
+    }
+
     showScreen(id) {
         this.clearPending();
+        this.destroyManipulative();
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById(id).classList.add('active');
         this.renderHeader();
@@ -561,11 +570,17 @@ class MasteryEngine {
         // Problem body
         this.el['problem-prompt'].innerHTML = p.prompt;
         const visualEl = this.el['problem-visual'];
-        if (p.visual) {
+        this.destroyManipulative();
+        visualEl.innerHTML = '';
+        if (p.interactive && window.Manipulatives && window.Manipulatives[p.interactive.type]) {
+            visualEl.style.display = 'block';
+            this.activeManipulative = window.Manipulatives[p.interactive.type].mount(
+                visualEl, p.interactive, { complete: msg => this.manipulativeComplete(msg) }
+            );
+        } else if (p.visual) {
             visualEl.innerHTML = p.visual;
             visualEl.style.display = 'block';
         } else {
-            visualEl.innerHTML = '';
             visualEl.style.display = 'none';
         }
 
@@ -905,6 +920,13 @@ class MasteryEngine {
         this.revealHint();
     }
 
+    manipulativeComplete(msg) {
+        const div = document.createElement('div');
+        div.className = 'hint-line coach';
+        div.innerHTML = `🌟 ${msg}`;
+        this.el['hint-area'].appendChild(div);
+    }
+
     revealHint() {
         const s = this.session;
         const p = s.problem;
@@ -919,7 +941,7 @@ class MasteryEngine {
             this.el['hint-btn'].disabled = true;
         }
         // Show the visual model as part of deeper hints when it was hidden
-        if (s.hintIndex >= 2 && p.visual && this.el['problem-visual'].style.display === 'none') {
+        if (s.hintIndex >= 2 && p.visual && !p.interactive && this.el['problem-visual'].style.display === 'none') {
             this.el['problem-visual'].innerHTML = p.visual;
             this.el['problem-visual'].style.display = 'block';
         }
