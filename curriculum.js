@@ -247,6 +247,11 @@ function frac(n, d) {
     return { answer: fracStr(n, d), fracValue: { n, d } };
 }
 
+const COLOR_EMOJI = { red: '🔴', blue: '🔵', green: '🟢', yellow: '🟡', purple: '🟣', orange: '🟠' };
+function colorEmoji(name) {
+    return COLOR_EMOJI[name] || '⚪';
+}
+
 function isPrime(n) {
     if (n < 2) return false;
     for (let i = 2; i * i <= n; i++) if (n % i === 0) return false;
@@ -3114,6 +3119,7 @@ const CURRICULUM = {
                         const k = level === 1 ? R.int(2, 3) : R.int(2, 6);
                         const c = a * k, d = b * k;
                         const askA = level === 3 && Math.random() < 0.5;
+                        const interactive = level === 1 ? { type: 'ratio-groups', a, b, k, iconA: '🔴', iconB: '🔵', done: `${k} groups of ${a}:${b} gives ${a * k} red to ${b * k} blue — the missing number is ${b * k}! Type it in ✏️` } : null;
                         if (askA) {
                             return {
                                 prompt: `Fill in the blank: ? : ${b} = ${c} : ${d}`,
@@ -3129,8 +3135,9 @@ const CURRICULUM = {
                             };
                         }
                         return {
-                            prompt: `Fill in the blank: ${a} : ${b} = ${c} : ?`,
+                            prompt: `Fill in the blank: ${a} : ${b} = ${c} : ?${level === 1 ? `<span class="prompt-sub">Add groups of ${a} red and ${b} blue until the red count reaches ${a * k}.</span>` : ''}`,
                             visual: null,
+                            interactive,
                             answerType: 'number',
                             answer: d,
                             hints: [
@@ -3151,11 +3158,15 @@ const CURRICULUM = {
                         const rate = level === 1 ? R.int(2, 9) : level === 2 ? R.int(3, 15) : R.int(4, 25);
                         const count = level === 1 ? R.int(2, 6) : level === 2 ? R.int(3, 8) : R.int(3, 12);
                         const total = rate * count;
+                        const gateOn = level === 1 && total <= 30;
+                        const interactive = gateOn ? { type: 'share-groups', total, groups: count, icon: '🔵', itemName: 'items', done: `${total} shared into ${count} equal groups is ${rate} each! Type it in ✏️` } : null;
+                        const promptSub = gateOn ? `<span class="prompt-sub">Deal all ${total} onto the ${count} plates, then count one plate.</span>` : '';
                         if (Math.random() < 0.5) {
                             const item = themeThing();
                             return {
-                                prompt: `${count} ${item.name} ${item.icon} cost ${total} coins in all. How many coins does 1 cost?`,
+                                prompt: `${count} ${item.name} ${item.icon} cost ${total} coins in all. How many coins does 1 cost?${promptSub}`,
                                 visual: null,
+                                interactive,
                                 answerType: 'number',
                                 answer: rate,
                                 hints: [
@@ -3167,8 +3178,9 @@ const CURRICULUM = {
                         }
                         const name = heroName();
                         return {
-                            prompt: `${name}'s car goes ${total} miles in ${count} hours. How many miles per hour is that?`,
+                            prompt: `${name}'s car goes ${total} miles in ${count} hours. How many miles per hour is that?${promptSub}`,
                             visual: null,
+                            interactive,
                             answerType: 'number',
                             answer: rate,
                             hints: [
@@ -3190,8 +3202,9 @@ const CURRICULUM = {
                             const base = R.int(2, 20) * 10;
                             const answer = base * percent / 100;
                             return {
-                                prompt: `What is ${percent}% of ${base}?`,
+                                prompt: `What is ${percent}% of ${base}?<span class="prompt-sub">Each part of the bar is 10% of ${base} — shade ${percent}%.</span>`,
                                 visual: null,
+                                interactive: { type: 'percent-bar', base, percent, mode: 'of', done: `Each part is 10% — you shaded ${percent}% of ${base}, which is ${answer}! Type it in ✏️` },
                                 answerType: 'number',
                                 answer,
                                 hints: [
@@ -3276,9 +3289,11 @@ const CURRICULUM = {
                             do { b = R.int(-9, -1); } while (b === a);
                         }
                         const answer = a < b ? '<' : a > b ? '>' : '=';
+                        const interactive = level === 1 ? { type: 'tap-line', min: -10, max: 10, targets: [{ value: a, label: String(a) }, { value: b, label: String(b) }], done: 'Both placed! The number farther RIGHT on the line is always the bigger one — now tap the correct symbol!' } : null;
                         return {
-                            prompt: `Which symbol makes this true?<br><span class="compare-nums">${a} &nbsp; ? &nbsp; ${b}</span>`,
+                            prompt: `Which symbol makes this true?<br><span class="compare-nums">${a} &nbsp; ? &nbsp; ${b}</span>${level === 1 ? `<span class="prompt-sub">Place both numbers on the number line first.</span>` : ''}`,
                             visual: null,
+                            interactive,
                             answerType: 'choice',
                             choices: ['<', '>', '='],
                             answer,
@@ -3302,9 +3317,11 @@ const CURRICULUM = {
                         do { x = R.int(-range, range); } while (x === 0);
                         do { y = R.int(-range, range); } while (y === 0);
                         const quadrant = x > 0 && y > 0 ? 'Quadrant I' : x < 0 && y > 0 ? 'Quadrant II' : x < 0 && y < 0 ? 'Quadrant III' : 'Quadrant IV';
+                        const interactive = level === 1 ? { type: 'coord-walk', min: -6, max: 6, x, y, done: `You landed at (${x}, ${y}) — that's ${quadrant}! Tap it below.` } : null;
                         return {
-                            prompt: `The point (${x}, ${y}) is in which quadrant?`,
+                            prompt: `The point (${x}, ${y}) is in which quadrant?${level === 1 ? `<span class="prompt-sub">Walk the rocket from 0 — watch which way you go!</span>` : ''}`,
                             visual: null,
+                            interactive,
                             answerType: 'choice',
                             choices: ['Quadrant I', 'Quadrant II', 'Quadrant III', 'Quadrant IV'],
                             answer: quadrant,
@@ -3371,9 +3388,11 @@ const CURRICULUM = {
                         let m, n;
                         do { m = R.int(1, 5); n = R.int(1, 5); } while (gcd(m, n) !== 1 || m === n);
                         const a = g * m, b = g * n;
+                        const interactive = level === 1 ? { type: 'group-check', a, b, options: [2, 3, 4, 5, 6], correct: g, done: `Groups of ${g} split BOTH ${a} and ${b} evenly — and nothing bigger does. GCF = ${g}! Type it in ✏️` } : null;
                         return {
-                            prompt: `What is the GCF (Greatest Common Factor) of ${a} and ${b}?`,
+                            prompt: `What is the GCF (Greatest Common Factor) of ${a} and ${b}?${level === 1 ? `<span class="prompt-sub">Try group sizes — find the BIGGEST that splits both numbers evenly.</span>` : ''}`,
                             visual: null,
+                            interactive,
                             answerType: 'number',
                             answer: g,
                             hints: [
@@ -3414,9 +3433,11 @@ const CURRICULUM = {
                         }
                         const answer = Math.pow(b, e);
                         const expansion = Array(e).fill(b).join(' × ');
+                        const interactive = level === 1 ? { type: 'build-array', rows: b, cols: b, icon: '🟪', done: `A ${b} × ${b} square — that's ${b}² = ${b * b}! Type it in ✏️` } : null;
                         return {
-                            prompt: `${b}<sup>${e}</sup> = ?`,
+                            prompt: `${b}<sup>${e}</sup> = ?${level === 1 ? `<span class="prompt-sub">Build a ${b} × ${b} square, then count.</span>` : ''}`,
                             visual: null,
+                            interactive,
                             answerType: 'number',
                             answer,
                             hints: [
@@ -3479,9 +3500,11 @@ const CURRICULUM = {
                             const x = small();
                             const a = R.int(1, 20);
                             const b = x + a;
+                            const interactive = level === 1 ? { type: 'balance-steps', coef: 1, constant: a, rhs: b, done: `You took ${a} off both sides — x = ${x}! Type it in ✏️` } : null;
                             return {
-                                prompt: `Solve for x: x + ${a} = ${b}`,
+                                prompt: `Solve for x: x + ${a} = ${b}${level === 1 ? `<span class="prompt-sub">Take 1 off both sides until x is alone.</span>` : ''}`,
                                 visual: null,
+                                interactive,
                                 answerType: 'number',
                                 answer: x,
                                 hints: [
@@ -3495,9 +3518,11 @@ const CURRICULUM = {
                             const a = R.int(1, 15);
                             const b = level === 1 ? R.int(1, 10) : R.int(1, 20);
                             const x = a + b;
+                            const interactive = level === 1 ? { type: 'balance-steps', coef: 1, constant: -a, rhs: b, done: `You added ${a} to both sides — x = ${x}! Type it in ✏️` } : null;
                             return {
-                                prompt: `Solve for x: x − ${a} = ${b}`,
+                                prompt: `Solve for x: x − ${a} = ${b}${level === 1 ? `<span class="prompt-sub">Add 1 to both sides until x is alone.</span>` : ''}`,
                                 visual: null,
+                                interactive,
                                 answerType: 'number',
                                 answer: x,
                                 hints: [
@@ -3558,8 +3583,9 @@ const CURRICULUM = {
                         if (level === 1) {
                             const b = R.int(3, 12), h = R.int(3, 12);
                             return {
-                                prompt: `A parallelogram has a base of ${b} units and a height of ${h} units. What is its area?`,
+                                prompt: `A parallelogram has a base of ${b} units and a height of ${h} units. What is its area?<span class="prompt-sub">Stack rows of ${b} until the shape is ${h} tall.</span>`,
                                 visual: null,
+                                interactive: { type: 'row-stack', cols: b, rows: h, done: `${h} rows of ${b} squares — area = ${b * h}! Type it in ✏️` },
                                 answerType: 'number',
                                 answer: b * h,
                                 hints: [
@@ -3620,9 +3646,11 @@ const CURRICULUM = {
                         }
                         devs.push(-total);
                         const nums = R.shuffle(devs.map(d => mean + d));
+                        const interactive = level === 1 ? { type: 'even-out', values: nums, done: `All evened out at ${mean} — sharing equally is exactly what the mean is! Type it in ✏️` } : null;
                         return {
-                            prompt: `Find the mean (average) of this set: ${nums.join(', ')}`,
+                            prompt: `Find the mean (average) of this set: ${nums.join(', ')}${level === 1 ? `<span class="prompt-sub">Move units from tall bars to short bars until all four are equal.</span>` : ''}`,
                             visual: null,
+                            interactive,
                             answerType: 'number',
                             answer: mean,
                             hints: [
@@ -3657,9 +3685,11 @@ const CURRICULUM = {
                         const d = b * k;
                         const c = a * k;
                         if (Math.random() < 0.5) {
+                            const interactive = level === 1 ? { type: 'equiv-bars', topParts: b, topShaded: a, bottomParts: d, done: `Same length! ${a}/${b} = ${c}/${d} — the missing number is ${c}. Type it in ✏️` } : null;
                             return {
-                                prompt: `Solve: ${a}/${b} = x/${d}`,
+                                prompt: `Solve: ${a}/${b} = x/${d}${level === 1 ? `<span class="prompt-sub">Shade the bottom bar until it matches the top bar.</span>` : ''}`,
                                 visual: null,
+                                interactive,
                                 answerType: 'number',
                                 answer: c,
                                 hints: [
@@ -3673,6 +3703,7 @@ const CURRICULUM = {
                         return {
                             prompt: `Solve: ${a}/${b} = ${c}/x`,
                             visual: null,
+                            interactive: null,
                             answerType: 'number',
                             answer: d,
                             hints: [
@@ -3712,9 +3743,11 @@ const CURRICULUM = {
                         const base = R.int(1, 10) * 20;
                         const discount = base * percent / 100;
                         const salePrice = base - discount;
+                        const interactive = level === 1 ? { type: 'percent-bar', base, percent, mode: 'off', done: `${percent}% off ${base} takes away ${discount}, leaving ${salePrice}! Type it in ✏️` } : null;
                         return {
-                            prompt: `A toy costs ${base} coins. It is ${percent}% off. What is the sale price?`,
+                            prompt: `A toy costs ${base} coins. It is ${percent}% off. What is the sale price?${level === 1 ? `<span class="prompt-sub">Each part is 10% of ${base} — cross off ${percent}%.</span>` : ''}`,
                             visual: null,
+                            interactive,
                             answerType: 'number',
                             answer: salePrice,
                             hints: [
@@ -3748,9 +3781,11 @@ const CURRICULUM = {
                         if (form === 'posminus') {
                             const a = R.int(0, range);
                             const b = R.int(1, range);
+                            const interactive = level === 1 ? { type: 'int-walk', min: -10, max: 10, start: a, target: a - b, done: `You started at ${a} and walked ${b} steps left — landing on ${a - b}! Type it in ✏️` } : null;
                             return {
-                                prompt: `${a} − ${b} = ?`,
+                                prompt: `${a} − ${b} = ?${level === 1 ? `<span class="prompt-sub">Walk ${b} steps left on the line.</span>` : ''}`,
                                 visual: null,
+                                interactive,
                                 answerType: 'number',
                                 allowNegative: true,
                                 answer: a - b,
@@ -3764,9 +3799,11 @@ const CURRICULUM = {
                         if (form === 'negplusneg') {
                             const a = -R.int(1, range);
                             const b = -R.int(1, range);
+                            const interactive = level === 1 ? { type: 'int-walk', min: -20, max: 5, start: -a, target: -a - b, done: `Adding negative ${b} walked you ${b} more steps left — to ${-a - b}! Type it in ✏️` } : null;
                             return {
-                                prompt: `${a} + (${b}) = ?`,
+                                prompt: `${a} + (${b}) = ?${level === 1 ? `<span class="prompt-sub">Walk ${b} steps left on the line.</span>` : ''}`,
                                 visual: null,
+                                interactive,
                                 answerType: 'number',
                                 allowNegative: true,
                                 answer: a + b,
@@ -3863,9 +3900,11 @@ const CURRICULUM = {
                         const b = R.int(1, 20) * (Math.random() < 0.5 ? 1 : -1);
                         const c = a * x + b;
                         const bStr = b < 0 ? `− ${Math.abs(b)}` : `+ ${b}`;
+                        const interactive = level === 1 ? { type: 'balance-steps', coef: a, constant: b, rhs: c, done: `Undo the ${b >= 0 ? '+ ' + b : '− ' + Math.abs(b)}, then split into ${a} equal groups — x = ${x}! Type it in ✏️` } : null;
                         return {
-                            prompt: `Solve for x: ${a}x ${bStr} = ${c}`,
+                            prompt: `Solve for x: ${a}x ${bStr} = ${c}${level === 1 ? `<span class="prompt-sub">First undo the added number, then split both sides into ${a} groups.</span>` : ''}`,
                             visual: null,
+                            interactive,
                             answerType: 'number',
                             allowNegative: allowNeg,
                             answer: x,
@@ -3902,9 +3941,11 @@ const CURRICULUM = {
                         }
                         const a = R.int(2, 9);
                         const c = R.int(1, 12);
+                        const interactive = level === 1 ? { type: 'distribute-grid', a, c, done: `${a}(x + ${c}) = ${a}x + ${a * c} — the missing number is ${a * c}! Type it in ✏️` } : null;
                         return {
-                            prompt: `${a}(x + ${c}) = ${a}x + ?`,
+                            prompt: `${a}(x + ${c}) = ${a}x + ?${level === 1 ? `<span class="prompt-sub">Tap each part of the rectangle — multiply ${a} by BOTH things inside.</span>` : ''}`,
                             visual: null,
+                            interactive,
                             answerType: 'number',
                             answer: a * c,
                             hints: [
@@ -3950,9 +3991,11 @@ const CURRICULUM = {
                         }
                         const r = R.int(1, 9);
                         const answer = (2 * 314 * r) / 100;
+                        const interactive = level === 1 ? { type: 'wrap-circle', r, done: `It takes about 3.14 diameters to wrap around — 2 × 3.14 × ${r} = ${answer}! Type it in ✏️` } : null;
                         return {
-                            prompt: `A circle has a radius of ${r} units. What is its circumference? (Use π ≈ 3.14)`,
+                            prompt: `A circle has a radius of ${r} units. What is its circumference? (Use π ≈ 3.14)${level === 1 ? `<span class="prompt-sub">Wrap the diameter around the circle — count how many times it fits.</span>` : ''}`,
                             visual: null,
+                            interactive,
                             answerType: 'number',
                             allowDecimal: true,
                             answer,
@@ -3974,9 +4017,11 @@ const CURRICULUM = {
                         const type = level === 1 ? 'vertical' : R.pick(['vertical', 'complementary', 'supplementary']);
                         if (type === 'vertical') {
                             const x = R.int(10, 170);
+                            const interactive = level === 1 ? { type: 'vertical-angles', x, done: `Vertical angles are twins — the angle straight across is also ${x}°! Type it in ✏️` } : null;
                             return {
-                                prompt: `Two angles are vertical angles. One measures ${x}°. What is the measure of the other?`,
+                                prompt: `Two angles are vertical angles. One measures ${x}°. What is the measure of the other?${level === 1 ? `<span class="prompt-sub">Tap the angle that matches ${x}°.</span>` : ''}`,
                                 visual: null,
+                                interactive,
                                 answerType: 'number',
                                 answer: x,
                                 hints: [

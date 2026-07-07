@@ -2042,6 +2042,820 @@
         };
     }
 
+    // ---------------------------------------------------------------
+    // 18. ratio-groups — { type:'ratio-groups', a, b, k, iconA, iconB, done }
+    // ---------------------------------------------------------------
+    function mountRatioGroups(container, config, api) {
+        const { a, b, k, iconA, iconB, done: doneMessage } = config;
+        let done = false;
+        let groups = 0;
+
+        const root = el('div', 'manip manip-ratio');
+        const countersRow = el('div', 'manip-ratio-counters');
+        const counterA = el('div', 'manip-count', `${iconA} × 0`);
+        const counterB = el('div', 'manip-count', `${iconB} × 0`);
+        countersRow.appendChild(counterA);
+        countersRow.appendChild(counterB);
+
+        const clustersWrap = el('div', 'manip-ratio-clusters');
+        const btnRow = el('div', 'manip-ratio-btns');
+        const clusters = [];
+
+        const wiggleTimers = new Set();
+
+        function wiggle(elm) {
+            elm.classList.add('manip-wiggle');
+            const timer = setTimeout(() => {
+                elm.classList.remove('manip-wiggle');
+                wiggleTimers.delete(timer);
+            }, 500);
+            wiggleTimers.add(timer);
+        }
+
+        function updateCounters() {
+            counterA.textContent = `${iconA} × ${a * groups}`;
+            counterB.textContent = `${iconB} × ${b * groups}`;
+        }
+
+        function addGroup(btn) {
+            if (done) return;
+            if (groups >= k) {
+                wiggle(btn);
+                return;
+            }
+            const cluster = el('div', 'manip-ratio-cluster');
+            for (let i = 0; i < a; i++) cluster.appendChild(el('span', 'manip-chip', iconA));
+            for (let i = 0; i < b; i++) cluster.appendChild(el('span', 'manip-chip', iconB));
+            clustersWrap.appendChild(cluster);
+            clusters.push(cluster);
+            groups++;
+            updateCounters();
+            if (groups === k) {
+                done = true;
+                root.classList.add('manip-locked');
+                api.complete(doneMessage);
+            }
+        }
+
+        function removeGroup(btn) {
+            if (done) return;
+            if (groups <= 0) {
+                wiggle(btn);
+                return;
+            }
+            groups--;
+            clustersWrap.removeChild(clusters.pop());
+            updateCounters();
+        }
+
+        const addBtn = el('button', 'manip-ratio-btn', 'Add a group ➕');
+        addBtn.type = 'button';
+        addBtn.addEventListener('click', () => addGroup(addBtn));
+        const removeBtn = el('button', 'manip-ratio-btn', 'Remove a group ➖');
+        removeBtn.type = 'button';
+        removeBtn.addEventListener('click', () => removeGroup(removeBtn));
+        btnRow.appendChild(addBtn);
+        btnRow.appendChild(removeBtn);
+
+        root.appendChild(countersRow);
+        root.appendChild(clustersWrap);
+        root.appendChild(btnRow);
+        container.appendChild(root);
+
+        return {
+            destroy() {
+                wiggleTimers.forEach(t => clearTimeout(t));
+                wiggleTimers.clear();
+            }
+        };
+    }
+
+    // ---------------------------------------------------------------
+    // 19. percent-bar — { type:'percent-bar', base, percent, mode:'of'|'off', done }
+    // ---------------------------------------------------------------
+    function mountPercentBar(container, config, api) {
+        const { base, percent, mode, done: doneMessage } = config;
+        let done = false;
+        let count = 0;
+        const target = percent / 10;
+        const segValue = base / 10;
+
+        const W = 360, H = 60, LABEL_H = 30;
+        const partWidth = W / 10;
+        const rectY = 6;
+
+        const root = el('div', 'manip manip-pctbar');
+        const svg = svgEl('svg', {
+            class: 'manip-pctbar-svg',
+            viewBox: `0 0 ${W} ${H + LABEL_H}`,
+            width: '100%'
+        });
+        const readout = el('div', 'manip-pctbar-readout');
+
+        function formatValue(v) {
+            if (Number.isInteger(v)) return String(v);
+            return v.toFixed(2).replace(/0+$/, '').replace(/\.$/, '');
+        }
+
+        const segs = [];
+        for (let i = 0; i < 10; i++) {
+            const x = i * partWidth;
+            const rect = svgEl('rect', {
+                class: 'manip-pctbar-seg',
+                x: x.toFixed(1), y: rectY, width: partWidth.toFixed(1), height: H
+            });
+            const label = svgEl('text', {
+                class: 'manip-pctbar-val',
+                x: (x + partWidth / 2).toFixed(1), y: (rectY + H + 18).toFixed(1),
+                'text-anchor': 'middle'
+            });
+            label.textContent = formatValue(segValue);
+            svg.appendChild(rect);
+            svg.appendChild(label);
+
+            if (mode === 'off') {
+                svg.appendChild(svgEl('line', {
+                    class: 'manip-pctbar-x',
+                    x1: (x + 8).toFixed(1), y1: (rectY + 8).toFixed(1),
+                    x2: (x + partWidth - 8).toFixed(1), y2: (rectY + H - 8).toFixed(1)
+                }));
+                svg.appendChild(svgEl('line', {
+                    class: 'manip-pctbar-x',
+                    x1: (x + 8).toFixed(1), y1: (rectY + H - 8).toFixed(1),
+                    x2: (x + partWidth - 8).toFixed(1), y2: (rectY + 8).toFixed(1)
+                }));
+            }
+
+            rect.addEventListener('click', () => {
+                if (done) return;
+                if (mode === 'of') {
+                    if (rect.classList.contains('shaded')) {
+                        rect.classList.remove('shaded');
+                        count--;
+                    } else {
+                        rect.classList.add('shaded');
+                        count++;
+                    }
+                } else {
+                    if (rect.classList.contains('crossed')) {
+                        rect.classList.remove('crossed');
+                        count--;
+                    } else {
+                        rect.classList.add('crossed');
+                        count++;
+                    }
+                    updateRemaining();
+                }
+                updateReadout();
+                if (count === target) {
+                    done = true;
+                    root.classList.add('manip-locked');
+                    api.complete(doneMessage);
+                }
+            });
+            segs.push(rect);
+        }
+
+        function updateRemaining() {
+            segs.forEach(r => {
+                if (r.classList.contains('crossed')) {
+                    r.classList.remove('manip-pctbar-remaining');
+                } else {
+                    r.classList.add('manip-pctbar-remaining');
+                }
+            });
+        }
+
+        function updateReadout() {
+            if (mode === 'of') {
+                const value = count * segValue;
+                readout.textContent = `${count * 10}% shaded = ${formatValue(value)}`;
+            } else {
+                const takeAway = count * segValue;
+                const leaving = base - takeAway;
+                readout.textContent = `${count * 10}% off — take away ${formatValue(takeAway)}, leaving ${formatValue(leaving)}`;
+            }
+        }
+
+        if (mode === 'off') updateRemaining();
+        updateReadout();
+        root.appendChild(svg);
+        root.appendChild(readout);
+        container.appendChild(root);
+
+        return {
+            destroy() {
+                // No document-level listeners or timers to clean up.
+            }
+        };
+    }
+
+    // ---------------------------------------------------------------
+    // 20. tap-line — { type:'tap-line', min, max, targets:[{value,label}], done }
+    // ---------------------------------------------------------------
+    function mountTapLine(container, config, api) {
+        const { min, max, targets, done: doneMessage } = config;
+        let done = false;
+        let targetIdx = 0;
+
+        const x0 = 20, x1 = 300, y = 40;
+        const VW = 320, VH = 90;
+
+        const root = el('div', 'manip manip-tapline');
+        const prompt = el('div', 'manip-tapline-prompt');
+        const svg = svgEl('svg', {
+            class: 'manip-tapline-svg',
+            viewBox: `0 0 ${VW} ${VH}`,
+            width: '100%'
+        });
+
+        function tickX(v) {
+            return x0 + (x1 - x0) * (v - min) / (max - min);
+        }
+
+        svg.appendChild(svgEl('line', {
+            class: 'manip-tapline-baseline',
+            x1: x0, y1: y, x2: x1, y2: y
+        }));
+
+        const ghost = svgEl('circle', { class: 'manip-tapline-ghost', cx: x0, cy: y, r: 8 });
+        ghost.style.visibility = 'hidden';
+
+        const wiggleTimers = new Set();
+
+        for (let v = min; v <= max; v++) {
+            const tx = tickX(v);
+            const isZero = v === 0;
+            svg.appendChild(svgEl('line', {
+                class: isZero ? 'manip-tapline-tick manip-tapline-tick-zero' : 'manip-tapline-tick',
+                x1: tx.toFixed(1), y1: (y - (isZero ? 14 : 8)).toFixed(1),
+                x2: tx.toFixed(1), y2: (y + (isZero ? 14 : 8)).toFixed(1)
+            }));
+
+            if (v === 0 || v === min || v === max || v % 5 === 0) {
+                const label = svgEl('text', {
+                    class: 'manip-tapline-label',
+                    x: tx.toFixed(1), y: (y + 26).toFixed(1),
+                    'text-anchor': 'middle'
+                });
+                label.textContent = String(v);
+                svg.appendChild(label);
+            }
+
+            const hit = svgEl('rect', {
+                class: 'manip-tapline-hit',
+                x: (tx - 11).toFixed(1), y: (y - 24).toFixed(1),
+                width: 22, height: 48,
+                fill: 'transparent'
+            });
+            hit.addEventListener('click', () => {
+                if (done) return;
+                if (hit.dataset.placed === '1') return;
+                const cur = targets[targetIdx];
+                if (v === cur.value) {
+                    hit.dataset.placed = '1';
+                    const dot = svgEl('circle', {
+                        class: 'manip-tapline-dot',
+                        cx: tx.toFixed(1), cy: y, r: 7
+                    });
+                    const lbl = svgEl('text', {
+                        class: 'manip-tapline-dot-label',
+                        x: tx.toFixed(1), y: (y - 16).toFixed(1),
+                        'text-anchor': 'middle'
+                    });
+                    lbl.textContent = cur.label;
+                    svg.appendChild(dot);
+                    svg.appendChild(lbl);
+                    targetIdx++;
+                    if (targetIdx >= targets.length) {
+                        done = true;
+                        root.classList.add('manip-locked');
+                        api.complete(doneMessage);
+                    } else {
+                        updatePrompt();
+                    }
+                } else {
+                    ghost.setAttribute('cx', tx.toFixed(1));
+                    ghost.style.visibility = 'visible';
+                    ghost.classList.add('manip-wiggle');
+                    const timer = setTimeout(() => {
+                        ghost.style.visibility = 'hidden';
+                        ghost.classList.remove('manip-wiggle');
+                        wiggleTimers.delete(timer);
+                    }, 500);
+                    wiggleTimers.add(timer);
+                }
+            });
+            svg.appendChild(hit);
+        }
+        svg.appendChild(ghost);
+
+        function updatePrompt() {
+            prompt.textContent = `Place: ${targets[targetIdx].label}`;
+        }
+        updatePrompt();
+
+        root.appendChild(prompt);
+        root.appendChild(svg);
+        container.appendChild(root);
+
+        return {
+            destroy() {
+                wiggleTimers.forEach(t => clearTimeout(t));
+                wiggleTimers.clear();
+            }
+        };
+    }
+
+    // ---------------------------------------------------------------
+    // 21. int-walk — { type:'int-walk', min, max, start, target, done }
+    // ---------------------------------------------------------------
+    function mountIntWalk(container, config, api) {
+        const { min, max, start, target, done: doneMessage } = config;
+        let done = false;
+        let pos = start;
+        let steps = 0;
+
+        const x0 = 20, x1 = 300, y = 40;
+        const VW = 320, VH = 90;
+
+        const root = el('div', 'manip manip-intwalk');
+        const svg = svgEl('svg', {
+            class: 'manip-intwalk-svg',
+            viewBox: `0 0 ${VW} ${VH}`,
+            width: '100%'
+        });
+
+        function tickX(v) {
+            return x0 + (x1 - x0) * (v - min) / (max - min);
+        }
+
+        svg.appendChild(svgEl('line', {
+            class: 'manip-intwalk-baseline',
+            x1: x0, y1: y, x2: x1, y2: y
+        }));
+
+        for (let v = min; v <= max; v++) {
+            const tx = tickX(v);
+            const isZero = v === 0;
+            svg.appendChild(svgEl('line', {
+                class: isZero ? 'manip-intwalk-tick manip-intwalk-tick-zero' : 'manip-intwalk-tick',
+                x1: tx.toFixed(1), y1: (y - (isZero ? 14 : 8)).toFixed(1),
+                x2: tx.toFixed(1), y2: (y + (isZero ? 14 : 8)).toFixed(1)
+            }));
+            if (v === 0 || v === min || v === max || v % 5 === 0) {
+                const label = svgEl('text', {
+                    class: 'manip-intwalk-label',
+                    x: tx.toFixed(1), y: (y + 26).toFixed(1),
+                    'text-anchor': 'middle'
+                });
+                label.textContent = String(v);
+                svg.appendChild(label);
+            }
+        }
+
+        const crumbLayer = svgEl('g', { class: 'manip-intwalk-crumbs' });
+        svg.appendChild(crumbLayer);
+        const crumbSeen = new Set();
+
+        function dropCrumb(v) {
+            if (crumbSeen.has(v)) return;
+            crumbSeen.add(v);
+            crumbLayer.appendChild(svgEl('circle', {
+                class: 'manip-intwalk-crumb',
+                cx: tickX(v).toFixed(1), cy: y, r: 3
+            }));
+        }
+
+        const startLabel = svgEl('text', {
+            class: 'manip-intwalk-startlabel',
+            x: tickX(start).toFixed(1), y: (y - 16).toFixed(1),
+            'text-anchor': 'middle'
+        });
+        startLabel.textContent = 'start';
+        svg.appendChild(startLabel);
+
+        const marker = svgEl('circle', {
+            class: 'manip-intwalk-marker',
+            cx: tickX(start).toFixed(1), cy: y, r: 8
+        });
+        svg.appendChild(marker);
+
+        dropCrumb(start);
+
+        const counter = el('div', 'manip-count');
+        const btnRow = el('div', 'manip-intwalk-btns');
+        const wiggleTimers = new Set();
+
+        function wiggle(elm) {
+            elm.classList.add('manip-wiggle');
+            const timer = setTimeout(() => {
+                elm.classList.remove('manip-wiggle');
+                wiggleTimers.delete(timer);
+            }, 500);
+            wiggleTimers.add(timer);
+        }
+
+        function updateCounter() {
+            counter.textContent = `steps taken: ${steps}`;
+        }
+
+        function move(delta, btn) {
+            if (done) return;
+            const next = pos + delta;
+            if (next < min || next > max) {
+                wiggle(btn);
+                return;
+            }
+            pos = next;
+            steps++;
+            marker.setAttribute('cx', tickX(pos).toFixed(1));
+            dropCrumb(pos);
+            updateCounter();
+            if (pos === target) {
+                done = true;
+                root.classList.add('manip-locked');
+                api.complete(doneMessage);
+            }
+        }
+
+        const leftBtn = el('button', 'manip-intwalk-btn', '⬅️ 1 step');
+        leftBtn.type = 'button';
+        leftBtn.addEventListener('click', () => move(-1, leftBtn));
+        const rightBtn = el('button', 'manip-intwalk-btn', '1 step ➡️');
+        rightBtn.type = 'button';
+        rightBtn.addEventListener('click', () => move(1, rightBtn));
+        btnRow.appendChild(leftBtn);
+        btnRow.appendChild(rightBtn);
+
+        updateCounter();
+        root.appendChild(svg);
+        root.appendChild(counter);
+        root.appendChild(btnRow);
+        container.appendChild(root);
+
+        return {
+            destroy() {
+                wiggleTimers.forEach(t => clearTimeout(t));
+                wiggleTimers.clear();
+            }
+        };
+    }
+
+    // ---------------------------------------------------------------
+    // 22. tap-count — { type:'tap-count', groups:[{label?, chips:[{text,target}]}],
+    //                    separator?, done }
+    // ---------------------------------------------------------------
+    function mountTapCount(container, config, api) {
+        const { groups, separator, done: doneMessage } = config;
+        let done = false;
+        let count = 0;
+        let remaining = 0;
+        groups.forEach(g => g.chips.forEach(c => { if (c.target) remaining++; }));
+
+        const root = el('div', 'manip manip-tapcount');
+        const counter = el('div', 'manip-count', '0');
+        const row = el('div', 'manip-tapcount-row');
+
+        const wiggleTimers = new Set();
+
+        function wiggle(elm) {
+            elm.classList.add('manip-wiggle');
+            const timer = setTimeout(() => {
+                elm.classList.remove('manip-wiggle');
+                wiggleTimers.delete(timer);
+            }, 500);
+            wiggleTimers.add(timer);
+        }
+
+        function updateCounter() {
+            counter.textContent = String(count);
+        }
+
+        groups.forEach((g, gi) => {
+            if (gi > 0 && separator) {
+                row.appendChild(el('div', 'manip-tapcount-sep', separator));
+            }
+            const cluster = el('div', 'manip-tapcount-cluster');
+            if (g.label) {
+                cluster.appendChild(el('div', 'manip-tapcount-label', g.label));
+            }
+            const chipsWrap = el('div', 'manip-tapcount-chips');
+            g.chips.forEach(chipSpec => {
+                const chip = el('button', 'manip-tapcount-chip', chipSpec.text);
+                chip.type = 'button';
+                chip.addEventListener('click', () => {
+                    if (done) return;
+                    if (chip.classList.contains('counted')) return;
+                    if (chipSpec.target) {
+                        chip.classList.add('counted');
+                        count++;
+                        remaining--;
+                        updateCounter();
+                        if (remaining === 0) {
+                            done = true;
+                            root.classList.add('manip-locked');
+                            api.complete(doneMessage);
+                        }
+                    } else {
+                        wiggle(chip);
+                    }
+                });
+                chipsWrap.appendChild(chip);
+            });
+            cluster.appendChild(chipsWrap);
+            row.appendChild(cluster);
+        });
+
+        root.appendChild(counter);
+        root.appendChild(row);
+        container.appendChild(root);
+
+        return {
+            destroy() {
+                wiggleTimers.forEach(t => clearTimeout(t));
+                wiggleTimers.clear();
+            }
+        };
+    }
+
+    // ---------------------------------------------------------------
+    // 23. square-builder — { type:'square-builder', n, done }
+    // ---------------------------------------------------------------
+    function mountSquareBuilder(container, config, api) {
+        const { n, done: doneMessage } = config;
+        let done = false;
+        let k = 1;
+
+        const CELL = 28, MAX_K = 10;
+        const W = CELL * MAX_K, H = CELL * MAX_K;
+
+        const root = el('div', 'manip manip-square');
+        const svg = svgEl('svg', {
+            class: 'manip-square-svg',
+            viewBox: `0 0 ${W} ${H}`,
+            width: '100%'
+        });
+        const readout = el('div', 'manip-count manip-square-readout');
+        const btnRow = el('div', 'manip-square-btns');
+
+        const wiggleTimers = new Set();
+
+        function wiggle(elm) {
+            elm.classList.add('manip-wiggle');
+            const timer = setTimeout(() => {
+                elm.classList.remove('manip-wiggle');
+                wiggleTimers.delete(timer);
+            }, 500);
+            wiggleTimers.add(timer);
+        }
+
+        function render() {
+            while (svg.firstChild) svg.removeChild(svg.firstChild);
+            const side = k * CELL;
+            const offsetX = (W - side) / 2;
+            const offsetY = (H - side) / 2;
+            for (let r = 0; r < k; r++) {
+                for (let c = 0; c < k; c++) {
+                    svg.appendChild(svgEl('rect', {
+                        class: 'manip-square-cell',
+                        x: (offsetX + c * CELL).toFixed(1), y: (offsetY + r * CELL).toFixed(1),
+                        width: CELL, height: CELL
+                    }));
+                }
+            }
+            readout.textContent = `${k} × ${k} = ${k * k}`;
+        }
+
+        function press(delta, btn) {
+            if (done) return;
+            const next = k + delta;
+            if (next < 1 || next > MAX_K) {
+                wiggle(btn);
+                return;
+            }
+            k = next;
+            render();
+            if (k * k === n) {
+                done = true;
+                root.classList.add('manip-locked');
+                api.complete(doneMessage);
+            }
+        }
+
+        const biggerBtn = el('button', 'manip-square-btn', 'Bigger ➕');
+        biggerBtn.type = 'button';
+        biggerBtn.addEventListener('click', () => press(1, biggerBtn));
+        const smallerBtn = el('button', 'manip-square-btn', 'Smaller ➖');
+        smallerBtn.type = 'button';
+        smallerBtn.addEventListener('click', () => press(-1, smallerBtn));
+        btnRow.appendChild(biggerBtn);
+        btnRow.appendChild(smallerBtn);
+
+        render();
+        root.appendChild(svg);
+        root.appendChild(readout);
+        root.appendChild(btnRow);
+        container.appendChild(root);
+
+        return {
+            destroy() {
+                wiggleTimers.forEach(t => clearTimeout(t));
+                wiggleTimers.clear();
+            }
+        };
+    }
+
+    // ---------------------------------------------------------------
+    // 24. row-stack — { type:'row-stack', cols, rows, done }
+    // ---------------------------------------------------------------
+    function mountRowStack(container, config, api) {
+        const { cols, rows, done: doneMessage } = config;
+        let done = false;
+        let r = 0;
+
+        const CELL = 28;
+        const W = cols * CELL, H = rows * CELL;
+
+        const root = el('div', 'manip manip-rowstack');
+        const svg = svgEl('svg', {
+            class: 'manip-rowstack-svg',
+            viewBox: `0 0 ${W} ${H}`,
+            width: '100%'
+        });
+
+        svg.appendChild(svgEl('rect', {
+            class: 'manip-rowstack-ghost',
+            x: 0, y: 0, width: W, height: H
+        }));
+
+        const rowGroups = [];
+
+        function buildRow(rowIndex) {
+            // Fills bottom-up: rowIndex 0 sits on the baseline.
+            const y = H - (rowIndex + 1) * CELL;
+            const g = svgEl('g', { class: 'manip-rowstack-row' });
+            for (let c = 0; c < cols; c++) {
+                g.appendChild(svgEl('rect', {
+                    class: 'manip-rowstack-cell',
+                    x: (c * CELL).toFixed(1), y: y.toFixed(1), width: CELL, height: CELL
+                }));
+            }
+            return g;
+        }
+
+        const counter = el('div', 'manip-count');
+        const btnRow = el('div', 'manip-rowstack-btns');
+        const wiggleTimers = new Set();
+
+        function wiggle(elm) {
+            elm.classList.add('manip-wiggle');
+            const timer = setTimeout(() => {
+                elm.classList.remove('manip-wiggle');
+                wiggleTimers.delete(timer);
+            }, 500);
+            wiggleTimers.add(timer);
+        }
+
+        function updateCounter() {
+            counter.textContent = `${r} rows × ${cols} = ${r * cols} square units`;
+        }
+
+        function addRow(btn) {
+            if (done) return;
+            if (r >= rows) {
+                wiggle(btn);
+                return;
+            }
+            const g = buildRow(r);
+            svg.appendChild(g);
+            rowGroups.push(g);
+            r++;
+            updateCounter();
+            if (r === rows) {
+                done = true;
+                root.classList.add('manip-locked');
+                api.complete(doneMessage);
+            }
+        }
+
+        function removeRow(btn) {
+            if (done) return;
+            if (r <= 0) {
+                wiggle(btn);
+                return;
+            }
+            r--;
+            svg.removeChild(rowGroups.pop());
+            updateCounter();
+        }
+
+        const addBtn = el('button', 'manip-rowstack-btn', 'Add a row ➕');
+        addBtn.type = 'button';
+        addBtn.addEventListener('click', () => addRow(addBtn));
+        const removeBtn = el('button', 'manip-rowstack-btn', 'Remove a row ➖');
+        removeBtn.type = 'button';
+        removeBtn.addEventListener('click', () => removeRow(removeBtn));
+        btnRow.appendChild(addBtn);
+        btnRow.appendChild(removeBtn);
+
+        updateCounter();
+        root.appendChild(svg);
+        root.appendChild(counter);
+        root.appendChild(btnRow);
+        container.appendChild(root);
+
+        return {
+            destroy() {
+                wiggleTimers.forEach(t => clearTimeout(t));
+                wiggleTimers.clear();
+            }
+        };
+    }
+
+    // ---------------------------------------------------------------
+    // 25. group-check — { type:'group-check', a, b, options, correct, done }
+    // ---------------------------------------------------------------
+    function mountGroupCheck(container, config, api) {
+        const { a, b, options, correct, done: doneMessage } = config;
+        let done = false;
+
+        const root = el('div', 'manip manip-groupcheck');
+
+        const rowA = el('div', 'manip-groupcheck-row');
+        rowA.appendChild(el('div', 'manip-groupcheck-label', `${a} chips`));
+        const chipsA = el('div', 'manip-groupcheck-chips');
+        rowA.appendChild(chipsA);
+
+        const rowB = el('div', 'manip-groupcheck-row');
+        rowB.appendChild(el('div', 'manip-groupcheck-label', `${b} chips`));
+        const chipsB = el('div', 'manip-groupcheck-chips');
+        rowB.appendChild(chipsB);
+
+        const optRow = el('div', 'manip-groupcheck-opts');
+        const status = el('div', 'manip-groupcheck-status');
+
+        function renderChips(wrap, total, k) {
+            while (wrap.firstChild) wrap.removeChild(wrap.firstChild);
+            if (!k) {
+                for (let i = 0; i < total; i++) {
+                    wrap.appendChild(el('span', 'manip-groupcheck-chip', '●'));
+                }
+                return;
+            }
+            const numGroups = Math.floor(total / k);
+            const leftover = total % k;
+            for (let g = 0; g < numGroups; g++) {
+                const cluster = el('span', 'manip-groupcheck-cluster');
+                for (let i = 0; i < k; i++) {
+                    cluster.appendChild(el('span', 'manip-groupcheck-chip', '●'));
+                }
+                wrap.appendChild(cluster);
+            }
+            for (let i = 0; i < leftover; i++) {
+                wrap.appendChild(el('span', 'manip-groupcheck-chip manip-groupcheck-leftover', '●'));
+            }
+        }
+
+        renderChips(chipsA, a, null);
+        renderChips(chipsB, b, null);
+
+        options.forEach(k => {
+            const btn = el('button', 'manip-groupcheck-btn', `Groups of ${k}`);
+            btn.type = 'button';
+            btn.addEventListener('click', () => {
+                if (done) return;
+                renderChips(chipsA, a, k);
+                renderChips(chipsB, b, k);
+                if (a % k === 0 && b % k === 0) {
+                    status.textContent = `✓ Groups of ${k} work for both! …but is it the BIGGEST that works?`;
+                    status.className = 'manip-groupcheck-status manip-groupcheck-status-ok';
+                } else {
+                    status.textContent = `✗ Groups of ${k} leave leftovers.`;
+                    status.className = 'manip-groupcheck-status manip-groupcheck-status-bad';
+                }
+                if (k === correct) {
+                    done = true;
+                    root.classList.add('manip-locked');
+                    api.complete(doneMessage);
+                }
+            });
+            optRow.appendChild(btn);
+        });
+
+        root.appendChild(rowA);
+        root.appendChild(rowB);
+        root.appendChild(optRow);
+        root.appendChild(status);
+        container.appendChild(root);
+
+        return {
+            destroy() {
+                // No document-level listeners or timers to clean up.
+            }
+        };
+    }
+
     window.Manipulatives = {
         'build-array': { mount: mountBuildArray },
         'share-groups': { mount: mountShareGroups },
@@ -2059,6 +2873,14 @@
         'decimal-build': { mount: mountDecimalBuild },
         'angle-drag': { mount: mountAngleDrag },
         'cube-builder': { mount: mountCubeBuilder },
-        'coord-walk': { mount: mountCoordWalk }
+        'coord-walk': { mount: mountCoordWalk },
+        'ratio-groups': { mount: mountRatioGroups },
+        'percent-bar': { mount: mountPercentBar },
+        'tap-line': { mount: mountTapLine },
+        'int-walk': { mount: mountIntWalk },
+        'tap-count': { mount: mountTapCount },
+        'square-builder': { mount: mountSquareBuilder },
+        'row-stack': { mount: mountRowStack },
+        'group-check': { mount: mountGroupCheck }
     };
 })();
