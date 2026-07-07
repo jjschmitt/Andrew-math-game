@@ -60,6 +60,10 @@ function pad2(n) {
     return n < 10 ? '0' + n : String(n);
 }
 
+function withCommas(n) {
+    return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
 // ------------------------------------------------------------
 // Visual builders (self-contained HTML/SVG strings)
 // ------------------------------------------------------------
@@ -2918,6 +2922,1345 @@ const CURRICULUM = {
                                 askX ? `Count the steps to the right.` : `Count the steps going up.`
                             ],
                             explain: `The point is at (${x}, ${y}) — ${askX ? 'x' : 'y'} is ${askX ? x : y}.`
+                        };
+                    }
+                }
+            ]
+        },
+        // ============ GRADE 6 ============
+        {
+            id: 'g6-ratios',
+            grade: 6,
+            title: 'Ratios, Rates & Percents',
+            icon: '🥤',
+            standard: 'NC.6.RP',
+            prereq: null,
+            skills: [
+                {
+                    id: 'equivalent-ratios',
+                    title: 'Equivalent Ratios',
+                    standard: 'NC.6.RP.1',
+                    learnIntro: '<strong>Ratios scale together!</strong><br>3 : 5 = 12 : ? → 3 was multiplied by 4 to get 12, so 5 × 4 = <strong>20</strong>.<br>Whatever you do to one side, do to the other!',
+                    generate(level) {
+                        const a = R.int(2, 9);
+                        let b = R.int(2, 9);
+                        if (b === a) b = a + 1;
+                        const k = level === 1 ? R.int(2, 3) : R.int(2, 6);
+                        const c = a * k, d = b * k;
+                        const askA = level === 3 && Math.random() < 0.5;
+                        if (askA) {
+                            return {
+                                prompt: `Fill in the blank: ? : ${b} = ${c} : ${d}`,
+                                visual: null,
+                                answerType: 'number',
+                                answer: a,
+                                hints: [
+                                    `The right ratio was scaled up from the left one.`,
+                                    `${b} × ? = ${d}. That scale factor is ${k}.`,
+                                    `${c} ÷ ${k} = ?`
+                                ],
+                                explain: `${a}:${b} scaled by ${k} gives ${c}:${d}, so the blank is ${a}.`
+                            };
+                        }
+                        return {
+                            prompt: `Fill in the blank: ${a} : ${b} = ${c} : ?`,
+                            visual: null,
+                            answerType: 'number',
+                            answer: d,
+                            hints: [
+                                `What was ${a} multiplied by to get ${c}?`,
+                                `${a} was multiplied by ${k}.`,
+                                `Multiply ${b} by ${k} too: ${b} × ${k} = ?`
+                            ],
+                            explain: `${a}:${b} = ${c}:${d} — both numbers scaled by ${k}.`
+                        };
+                    }
+                },
+                {
+                    id: 'unit-rates',
+                    title: 'Unit Rates',
+                    standard: 'NC.6.RP.2',
+                    learnIntro: '<strong>Unit rate = the amount for just ONE!</strong><br>6 apples cost 18 coins → 18 ÷ 6 = <strong>3</strong> coins per apple.',
+                    generate(level) {
+                        const rate = level === 1 ? R.int(2, 9) : level === 2 ? R.int(3, 15) : R.int(4, 25);
+                        const count = level === 1 ? R.int(2, 6) : level === 2 ? R.int(3, 8) : R.int(3, 12);
+                        const total = rate * count;
+                        if (Math.random() < 0.5) {
+                            const item = themeThing();
+                            return {
+                                prompt: `${count} ${item.name} ${item.icon} cost ${total} coins in all. How many coins does 1 cost?`,
+                                visual: null,
+                                answerType: 'number',
+                                answer: rate,
+                                hints: [
+                                    `A unit rate is the amount for just ONE.`,
+                                    `${total} ÷ ${count} = ?`
+                                ],
+                                explain: `${total} ÷ ${count} = ${rate} coins each.`
+                            };
+                        }
+                        const name = heroName();
+                        return {
+                            prompt: `${name}'s car goes ${total} miles in ${count} hours. How many miles per hour is that?`,
+                            visual: null,
+                            answerType: 'number',
+                            answer: rate,
+                            hints: [
+                                `Miles PER hour means miles for just ONE hour.`,
+                                `${total} ÷ ${count} = ?`
+                            ],
+                            explain: `${total} ÷ ${count} = ${rate} miles per hour.`
+                        };
+                    }
+                },
+                {
+                    id: 'percent-of',
+                    title: 'Percent of a Number',
+                    standard: 'NC.6.RP.3',
+                    learnIntro: '<strong>Percent means "out of 100"!</strong><br>10% of 80 → 80 ÷ 10 = <strong>8</strong>.<br>Find 10% first, then scale it to find other percents.',
+                    generate(level) {
+                        if (level === 1) {
+                            const percent = R.pick([10, 50]);
+                            const base = R.int(2, 20) * 10;
+                            const answer = base * percent / 100;
+                            return {
+                                prompt: `What is ${percent}% of ${base}?`,
+                                visual: null,
+                                answerType: 'number',
+                                answer,
+                                hints: [
+                                    percent === 10 ? `10% means 1/10 — divide by 10.` : `50% means HALF!`,
+                                    percent === 10 ? `${base} ÷ 10 = ?` : `${base} ÷ 2 = ?`
+                                ],
+                                explain: `${percent}% of ${base} = ${answer}.`
+                            };
+                        }
+                        if (level === 2) {
+                            const percent = R.pick([20, 25, 75]);
+                            const base = R.int(1, 10) * 20;
+                            const answer = base * percent / 100;
+                            const tenPct = base / 10;
+                            return {
+                                prompt: `What is ${percent}% of ${base}?`,
+                                visual: null,
+                                answerType: 'number',
+                                answer,
+                                hints: [
+                                    `Find 10% first: ${base} ÷ 10 = ${tenPct}.`,
+                                    percent === 25 ? `25% is a quarter — try ${base} ÷ 4.` : percent === 75 ? `75% is three quarters of the whole.` : `Double 10% to get 20%.`
+                                ],
+                                explain: `${percent}% of ${base} = ${answer}.`
+                            };
+                        }
+                        const percent = R.pick([5, 10, 20, 25, 50, 75]);
+                        const base = R.int(1, 8) * 20;
+                        const part = base * percent / 100;
+                        return {
+                            prompt: `${part} is what percent of ${base}?`,
+                            visual: null,
+                            answerType: 'number',
+                            answer: percent,
+                            hints: [
+                                `Divide the part by the whole: ${part} ÷ ${base}.`,
+                                `Turn that fraction into a percent by thinking "out of 100."`
+                            ],
+                            explain: `${part} ÷ ${base} = ${percent}%.`
+                        };
+                    }
+                }
+            ]
+        },
+        {
+            id: 'g6-negatives',
+            grade: 6,
+            title: 'Into the Negatives',
+            icon: '🧊',
+            standard: 'NC.6.NS',
+            prereq: 'g6-ratios',
+            skills: [
+                {
+                    id: 'negatives-compare',
+                    title: 'Comparing Negatives',
+                    standard: 'NC.6.NS.7',
+                    learnIntro: '<strong>Further LEFT means SMALLER!</strong><br>−8 is further left than −3, so −8 &lt; −3 — even though 8 looks "bigger"!',
+                    generate(level) {
+                        if (level === 3 && Math.random() < 0.5) {
+                            const n = -R.int(1, 12);
+                            return {
+                                prompt: `|${n}| = ?`,
+                                visual: null,
+                                answerType: 'number',
+                                answer: Math.abs(n),
+                                hints: [
+                                    `Absolute value is the DISTANCE from zero — always positive.`,
+                                    `${n} is ${Math.abs(n)} steps away from 0.`
+                                ],
+                                explain: `|${n}| = ${Math.abs(n)}.`
+                            };
+                        }
+                        let a, b;
+                        if (level === 1) {
+                            a = R.int(-10, 10);
+                            do { b = R.int(-10, 10); } while (b === a);
+                        } else if (level === 2) {
+                            a = R.int(-15, 15);
+                            do { b = R.int(-15, 15); } while (b === a);
+                        } else {
+                            a = R.int(-9, -1);
+                            do { b = R.int(-9, -1); } while (b === a);
+                        }
+                        const answer = a < b ? '<' : a > b ? '>' : '=';
+                        return {
+                            prompt: `Which symbol makes this true?<br><span class="compare-nums">${a} &nbsp; ? &nbsp; ${b}</span>`,
+                            visual: null,
+                            answerType: 'choice',
+                            choices: ['<', '>', '='],
+                            answer,
+                            hints: [
+                                `Picture a number line — which one is further LEFT?`,
+                                `Numbers get SMALLER the further left (more negative) they are.`,
+                                a < 0 && b < 0 ? `Both are negative — the one CLOSER to zero is actually bigger.` : `Any positive number beats any negative number.`
+                            ],
+                            explain: `${a} ${answer === '<' ? 'is less than' : answer === '>' ? 'is greater than' : 'equals'} ${b} on the number line.`
+                        };
+                    }
+                },
+                {
+                    id: 'quadrants',
+                    title: 'The Four Quadrants',
+                    standard: 'NC.6.NS.6',
+                    learnIntro: '<strong>Signs tell you the quadrant!</strong><br>(−3, 5): x is negative, y is positive → <strong>Quadrant II</strong>.<br>I: (+,+) II: (−,+) III: (−,−) IV: (+,−).',
+                    generate(level) {
+                        const range = level === 1 ? 6 : level === 2 ? 9 : 12;
+                        let x, y;
+                        do { x = R.int(-range, range); } while (x === 0);
+                        do { y = R.int(-range, range); } while (y === 0);
+                        const quadrant = x > 0 && y > 0 ? 'Quadrant I' : x < 0 && y > 0 ? 'Quadrant II' : x < 0 && y < 0 ? 'Quadrant III' : 'Quadrant IV';
+                        return {
+                            prompt: `The point (${x}, ${y}) is in which quadrant?`,
+                            visual: null,
+                            answerType: 'choice',
+                            choices: ['Quadrant I', 'Quadrant II', 'Quadrant III', 'Quadrant IV'],
+                            answer: quadrant,
+                            hints: [
+                                `Quadrant I: both positive. Quadrant II: x negative, y positive.`,
+                                `Quadrant III: both negative. Quadrant IV: x positive, y negative.`,
+                                `Here x is ${x > 0 ? 'positive' : 'negative'} and y is ${y > 0 ? 'positive' : 'negative'}.`
+                            ],
+                            explain: `x is ${x > 0 ? 'positive' : 'negative'} and y is ${y > 0 ? 'positive' : 'negative'}, so the point is in ${quadrant}.`
+                        };
+                    }
+                },
+                {
+                    id: 'divide-fractions',
+                    title: 'Dividing Fractions',
+                    standard: 'NC.6.NS.1',
+                    learnIntro: '<strong>Keep, Change, Flip!</strong><br>1/2 ÷ 1/4 → keep 1/2, change ÷ to ×, flip 1/4 to 4/1.<br>1/2 × 4/1 = <strong>2</strong>.',
+                    generate(level) {
+                        const b = R.int(2, 6);
+                        const d = R.int(2, 6);
+                        const a = level === 1 ? 1 : R.int(1, b - 1);
+                        const c = level === 1 ? 1 : R.int(1, d - 1);
+                        return Object.assign({
+                            prompt: `${a}/${b} ÷ ${c}/${d} = ? (Type it like 3/4)`,
+                            visual: null,
+                            answerType: 'fraction',
+                            hints: [
+                                `Dividing fractions: Keep, Change, Flip!`,
+                                `Flip the second fraction: ${c}/${d} becomes ${d}/${c}.`,
+                                `Now multiply: ${a}/${b} × ${d}/${c} = ?`
+                            ],
+                            explain: `${a}/${b} ÷ ${c}/${d} = ${a}/${b} × ${d}/${c} = ${fracStr(a * d, b * c)}.`
+                        }, frac(a * d, b * c));
+                    }
+                },
+                {
+                    id: 'gcf-lcm',
+                    title: 'GCF & LCM',
+                    standard: 'NC.6.NS.4',
+                    learnIntro: '<strong>GCF = biggest shared factor. LCM = smallest shared multiple.</strong><br>GCF(8, 12) = 4. LCM(4, 6) = 12.',
+                    generate(level) {
+                        if (level === 3) {
+                            let g, m, n, l, a, b;
+                            do {
+                                g = R.int(1, 4);
+                                m = R.int(1, 4);
+                                n = R.int(1, 4);
+                            } while (gcd(m, n) !== 1 || m === n || g * m * n > 60);
+                            a = g * m; b = g * n; l = g * m * n;
+                            return {
+                                prompt: `What is the LCM (Least Common Multiple) of ${a} and ${b}?`,
+                                visual: null,
+                                answerType: 'number',
+                                answer: l,
+                                hints: [
+                                    `List multiples of ${a}: ${a}, ${2 * a}, ${3 * a}...`,
+                                    `Keep going until you hit one that's also a multiple of ${b}.`,
+                                    `Shortcut: LCM = (${a} × ${b}) ÷ GCF(${a}, ${b}) = (${a} × ${b}) ÷ ${g}.`
+                                ],
+                                explain: `${a} = ${g}×${m} and ${b} = ${g}×${n}; since ${m} and ${n} share no factors, LCM = ${g}×${m}×${n} = ${l}.`
+                            };
+                        }
+                        const g = R.int(2, 6);
+                        let m, n;
+                        do { m = R.int(1, 5); n = R.int(1, 5); } while (gcd(m, n) !== 1 || m === n);
+                        const a = g * m, b = g * n;
+                        return {
+                            prompt: `What is the GCF (Greatest Common Factor) of ${a} and ${b}?`,
+                            visual: null,
+                            answerType: 'number',
+                            answer: g,
+                            hints: [
+                                `List the factors of ${a} and of ${b}.`,
+                                `Look for the LARGEST factor they share.`,
+                                `Both ${a} and ${b} can be divided evenly by ${g}.`
+                            ],
+                            explain: `${a} = ${g} × ${m} and ${b} = ${g} × ${n}, and ${m}, ${n} share no common factor, so GCF = ${g}.`
+                        };
+                    }
+                }
+            ]
+        },
+        {
+            id: 'g6-expressions',
+            grade: 6,
+            title: 'Expressions & Equations',
+            icon: '🔤',
+            standard: 'NC.6.EE',
+            prereq: 'g6-negatives',
+            skills: [
+                {
+                    id: 'exponents-intro',
+                    title: 'Exponents',
+                    standard: 'NC.6.EE.1',
+                    learnIntro: '<strong>An exponent counts repeated multiplying!</strong><br>2<sup>4</sup> means 2 × 2 × 2 × 2 = <strong>16</strong>.',
+                    generate(level) {
+                        let b, e;
+                        if (level === 1) {
+                            b = R.pick([2, 3]);
+                            e = 2;
+                        } else if (level === 2) {
+                            b = R.pick([2, 3, 4, 5]);
+                            e = R.int(2, 3);
+                        } else {
+                            b = R.pick([2, 3, 4, 5, 10]);
+                            e = b === 10 ? R.int(2, 3) : R.int(2, 4);
+                        }
+                        const answer = Math.pow(b, e);
+                        const expansion = Array(e).fill(b).join(' × ');
+                        return {
+                            prompt: `${b}<sup>${e}</sup> = ?`,
+                            visual: null,
+                            answerType: 'number',
+                            answer,
+                            hints: [
+                                `The exponent tells you how many times to multiply the base by itself.`,
+                                `${b}<sup>${e}</sup> means ${expansion}.`,
+                                `${expansion} = ?`
+                            ],
+                            explain: `${b}<sup>${e}</sup> = ${expansion} = ${answer}.`
+                        };
+                    }
+                },
+                {
+                    id: 'evaluate-expressions',
+                    title: 'Evaluate Expressions',
+                    standard: 'NC.6.EE.2',
+                    learnIntro: '<strong>Substitute, then solve!</strong><br>3x + 4 when x = 5 → 3(5) + 4 = 15 + 4 = <strong>19</strong>.',
+                    generate(level) {
+                        if (level === 3 && Math.random() < 0.5) {
+                            const m1 = R.int(2, 6), m2 = R.int(2, 6);
+                            const a = R.int(1, 9), b = R.int(1, 9);
+                            return {
+                                prompt: `What is ${m1}a + ${m2}b when a = ${a}, b = ${b}?`,
+                                visual: null,
+                                answerType: 'number',
+                                answer: m1 * a + m2 * b,
+                                hints: [
+                                    `Substitute the numbers in for the letters.`,
+                                    `${m1} × ${a} = ${m1 * a}, and ${m2} × ${b} = ${m2 * b}.`,
+                                    `${m1 * a} + ${m2 * b} = ?`
+                                ],
+                                explain: `${m1}(${a}) + ${m2}(${b}) = ${m1 * a} + ${m2 * b} = ${m1 * a + m2 * b}.`
+                            };
+                        }
+                        const m = R.int(2, 9);
+                        const c = R.int(1, 15);
+                        const x = level === 1 ? R.int(1, 5) : R.int(1, 10);
+                        return {
+                            prompt: `What is ${m}x + ${c} when x = ${x}?`,
+                            visual: null,
+                            answerType: 'number',
+                            answer: m * x + c,
+                            hints: [
+                                `Substitute ${x} in for x.`,
+                                `${m} × ${x} = ${m * x}.`,
+                                `${m * x} + ${c} = ?`
+                            ],
+                            explain: `${m}(${x}) + ${c} = ${m * x} + ${c} = ${m * x + c}.`
+                        };
+                    }
+                },
+                {
+                    id: 'one-step-equations',
+                    title: 'One-Step Equations',
+                    standard: 'NC.6.EE.7',
+                    learnIntro: '<strong>Undo it to find x!</strong><br>x + 6 = 10 → undo the + 6 by subtracting: x = 10 − 6 = <strong>4</strong>.',
+                    generate(level) {
+                        const type = level === 1 ? R.pick(['add', 'sub']) : R.pick(['add', 'sub', 'mul', 'div']);
+                        const small = () => level === 1 ? R.int(1, 10) : R.int(2, 20);
+                        if (type === 'add') {
+                            const x = small();
+                            const a = R.int(1, 20);
+                            const b = x + a;
+                            return {
+                                prompt: `Solve for x: x + ${a} = ${b}`,
+                                visual: null,
+                                answerType: 'number',
+                                answer: x,
+                                hints: [
+                                    `Undo the "+ ${a}" by subtracting ${a} from both sides.`,
+                                    `${b} − ${a} = ?`
+                                ],
+                                explain: `x + ${a} = ${b}, so x = ${b} − ${a} = ${x}.`
+                            };
+                        }
+                        if (type === 'sub') {
+                            const a = R.int(1, 15);
+                            const b = level === 1 ? R.int(1, 10) : R.int(1, 20);
+                            const x = a + b;
+                            return {
+                                prompt: `Solve for x: x − ${a} = ${b}`,
+                                visual: null,
+                                answerType: 'number',
+                                answer: x,
+                                hints: [
+                                    `Undo the "− ${a}" by adding ${a} to both sides.`,
+                                    `${b} + ${a} = ?`
+                                ],
+                                explain: `x − ${a} = ${b}, so x = ${b} + ${a} = ${x}.`
+                            };
+                        }
+                        if (type === 'mul') {
+                            const a = R.int(2, 9);
+                            const x = level === 2 ? R.int(2, 9) : R.int(2, 12);
+                            const b = a * x;
+                            return {
+                                prompt: `Solve for x: ${a}x = ${b}`,
+                                visual: null,
+                                answerType: 'number',
+                                answer: x,
+                                hints: [
+                                    `Undo the multiplication by dividing both sides by ${a}.`,
+                                    `${b} ÷ ${a} = ?`
+                                ],
+                                explain: `${a}x = ${b}, so x = ${b} ÷ ${a} = ${x}.`
+                            };
+                        }
+                        const a = R.int(2, 9);
+                        const q = level === 2 ? R.int(2, 9) : R.int(2, 12);
+                        const x = a * q;
+                        return {
+                            prompt: `Solve for x: x ÷ ${a} = ${q}`,
+                            visual: null,
+                            answerType: 'number',
+                            answer: x,
+                            hints: [
+                                `Undo the division by multiplying both sides by ${a}.`,
+                                `${q} × ${a} = ?`
+                            ],
+                            explain: `x ÷ ${a} = ${q}, so x = ${q} × ${a} = ${x}.`
+                        };
+                    }
+                }
+            ]
+        },
+        {
+            id: 'g6-geometry-data',
+            grade: 6,
+            title: 'Area & Data',
+            icon: '📊',
+            standard: 'NC.6.G, 6.SP',
+            prereq: 'g6-expressions',
+            skills: [
+                {
+                    id: 'area-triangles',
+                    title: 'Area of Parallelograms & Triangles',
+                    standard: 'NC.6.G.1',
+                    learnIntro: '<strong>Triangles are HALF a parallelogram!</strong><br>Area of a parallelogram = base × height.<br>Area of a triangle = ½ × base × height.',
+                    generate(level) {
+                        if (level === 1) {
+                            const b = R.int(3, 12), h = R.int(3, 12);
+                            return {
+                                prompt: `A parallelogram has a base of ${b} units and a height of ${h} units. What is its area?`,
+                                visual: null,
+                                answerType: 'number',
+                                answer: b * h,
+                                hints: [
+                                    `Area of a parallelogram = base × height.`,
+                                    `${b} × ${h} = ?`
+                                ],
+                                explain: `Area = ${b} × ${h} = ${b * h} square units.`
+                            };
+                        }
+                        const b = R.int(2, level === 2 ? 8 : 14) * 2;
+                        const h = level === 2 ? R.int(3, 10) : R.int(3, 16);
+                        const area = b * h / 2;
+                        return {
+                            prompt: `A triangle has a base of ${b} units and a height of ${h} units. What is its area?`,
+                            visual: null,
+                            answerType: 'number',
+                            answer: area,
+                            hints: [
+                                `Area of a triangle = ½ × base × height.`,
+                                `${b} × ${h} = ${b * h}. Now take half.`,
+                                `${b * h} ÷ 2 = ?`
+                            ],
+                            explain: `Area = ½ × ${b} × ${h} = ${b * h} ÷ 2 = ${area}.`
+                        };
+                    }
+                },
+                {
+                    id: 'mean-median',
+                    title: 'Mean & Median',
+                    standard: 'NC.6.SP.5',
+                    learnIntro: '<strong>Mean = share it out evenly. Median = the middle number.</strong><br>For 2, 4, 6: mean = (2+4+6)÷3 = 4. Median (sorted, middle) = 4 too!',
+                    generate(level) {
+                        if (level === 3 && Math.random() < 0.5) {
+                            const nums = Array.from({ length: 5 }, () => R.int(1, 30));
+                            const sorted = nums.slice().sort((x, y) => x - y);
+                            const median = sorted[2];
+                            return {
+                                prompt: `Find the median of this set: ${nums.join(', ')}`,
+                                visual: null,
+                                answerType: 'number',
+                                answer: median,
+                                hints: [
+                                    `Put the numbers in order from smallest to largest first.`,
+                                    `In order: ${sorted.join(', ')}.`,
+                                    `The median is the MIDDLE number.`
+                                ],
+                                explain: `Sorted: ${sorted.join(', ')}. The middle number is ${median}.`
+                            };
+                        }
+                        const count = level === 1 ? 4 : R.pick([4, 5]);
+                        const mean = R.int(15, 30);
+                        const devs = [];
+                        let total = 0;
+                        for (let i = 0; i < count - 1; i++) {
+                            const d = R.int(-3, 3);
+                            devs.push(d);
+                            total += d;
+                        }
+                        devs.push(-total);
+                        const nums = R.shuffle(devs.map(d => mean + d));
+                        return {
+                            prompt: `Find the mean (average) of this set: ${nums.join(', ')}`,
+                            visual: null,
+                            answerType: 'number',
+                            answer: mean,
+                            hints: [
+                                `Add up all the numbers first.`,
+                                `The sum is ${mean * count}. Now divide by how many numbers there are (${count}).`,
+                                `${mean * count} ÷ ${count} = ?`
+                            ],
+                            explain: `Sum = ${mean * count}; ${mean * count} ÷ ${count} = ${mean}.`
+                        };
+                    }
+                }
+            ]
+        },
+        // ============ GRADE 7 ============
+        {
+            id: 'g7-proportions',
+            grade: 7,
+            title: 'Proportions & Percent Power',
+            icon: '💰',
+            standard: 'NC.7.RP',
+            prereq: null,
+            skills: [
+                {
+                    id: 'solve-proportions',
+                    title: 'Solve Proportions',
+                    standard: 'NC.7.RP.2',
+                    learnIntro: '<strong>Cross-multiply, or scale it!</strong><br>3/4 = x/12 → 4 was scaled to 12 by ×3, so 3 × 3 = <strong>9</strong> = x.',
+                    generate(level) {
+                        const b = level === 1 ? R.pick([2, 3, 4]) : R.int(2, level === 2 ? 8 : 12);
+                        const a = R.int(1, b - 1);
+                        const k = level === 1 ? R.int(2, 4) : R.int(2, 8);
+                        const d = b * k;
+                        const c = a * k;
+                        if (Math.random() < 0.5) {
+                            return {
+                                prompt: `Solve: ${a}/${b} = x/${d}`,
+                                visual: null,
+                                answerType: 'number',
+                                answer: c,
+                                hints: [
+                                    `What was ${b} multiplied by to get ${d}?`,
+                                    `${d} ÷ ${b} = ${k}. Multiply the top by ${k} too.`,
+                                    `${a} × ${k} = ?`
+                                ],
+                                explain: `${b} × ${k} = ${d}, so ${a} × ${k} = ${c}. x = ${c}.`
+                            };
+                        }
+                        return {
+                            prompt: `Solve: ${a}/${b} = ${c}/x`,
+                            visual: null,
+                            answerType: 'number',
+                            answer: d,
+                            hints: [
+                                `What was ${a} multiplied by to get ${c}?`,
+                                `${c} ÷ ${a} = ${k}. Multiply the bottom by ${k} too.`,
+                                `${b} × ${k} = ?`
+                            ],
+                            explain: `${a} × ${k} = ${c}, so ${b} × ${k} = ${d}. x = ${d}.`
+                        };
+                    }
+                },
+                {
+                    id: 'percent-change',
+                    title: 'Discounts & Tips',
+                    standard: 'NC.7.RP.3',
+                    learnIntro: '<strong>Find the percent, then add or subtract!</strong><br>A 40-coin toy, 25% off → 25% of 40 = 10 → 40 − 10 = <strong>30</strong> coins.',
+                    generate(level) {
+                        if (level === 3 && Math.random() < 0.5) {
+                            const percent = R.pick([10, 15, 20, 25]);
+                            const base = R.int(1, 10) * 20;
+                            const tip = base * percent / 100;
+                            const total = base + tip;
+                            return {
+                                prompt: `A meal costs ${base} coins. Add a ${percent}% tip. What is the total?`,
+                                visual: null,
+                                answerType: 'number',
+                                answer: total,
+                                hints: [
+                                    `First find ${percent}% of ${base}.`,
+                                    `${percent}% of ${base} = ${tip}.`,
+                                    `Add the tip to the meal: ${base} + ${tip} = ?`
+                                ],
+                                explain: `${percent}% of ${base} = ${tip}; ${base} + ${tip} = ${total}.`
+                            };
+                        }
+                        const percent = level === 1 ? R.pick([10, 50]) : R.pick([10, 20, 25, 50]);
+                        const base = R.int(1, 10) * 20;
+                        const discount = base * percent / 100;
+                        const salePrice = base - discount;
+                        return {
+                            prompt: `A toy costs ${base} coins. It is ${percent}% off. What is the sale price?`,
+                            visual: null,
+                            answerType: 'number',
+                            answer: salePrice,
+                            hints: [
+                                `First find ${percent}% of ${base} — that's the discount.`,
+                                `${percent}% of ${base} = ${discount}.`,
+                                `Subtract the discount from the price: ${base} − ${discount} = ?`
+                            ],
+                            explain: `${percent}% of ${base} = ${discount}; ${base} − ${discount} = ${salePrice}.`
+                        };
+                    }
+                }
+            ]
+        },
+        {
+            id: 'g7-integers',
+            grade: 7,
+            title: 'Integer Operations',
+            icon: '➖',
+            standard: 'NC.7.NS',
+            prereq: 'g7-proportions',
+            skills: [
+                {
+                    id: 'add-sub-integers',
+                    title: 'Adding & Subtracting Integers',
+                    standard: 'NC.7.NS.1',
+                    learnIntro: '<strong>Think of a number line!</strong><br>3 − 9 → start at 3, move LEFT 9 → <strong>−6</strong>.<br>Subtracting a negative means moving RIGHT instead!',
+                    generate(level) {
+                        const range = level === 1 ? 10 : level === 2 ? 15 : 20;
+                        const forms = level === 3 ? ['posminus', 'negplusneg', 'doubleneg'] : ['posminus', 'negplusneg'];
+                        const form = R.pick(forms);
+                        if (form === 'posminus') {
+                            const a = R.int(0, range);
+                            const b = R.int(1, range);
+                            return {
+                                prompt: `${a} − ${b} = ?`,
+                                visual: null,
+                                answerType: 'number',
+                                allowNegative: true,
+                                answer: a - b,
+                                hints: [
+                                    `Start at ${a} on the number line and move LEFT ${b} spaces.`,
+                                    `If you go past zero, you land on a negative number.`
+                                ],
+                                explain: `${a} − ${b} = ${a - b}.`
+                            };
+                        }
+                        if (form === 'negplusneg') {
+                            const a = -R.int(1, range);
+                            const b = -R.int(1, range);
+                            return {
+                                prompt: `${a} + (${b}) = ?`,
+                                visual: null,
+                                answerType: 'number',
+                                allowNegative: true,
+                                answer: a + b,
+                                hints: [
+                                    `Adding two negatives moves further LEFT on the number line.`,
+                                    `${a} + (${b}) = ${a} − ${Math.abs(b)}.`
+                                ],
+                                explain: `${a} + (${b}) = ${a + b}.`
+                            };
+                        }
+                        const a = R.int(-range, range) || 1;
+                        const b = R.int(1, range);
+                        return {
+                            prompt: `${a} − (${-b}) = ?`,
+                            visual: null,
+                            answerType: 'number',
+                            allowNegative: true,
+                            answer: a + b,
+                            hints: [
+                                `Subtracting a negative is the same as ADDING a positive!`,
+                                `${a} − (${-b}) = ${a} + ${b}.`
+                            ],
+                            explain: `${a} − (${-b}) = ${a} + ${b} = ${a + b}.`
+                        };
+                    }
+                },
+                {
+                    id: 'mult-div-integers',
+                    title: 'Multiplying & Dividing Integers',
+                    standard: 'NC.7.NS.2',
+                    learnIntro: '<strong>Same signs → positive. Different signs → negative!</strong><br>(−4) × 6 = <strong>−24</strong>. (−24) ÷ (−6) = <strong>4</strong>.',
+                    generate(level) {
+                        const fmt = n => n < 0 ? `(${n})` : `${n}`;
+                        const cap = level === 1 ? 9 : level === 2 ? 12 : 15;
+                        let sA, sB;
+                        do {
+                            sA = R.pick([-1, 1]);
+                            sB = R.pick([-1, 1]);
+                        } while (sA === 1 && sB === 1);
+                        const isMul = Math.random() < 0.5;
+                        if (isMul) {
+                            const mag1 = R.int(2, cap), mag2 = R.int(2, cap);
+                            const a = sA * mag1, b = sB * mag2;
+                            const answer = a * b;
+                            return {
+                                prompt: `${fmt(a)} × ${fmt(b)} = ?`,
+                                visual: null,
+                                answerType: 'number',
+                                allowNegative: true,
+                                answer,
+                                hints: [
+                                    `Same signs multiply to a POSITIVE answer; different signs give a NEGATIVE answer.`,
+                                    `${mag1} × ${mag2} = ${mag1 * mag2}. Now figure out the sign.`
+                                ],
+                                explain: `${fmt(a)} × ${fmt(b)} = ${answer}. ${sA === sB ? 'Same signs → positive.' : 'Different signs → negative.'}`
+                            };
+                        }
+                        const db = R.int(2, cap), q = R.int(2, cap);
+                        const dividend = sA * db * q, divisor = sB * db;
+                        const quotient = dividend / divisor;
+                        return {
+                            prompt: `${fmt(dividend)} ÷ ${fmt(divisor)} = ?`,
+                            visual: null,
+                            answerType: 'number',
+                            allowNegative: true,
+                            answer: quotient,
+                            hints: [
+                                `Same signs divide to a POSITIVE answer; different signs give a NEGATIVE answer.`,
+                                `${db * q} ÷ ${db} = ${q}. Now figure out the sign.`
+                            ],
+                            explain: `${fmt(dividend)} ÷ ${fmt(divisor)} = ${quotient}. ${sA === sB ? 'Same signs → positive.' : 'Different signs → negative.'}`
+                        };
+                    }
+                }
+            ]
+        },
+        {
+            id: 'g7-equations',
+            grade: 7,
+            title: 'Two-Step Equations',
+            icon: '⚖️',
+            standard: 'NC.7.EE',
+            prereq: 'g7-integers',
+            skills: [
+                {
+                    id: 'two-step-equations',
+                    title: 'Two-Step Equations',
+                    standard: 'NC.7.EE.4',
+                    learnIntro: '<strong>Undo addition/subtraction FIRST, then multiplication/division!</strong><br>2x + 3 = 11 → 2x = 8 → x = <strong>4</strong>.',
+                    generate(level) {
+                        const allowNeg = level === 3 && Math.random() < 0.4;
+                        const x = allowNeg ? -R.int(1, 10) : (level === 1 ? R.int(1, 8) : R.int(1, 12));
+                        const a = R.int(2, 9);
+                        const b = R.int(1, 20) * (Math.random() < 0.5 ? 1 : -1);
+                        const c = a * x + b;
+                        const bStr = b < 0 ? `− ${Math.abs(b)}` : `+ ${b}`;
+                        return {
+                            prompt: `Solve for x: ${a}x ${bStr} = ${c}`,
+                            visual: null,
+                            answerType: 'number',
+                            allowNegative: allowNeg,
+                            answer: x,
+                            hints: [
+                                `Undo the ${b < 0 ? 'subtraction' : 'addition'} first: ${b < 0 ? `add ${Math.abs(b)} to` : `subtract ${b} from`} both sides.`,
+                                `${c} ${b < 0 ? '+' : '−'} ${Math.abs(b)} = ${a * x}.`,
+                                `Now divide both sides by ${a}: ${a * x} ÷ ${a} = ?`
+                            ],
+                            explain: `${a}x ${bStr} = ${c} → ${a}x = ${a * x} → x = ${x}.`
+                        };
+                    }
+                },
+                {
+                    id: 'distributive',
+                    title: 'Distributive Property',
+                    standard: 'NC.7.EE.1',
+                    learnIntro: '<strong>Multiply through the parentheses!</strong><br>4(x + 3) = 4x + 4×3 = 4x + <strong>12</strong>.<br>Like terms combine: 3x + 2x = <strong>5x</strong>.',
+                    generate(level) {
+                        if (level === 3 && Math.random() < 0.5) {
+                            const m1 = R.int(2, 6), c1 = R.int(1, 9);
+                            const m2 = R.int(2, 6), c2 = R.int(1, 9);
+                            const totalC = c1 + c2;
+                            return {
+                                prompt: `${m1}x + ${c1} + ${m2}x + ${c2} = ?x + ${totalC} — what number goes in the ?x blank?`,
+                                visual: null,
+                                answerType: 'number',
+                                answer: m1 + m2,
+                                hints: [
+                                    `Combine the x-terms together: ${m1}x + ${m2}x.`,
+                                    `${m1} + ${m2} = ?`
+                                ],
+                                explain: `${m1}x + ${m2}x = ${m1 + m2}x, and ${c1} + ${c2} = ${totalC}.`
+                            };
+                        }
+                        const a = R.int(2, 9);
+                        const c = R.int(1, 12);
+                        return {
+                            prompt: `${a}(x + ${c}) = ${a}x + ?`,
+                            visual: null,
+                            answerType: 'number',
+                            answer: a * c,
+                            hints: [
+                                `Distribute the ${a} to BOTH terms inside the parentheses.`,
+                                `${a} × ${c} = ?`
+                            ],
+                            explain: `${a}(x + ${c}) = ${a}x + ${a * c}.`
+                        };
+                    }
+                }
+            ]
+        },
+        {
+            id: 'g7-geometry-prob',
+            grade: 7,
+            title: 'Circles, Angles & Chance',
+            icon: '🎲',
+            standard: 'NC.7.G, 7.SP',
+            prereq: 'g7-equations',
+            skills: [
+                {
+                    id: 'circles',
+                    title: 'Circumference & Area of Circles',
+                    standard: 'NC.7.G.4',
+                    learnIntro: '<strong>Use π ≈ 3.14!</strong><br>Circumference = 2πr. Area = πr².<br>A radius-3 circle: circumference ≈ 2 × 3.14 × 3 = <strong>18.84</strong>.',
+                    generate(level) {
+                        if (level === 3) {
+                            const r = R.int(1, 7);
+                            const answer = (314 * r * r) / 100;
+                            return {
+                                prompt: `A circle has a radius of ${r} units. What is its area? (Use π ≈ 3.14)`,
+                                visual: null,
+                                answerType: 'number',
+                                allowDecimal: true,
+                                answer,
+                                hints: [
+                                    `Area of a circle = π × r².`,
+                                    `${r}² = ${r * r}. Now multiply by 3.14.`,
+                                    `3.14 × ${r * r} = ?`
+                                ],
+                                explain: `Area = 3.14 × ${r}² = 3.14 × ${r * r} = ${answer} square units.`
+                            };
+                        }
+                        const r = R.int(1, 9);
+                        const answer = (2 * 314 * r) / 100;
+                        return {
+                            prompt: `A circle has a radius of ${r} units. What is its circumference? (Use π ≈ 3.14)`,
+                            visual: null,
+                            answerType: 'number',
+                            allowDecimal: true,
+                            answer,
+                            hints: [
+                                `Circumference = 2 × π × r.`,
+                                `2 × ${r} = ${2 * r}. Now multiply by 3.14.`,
+                                `3.14 × ${2 * r} = ?`
+                            ],
+                            explain: `Circumference = 2 × 3.14 × ${r} = ${answer} units.`
+                        };
+                    }
+                },
+                {
+                    id: 'angle-pairs',
+                    title: 'Angle Pairs',
+                    standard: 'NC.7.G.5',
+                    learnIntro: '<strong>Special angle pairs!</strong><br>Vertical angles are EQUAL. Complementary angles add to 90°. Supplementary angles add to 180°.',
+                    generate(level) {
+                        const type = level === 1 ? 'vertical' : R.pick(['vertical', 'complementary', 'supplementary']);
+                        if (type === 'vertical') {
+                            const x = R.int(10, 170);
+                            return {
+                                prompt: `Two angles are vertical angles. One measures ${x}°. What is the measure of the other?`,
+                                visual: null,
+                                answerType: 'number',
+                                answer: x,
+                                hints: [
+                                    `Vertical angles are always EQUAL.`,
+                                    `The other angle is also ${x}°.`
+                                ],
+                                explain: `Vertical angles are equal, so the other angle is ${x}°.`
+                            };
+                        }
+                        if (type === 'complementary') {
+                            const x = R.int(10, 80);
+                            return {
+                                prompt: `Two angles are complementary. One measures ${x}°. What is the other angle's measure?`,
+                                visual: null,
+                                answerType: 'number',
+                                answer: 90 - x,
+                                hints: [
+                                    `Complementary angles add up to 90°.`,
+                                    `90 − ${x} = ?`
+                                ],
+                                explain: `90° − ${x}° = ${90 - x}°.`
+                            };
+                        }
+                        const x = R.int(10, 170);
+                        return {
+                            prompt: `Two angles are supplementary. One measures ${x}°. What is the other angle's measure?`,
+                            visual: null,
+                            answerType: 'number',
+                            answer: 180 - x,
+                            hints: [
+                                `Supplementary angles add up to 180°.`,
+                                `180 − ${x} = ?`
+                            ],
+                            explain: `180° − ${x}° = ${180 - x}°.`
+                        };
+                    }
+                },
+                {
+                    id: 'probability',
+                    title: 'Probability',
+                    standard: 'NC.7.SP.5',
+                    learnIntro: '<strong>Probability = favorable ÷ total!</strong><br>A bag with 3 red, 5 blue marbles: P(red) = 3/8.',
+                    generate(level) {
+                        const colors = ['red', 'blue', 'green', 'yellow', 'purple'];
+                        const chosen = R.shuffle(colors).slice(0, level === 1 ? 2 : 3);
+                        const counts = chosen.map(() => R.int(1, 8));
+                        const total = counts.reduce((s, n) => s + n, 0);
+                        const idx = R.int(0, chosen.length - 1);
+                        const target = chosen[idx];
+                        const favorable = counts[idx];
+                        const desc = chosen.map((c, i) => `${counts[i]} ${c}`).join(', ');
+                        if (level === 3 && Math.random() < 0.5) {
+                            return Object.assign({
+                                prompt: `A bag has ${desc} marbles. What is P(NOT ${target})? (Type it like 3/4)`,
+                                visual: null,
+                                answerType: 'fraction',
+                                hints: [
+                                    `"NOT ${target}" means any marble that ISN'T ${target}.`,
+                                    `${total} − ${favorable} = ${total - favorable} marbles are not ${target}, out of ${total} total.`
+                                ],
+                                explain: `P(NOT ${target}) = ${fracStr(total - favorable, total)}.`
+                            }, frac(total - favorable, total));
+                        }
+                        return Object.assign({
+                            prompt: `A bag has ${desc} marbles. What is P(${target})? (Type it like 3/4)`,
+                            visual: null,
+                            answerType: 'fraction',
+                            hints: [
+                                `Probability = favorable outcomes ÷ total outcomes.`,
+                                `There are ${favorable} ${target} marbles out of ${total} total.`
+                            ],
+                            explain: `P(${target}) = ${fracStr(favorable, total)}.`
+                        }, frac(favorable, total));
+                    }
+                }
+            ]
+        },
+        // ============ GRADE 8 ============
+        {
+            id: 'g8-powers',
+            grade: 8,
+            title: 'Powers, Roots & Scientific Notation',
+            icon: '🔬',
+            standard: 'NC.8.EE, 8.NS',
+            prereq: null,
+            skills: [
+                {
+                    id: 'exponent-rules',
+                    title: 'Exponent Rules',
+                    standard: 'NC.8.EE.1',
+                    learnIntro: '<strong>Same base? Just work with the exponents!</strong><br>2<sup>3</sup> × 2<sup>4</sup> = 2<sup>3+4</sup> = 2<sup>7</sup>. Multiplying → ADD exponents.',
+                    generate(level) {
+                        const b = R.pick([2, 3, 4, 5]);
+                        if (level === 3) {
+                            const type = R.pick(['power', 'divide']);
+                            if (type === 'power') {
+                                const a = R.int(2, 3), c = R.int(2, 3);
+                                return {
+                                    prompt: `(${b}<sup>${a}</sup>)<sup>${c}</sup> = ${b}<sup>?</sup>`,
+                                    visual: null,
+                                    answerType: 'number',
+                                    answer: a * c,
+                                    hints: [
+                                        `Power of a power: MULTIPLY the exponents.`,
+                                        `${a} × ${c} = ?`
+                                    ],
+                                    explain: `(${b}<sup>${a}</sup>)<sup>${c}</sup> = ${b}<sup>${a * c}</sup>.`
+                                };
+                            }
+                            const c = R.int(2, 4), a = R.int(c + 1, c + 4);
+                            return {
+                                prompt: `${b}<sup>${a}</sup> ÷ ${b}<sup>${c}</sup> = ${b}<sup>?</sup>`,
+                                visual: null,
+                                answerType: 'number',
+                                answer: a - c,
+                                hints: [
+                                    `Dividing powers with the same base: SUBTRACT the exponents.`,
+                                    `${a} − ${c} = ?`
+                                ],
+                                explain: `${b}<sup>${a}</sup> ÷ ${b}<sup>${c}</sup> = ${b}<sup>${a - c}</sup>.`
+                            };
+                        }
+                        const a = level === 1 ? R.int(2, 4) : R.int(2, 5);
+                        const c = level === 1 ? R.int(2, 4) : R.int(2, 5);
+                        return {
+                            prompt: `${b}<sup>${a}</sup> × ${b}<sup>${c}</sup> = ${b}<sup>?</sup>`,
+                            visual: null,
+                            answerType: 'number',
+                            answer: a + c,
+                            hints: [
+                                `Multiplying powers with the same base: ADD the exponents.`,
+                                `${a} + ${c} = ?`
+                            ],
+                            explain: `${b}<sup>${a}</sup> × ${b}<sup>${c}</sup> = ${b}<sup>${a + c}</sup>.`
+                        };
+                    }
+                },
+                {
+                    id: 'roots',
+                    title: 'Square & Cube Roots',
+                    standard: 'NC.8.NS.2',
+                    learnIntro: '<strong>A root asks "what number squared/cubed gives this?"</strong><br>√36 = 6 because 6 × 6 = 36. ∛27 = 3 because 3 × 3 × 3 = 27.',
+                    generate(level) {
+                        if (level === 3 && Math.random() < 0.5) {
+                            const lo = R.int(2, 14);
+                            const hi = lo + 1;
+                            const n = R.int(lo * lo + 1, hi * hi - 1);
+                            const correct = `${lo} and ${hi}`;
+                            const distractor1 = `${lo - 1} and ${lo}`;
+                            const distractor2 = `${hi} and ${hi + 1}`;
+                            const choices = R.shuffle([correct, distractor1, distractor2]);
+                            return {
+                                prompt: `√${n} is between which two whole numbers?`,
+                                visual: null,
+                                answerType: 'choice',
+                                choices,
+                                answer: correct,
+                                hints: [
+                                    `Find the perfect squares just below and above ${n}.`,
+                                    `${lo}² = ${lo * lo} and ${hi}² = ${hi * hi}.`,
+                                    `${n} is between ${lo * lo} and ${hi * hi}.`
+                                ],
+                                explain: `${lo}² = ${lo * lo} and ${hi}² = ${hi * hi}, and ${lo * lo} < ${n} < ${hi * hi}, so √${n} is between ${lo} and ${hi}.`
+                            };
+                        }
+                        const useCube = level === 3 ? Math.random() < 0.5 : (level === 2 && Math.random() < 0.3);
+                        if (useCube) {
+                            const cubes = [[2, 8], [3, 27], [4, 64], [5, 125], [10, 1000]];
+                            const [root, n] = R.pick(cubes);
+                            return {
+                                prompt: `∛${n} = ?`,
+                                visual: null,
+                                answerType: 'number',
+                                answer: root,
+                                hints: [
+                                    `What number times itself THREE times makes ${n}?`,
+                                    `Try small numbers: 2³=8, 3³=27, 4³=64, 5³=125...`
+                                ],
+                                explain: `${root}³ = ${n}, so ∛${n} = ${root}.`
+                            };
+                        }
+                        const root = level === 1 ? R.int(2, 10) : R.int(2, 15);
+                        const n = root * root;
+                        return {
+                            prompt: `√${n} = ?`,
+                            visual: null,
+                            answerType: 'number',
+                            answer: root,
+                            hints: [
+                                `What number times itself makes ${n}?`,
+                                `Try counting up: 1×1, 2×2, 3×3...`
+                            ],
+                            explain: `${root}² = ${n}, so √${n} = ${root}.`
+                        };
+                    }
+                },
+                {
+                    id: 'scientific-notation',
+                    title: 'Scientific Notation',
+                    standard: 'NC.8.EE.3',
+                    learnIntro: '<strong>Scientific notation writes BIG numbers compactly!</strong><br>3.5 × 10<sup>4</sup> → move the point 4 places right → <strong>35,000</strong>.',
+                    generate(level) {
+                        if (level === 3 && Math.random() < 0.5) {
+                            let lead;
+                            do { lead = R.int(10, 99); } while (lead % 10 === 0);
+                            const exp = R.int(2, 5);
+                            const n = lead * Math.pow(10, exp - 1);
+                            const mantissa = `${Math.floor(lead / 10)}.${lead % 10}`;
+                            return {
+                                prompt: `${withCommas(n)} = ${mantissa} × 10<sup>?</sup>`,
+                                visual: null,
+                                answerType: 'number',
+                                answer: exp,
+                                hints: [
+                                    `Count how many places the decimal point moves to get from ${mantissa} to ${withCommas(n)}.`,
+                                    `${mantissa} needs to move ${exp} places to the right.`
+                                ],
+                                explain: `${mantissa} × 10<sup>${exp}</sup> = ${withCommas(n)}.`
+                            };
+                        }
+                        let lead;
+                        do { lead = R.int(10, 99); } while (lead % 10 === 0);
+                        const exp = R.int(2, 5);
+                        const answer = lead * Math.pow(10, exp - 1);
+                        const mantissa = `${Math.floor(lead / 10)}.${lead % 10}`;
+                        return {
+                            prompt: `${mantissa} × 10<sup>${exp}</sup> = ?`,
+                            visual: null,
+                            answerType: 'number',
+                            answer,
+                            hints: [
+                                `Multiplying by 10<sup>${exp}</sup> moves the decimal point ${exp} places to the right.`,
+                                `${mantissa} → move the point ${exp} times.`
+                            ],
+                            explain: `${mantissa} × 10<sup>${exp}</sup> = ${answer}.`
+                        };
+                    }
+                }
+            ]
+        },
+        {
+            id: 'g8-linear',
+            grade: 8,
+            title: 'Slopes & Equations',
+            icon: '📈',
+            standard: 'NC.8.EE, 8.F',
+            prereq: 'g8-powers',
+            skills: [
+                {
+                    id: 'slope',
+                    title: 'Slope',
+                    standard: 'NC.8.EE.6',
+                    learnIntro: '<strong>Slope = rise over run!</strong><br>A line that rises 6 for every 2 across has slope 6 ÷ 2 = <strong>3</strong>.',
+                    generate(level) {
+                        if (level === 1) {
+                            const run = R.int(1, 6);
+                            const rise = run * R.int(1, 5);
+                            return {
+                                prompt: `A line rises ${rise} for every ${run} across. What is its slope?`,
+                                visual: null,
+                                answerType: 'number',
+                                answer: rise / run,
+                                hints: [
+                                    `Slope = rise ÷ run.`,
+                                    `${rise} ÷ ${run} = ?`
+                                ],
+                                explain: `Slope = ${rise} ÷ ${run} = ${rise / run}.`
+                            };
+                        }
+                        const dx = R.int(1, level === 2 ? 5 : 6);
+                        const slope = level === 3 && Math.random() < 0.5 ? -R.int(1, 5) : R.int(1, 5);
+                        const x1 = R.int(-5, 5), y1 = R.int(-5, 5);
+                        const x2 = x1 + dx;
+                        const y2 = y1 + slope * dx;
+                        return {
+                            prompt: `Find the slope of the line through (${x1}, ${y1}) and (${x2}, ${y2}).`,
+                            visual: null,
+                            answerType: 'number',
+                            allowNegative: slope < 0,
+                            answer: slope,
+                            hints: [
+                                `Slope = (change in y) ÷ (change in x).`,
+                                `Change in y: ${y2} − ${y1} = ${y2 - y1}. Change in x: ${x2} − ${x1} = ${x2 - x1}.`,
+                                `${y2 - y1} ÷ ${x2 - x1} = ?`
+                            ],
+                            explain: `Slope = (${y2} − ${y1}) ÷ (${x2} − ${x1}) = ${y2 - y1} ÷ ${dx} = ${slope}.`
+                        };
+                    }
+                },
+                {
+                    id: 'multi-step-equations',
+                    title: 'Multi-Step Equations',
+                    standard: 'NC.8.EE.7',
+                    learnIntro: '<strong>Distribute or collect x-terms first!</strong><br>2(x + 3) = 16 → 2x + 6 = 16 → 2x = 10 → x = <strong>5</strong>.',
+                    generate(level) {
+                        const allowNeg = level === 3 && Math.random() < 0.4;
+                        const x = allowNeg ? -R.int(1, 9) : R.int(1, level === 1 ? 8 : 12);
+                        const type = level === 1 ? 'distribute' : R.pick(['distribute', 'bothsides']);
+                        if (type === 'distribute') {
+                            const a = R.int(2, 6);
+                            const c = R.int(1, 10);
+                            const total = a * x + a * c;
+                            return {
+                                prompt: `Solve for x: ${a}(x + ${c}) = ${total}`,
+                                visual: null,
+                                answerType: 'number',
+                                allowNegative: allowNeg,
+                                answer: x,
+                                hints: [
+                                    `Distribute the ${a} first: ${a}x + ${a * c} = ${total}.`,
+                                    `Undo the + ${a * c}: ${total} − ${a * c} = ${a * x}.`,
+                                    `Divide both sides by ${a}: ${a * x} ÷ ${a} = ?`
+                                ],
+                                explain: `${a}(x + ${c}) = ${total} → ${a}x = ${a * x} → x = ${x}.`
+                            };
+                        }
+                        const m1 = R.int(3, 9);
+                        let m2 = R.int(1, 8);
+                        if (m2 === m1) m2 = m1 - 1;
+                        const b1 = R.int(1, 15);
+                        const b2 = b1 + (m1 - m2) * x;
+                        const b2Str = b2 < 0 ? `− ${Math.abs(b2)}` : `+ ${b2}`;
+                        return {
+                            prompt: `Solve for x: ${m1}x + ${b1} = ${m2}x ${b2Str}`,
+                            visual: null,
+                            answerType: 'number',
+                            allowNegative: allowNeg,
+                            answer: x,
+                            hints: [
+                                `Get the x-terms together: subtract ${m2}x from both sides.`,
+                                `${m1 - m2}x + ${b1} = ${b2}.`,
+                                `Now undo the + ${b1}, then divide by ${m1 - m2}.`
+                            ],
+                            explain: `${m1}x + ${b1} = ${m2}x ${b2Str} → ${m1 - m2}x = ${b2 - b1} → x = ${x}.`
+                        };
+                    }
+                },
+                {
+                    id: 'evaluate-functions',
+                    title: 'Evaluate Functions',
+                    standard: 'NC.8.F.4',
+                    learnIntro: '<strong>Plug the x-value into the function!</strong><br>y = 3x − 2, when x = 4 → y = 3(4) − 2 = 12 − 2 = <strong>10</strong>.',
+                    generate(level) {
+                        let m;
+                        do { m = R.int(-9, 9); } while (m === 0);
+                        const b = R.int(-9, 9);
+                        const x = R.int(-9, 9);
+                        const y = m * x + b;
+                        const mStr = m === 1 ? 'x' : m === -1 ? '−x' : (m < 0 ? `−${Math.abs(m)}x` : `${m}x`);
+                        const bStr = b === 0 ? '' : b < 0 ? ` − ${Math.abs(b)}` : ` + ${b}`;
+                        return {
+                            prompt: `y = ${mStr}${bStr}. What is y when x = ${x}?`,
+                            visual: null,
+                            answerType: 'number',
+                            allowNegative: true,
+                            answer: y,
+                            hints: [
+                                `Substitute ${x} in for x.`,
+                                `${m} × (${x}) = ${m * x}.`,
+                                `${m * x} ${b < 0 ? '−' : '+'} ${Math.abs(b)} = ?`
+                            ],
+                            explain: `y = ${m}(${x}) ${b < 0 ? '−' : '+'} ${Math.abs(b)} = ${m * x} ${b < 0 ? '−' : '+'} ${Math.abs(b)} = ${y}.`
+                        };
+                    }
+                }
+            ]
+        },
+        {
+            id: 'g8-geometry',
+            grade: 8,
+            title: 'Right Triangles & Volume',
+            icon: '📐',
+            standard: 'NC.8.G',
+            prereq: 'g8-linear',
+            skills: [
+                {
+                    id: 'pythagorean',
+                    title: 'The Pythagorean Theorem',
+                    standard: 'NC.8.G.7',
+                    learnIntro: '<strong>a² + b² = c² for right triangles!</strong><br>Legs 3 and 4: 3² + 4² = 9 + 16 = 25 = 5². Hypotenuse = <strong>5</strong>.',
+                    generate(level) {
+                        const triples = [[3, 4, 5], [6, 8, 10], [5, 12, 13], [8, 15, 17], [9, 12, 15], [7, 24, 25]];
+                        const [a, b, c] = R.pick(triples);
+                        if (level === 3 && Math.random() < 0.5) {
+                            const missing = R.pick(['a', 'b']);
+                            const known = missing === 'a' ? b : a;
+                            const answer = missing === 'a' ? a : b;
+                            return {
+                                prompt: `A right triangle has a hypotenuse of ${c} and one leg of ${known}. What is the length of the other leg?`,
+                                visual: null,
+                                answerType: 'number',
+                                answer,
+                                hints: [
+                                    `Use the Pythagorean theorem: leg² + leg² = hypotenuse².`,
+                                    `${c}² − ${known}² = ${c * c} − ${known * known} = ${c * c - known * known}.`,
+                                    `√${c * c - known * known} = ?`
+                                ],
+                                explain: `${known}² + ?² = ${c}²; ${c * c} − ${known * known} = ${c * c - known * known}, and √${c * c - known * known} = ${answer}.`
+                            };
+                        }
+                        return {
+                            prompt: `A right triangle has legs of ${a} and ${b}. What is the length of the hypotenuse?`,
+                            visual: null,
+                            answerType: 'number',
+                            answer: c,
+                            hints: [
+                                `Use the Pythagorean theorem: a² + b² = c².`,
+                                `${a}² + ${b}² = ${a * a} + ${b * b} = ${a * a + b * b}.`,
+                                `√${a * a + b * b} = ?`
+                            ],
+                            explain: `${a}² + ${b}² = ${a * a + b * b} = ${c}², so the hypotenuse is ${c}.`
+                        };
+                    }
+                },
+                {
+                    id: 'volume-round',
+                    title: 'Volume in Terms of π',
+                    standard: 'NC.8.G.9',
+                    learnIntro: '<strong>Cylinders and cones use π too!</strong><br>Cylinder: V = π r² h. Cone: V = (1/3) π r² h.<br>Just find the number in front of π!',
+                    generate(level) {
+                        if (level === 3) {
+                            const r = R.int(2, 6);
+                            let h;
+                            do { h = R.int(2, 9); } while ((r * r * h) % 3 !== 0);
+                            const coeff = (r * r * h) / 3;
+                            return {
+                                prompt: `A cone has a radius of ${r} and a height of ${h}. What is its volume in terms of π? (V = ?π cubic units)`,
+                                visual: null,
+                                answerType: 'number',
+                                answer: coeff,
+                                hints: [
+                                    `Volume of a cone = (1/3) × π × r² × h.`,
+                                    `${r}² × ${h} = ${r * r * h}.`,
+                                    `${r * r * h} ÷ 3 = ?`
+                                ],
+                                explain: `V = (1/3)π(${r})²(${h}) = ${coeff}π cubic units.`
+                            };
+                        }
+                        const r = R.int(2, 5), h = R.int(2, 6);
+                        const coeff = r * r * h;
+                        return {
+                            prompt: `A cylinder has a radius of ${r} and a height of ${h}. What is its volume in terms of π? (V = ?π cubic units)`,
+                            visual: null,
+                            answerType: 'number',
+                            answer: coeff,
+                            hints: [
+                                `Volume of a cylinder = π × r² × h.`,
+                                `${r}² × ${h} = ?`
+                            ],
+                            explain: `V = π(${r})²(${h}) = ${coeff}π cubic units.`
                         };
                     }
                 }
