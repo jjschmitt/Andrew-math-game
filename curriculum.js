@@ -3799,9 +3799,9 @@ const CURRICULUM = {
                         if (form === 'negplusneg') {
                             const a = -R.int(1, range);
                             const b = -R.int(1, range);
-                            const interactive = level === 1 ? { type: 'int-walk', min: -20, max: 5, start: -a, target: -a - b, done: `Adding negative ${b} walked you ${b} more steps left — to ${-a - b}! Type it in ✏️` } : null;
+                            const interactive = level === 1 ? { type: 'int-walk', min: -20, max: 5, start: a, target: a + b, done: `Adding negative ${Math.abs(b)} walked you ${Math.abs(b)} more steps left — to ${a + b}! Type it in ✏️` } : null;
                             return {
-                                prompt: `${a} + (${b}) = ?${level === 1 ? `<span class="prompt-sub">Walk ${b} steps left on the line.</span>` : ''}`,
+                                prompt: `${a} + (${b}) = ?${level === 1 ? `<span class="prompt-sub">Walk ${Math.abs(b)} steps left on the line.</span>` : ''}`,
                                 visual: null,
                                 interactive,
                                 answerType: 'number',
