@@ -1,10 +1,10 @@
-# 🌟 Math Adventure — Mastery Quest (Grades 2–5)
+# 🌟 Math Adventure — Mastery Quest (Grades 2–8)
 
 An interactive math game built around how kids actually learn: **mastery before moving on**, **effortful retrieval**, and **the right cognitive load at the right moment**. Pick a Pokémon ⚡ or Mario 🍄 buddy and work through a learning path aligned to NC / Common Core standards.
 
-The game **starts at 2nd grade and secretly contains 3rd–5th grade too**: nothing about the higher grades is shown anywhere in the UI until every skill of the current grade is mastered — then a "LEVEL UP" celebration fires and the next grade's units simply appear on the map. From the child's point of view, the game just keeps growing as they conquer it.
+The game **starts at 2nd grade and secretly contains 3rd–8th grade too**: nothing about the higher grades is shown anywhere in the UI until every skill of the current grade is mastered — then a "LEVEL UP" celebration fires and the next grade's units simply appear on the map. From the child's point of view, the game just keeps growing as they conquer it.
 
-**Grades are never named on screen.** The child only ever sees "Level 2" through "Level 5" — the word "grade" doesn't appear anywhere in the game, so an advanced kid can race ahead (or take their time) without comparing themselves to a school grade. The only grade reference left is the small standards code on each problem (e.g. `NC.3.OA.7`), kept for grown-ups.
+**Grades are never named on screen.** The child only ever sees "Level 2" through "Level 8" — the word "grade" doesn't appear anywhere in the game, so an advanced kid can race ahead (or take their time) without comparing themselves to a school grade. The only grade reference left is the small standards code on each problem (e.g. `NC.3.OA.7`), kept for grown-ups.
 
 ## 🚀 How to Play
 
@@ -15,7 +15,7 @@ The game **starts at 2nd grade and secretly contains 3rd–5th grade too**: noth
 
 Progress saves automatically in the browser (localStorage), so the game remembers where you left off.
 
-**iPad-friendly:** on touch devices the game shows its own big-button number pad (with `:`, `/`, and `.` keys when a problem needs them) and suppresses the iOS keyboard entirely, so the problem never gets covered or scrolled away. Everything fits one screen in both orientations. For the best experience use Safari's Share → "Add to Home Screen" — it launches full-screen without browser bars.
+**iPad-friendly:** on touch devices the game shows its own big-button number pad (with `:`, `/`, `.`, and `-` keys when a problem needs them) and suppresses the iOS keyboard entirely, so the problem never gets covered or scrolled away. Everything fits one screen in both orientations. For the best experience use Safari's Share → "Add to Home Screen" — it launches full-screen without browser bars.
 
 ## 🧠 The Learning Science Inside
 
@@ -37,7 +37,7 @@ Progress saves automatically in the browser (localStorage), so the game remember
 - One problem, one screen, no timers — working memory goes to the math, not the interface.
 - Wrong answers end with a short **worked explanation** ("62 − 38: 62 − 30 = 32, 32 − 8 = 24"), then a *similar* problem — never the same one, so the child can't just copy the answer.
 
-## 📚 Curriculum (NC / CCSS, Grades 2–5)
+## 📚 Curriculum (NC / CCSS, Grades 2–8)
 
 ### Grade 2 (visible from the start)
 
@@ -79,6 +79,32 @@ Progress saves automatically in the browser (localStorage), so the game remember
 | 🏆 Fraction Pro | Add/subtract unlike fractions, multiply fractions, divide with unit fractions | 5.NF.1, 5.NF.4, 5.NF.7 |
 | 📦 Volume & the Coordinate Plane | Volume of boxes, coordinates | 5.MD.5, 5.G.1 |
 
+### Grade 6 (appears when all of grade 5 is mastered)
+
+| Unit | Skills | Standards |
+|---|---|---|
+| 🥤 Ratios, Rates & Percents | Equivalent ratios, unit rates, percent of a number | 6.RP |
+| 🧊 Into the Negatives | Comparing negatives, the four quadrants, dividing fractions, GCF & LCM | 6.NS |
+| 🔤 Expressions & Equations | Exponents, evaluating expressions, one-step equations | 6.EE |
+| 📊 Area & Data | Area of parallelograms/triangles, mean & median | 6.G, 6.SP |
+
+### Grade 7 (appears when all of grade 6 is mastered)
+
+| Unit | Skills | Standards |
+|---|---|---|
+| 💰 Proportions & Percent Power | Solving proportions, discounts & tips | 7.RP |
+| ➖ Integer Operations | Adding/subtracting integers, multiplying/dividing integers | 7.NS |
+| ⚖️ Two-Step Equations | Two-step equations, the distributive property | 7.EE |
+| 🎲 Circles, Angles & Chance | Circumference & area of circles, angle pairs, probability | 7.G, 7.SP |
+
+### Grade 8 (appears when all of grade 7 is mastered)
+
+| Unit | Skills | Standards |
+|---|---|---|
+| 🔬 Powers, Roots & Scientific Notation | Exponent rules, square/cube roots, scientific notation | 8.EE, 8.NS |
+| 📈 Slopes & Equations | Slope, multi-step equations, evaluating functions | 8.EE, 8.F |
+| 📐 Right Triangles & Volume | The Pythagorean theorem, volume in terms of π | 8.G |
+
 The standard being practiced is shown on every problem, and strategy hints teach the mental-math strategies teachers use at each grade (make a ten, break numbers apart, common denominators, count up for change). Fraction answers accept any equivalent form (3/4, 6/8, or 1 1/2 for 3/2).
 
 ## 👨‍👩‍👧 For Parents
@@ -90,7 +116,7 @@ The standard being practiced is shown on every problem, and strategy hints teach
 ## 🛠️ Technical Details
 
 - Pure HTML, CSS, and JavaScript — no dependencies, no build step.
-- `curriculum.js` — 66 skill definitions across grades 2–5, each with problem generators at three scaffold levels, hints, and worked explanations.
+- `curriculum.js` — 95 skill definitions across grades 2–8, each with problem generators at three scaffold levels, hints, and worked explanations.
 - `engine.js` — mastery tracking, grade-tier gating, spaced-review scheduling, adaptive scaffolding, theming, and localStorage persistence.
 - To reset all progress, run `localStorage.removeItem('math-adventure-grade2-v1')` in the browser console.
 
