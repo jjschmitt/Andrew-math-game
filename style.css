@@ -3228,3 +3228,244 @@ header h1 {
     .manip-pyth-value, .manip-pyth-sidelabel { font-size: 12px; }
     .manip-disk-btn { padding: 6px 10px; font-size: 0.88em; }
 }
+
+/* ---- Parent dashboard ---- */
+
+.dashboard-link {
+    display: block;
+    margin: 14px auto 0;
+    padding: 8px 16px;
+    background: rgba(0, 0, 0, 0.05);
+    border: none;
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 0.85em;
+    color: #777;
+    cursor: pointer;
+}
+
+.dashboard-link:hover { background: rgba(0, 0, 0, 0.09); color: #555; }
+
+.dashboard-topbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+}
+
+.dashboard-title {
+    flex: 1;
+    font-size: 1.3em;
+    color: #4a3b7a;
+}
+
+.dashboard-tiles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.dashboard-tile {
+    flex: 1 1 120px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 14px 10px;
+    border-radius: 16px;
+    background: #f3f0fb;
+}
+
+.tile-number {
+    font-size: 1.6em;
+    font-weight: bold;
+    color: #4a3b7a;
+}
+
+.tile-label {
+    font-size: 0.8em;
+    color: #888;
+}
+
+.dashboard-unit-card {
+    border: 2px solid #e4defa;
+    border-radius: 18px;
+    padding: 14px 16px;
+    background: #fdfcff;
+    margin-bottom: 14px;
+}
+
+.dashboard-unit-title {
+    font-size: 1.1em;
+    font-weight: bold;
+    color: #4a3b7a;
+    margin-bottom: 10px;
+}
+
+.dashboard-skill-row {
+    padding: 8px 0;
+    border-top: 1px solid #eee;
+}
+
+.dashboard-unit-title + .dashboard-skill-row { border-top: none; }
+
+.dashboard-skill-top {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.dashboard-skill-name {
+    flex: 1 1 140px;
+    font-weight: bold;
+    color: #444;
+}
+
+.dashboard-chip {
+    font-size: 0.8em;
+    font-weight: bold;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: #ede7f6;
+    color: #5b3fa8;
+    white-space: nowrap;
+}
+
+.dashboard-counts {
+    font-size: 0.85em;
+    color: #777;
+    white-space: nowrap;
+}
+
+.dashboard-warn {
+    font-size: 0.8em;
+    font-weight: bold;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: #fff3e0;
+    color: #ef6c00;
+    white-space: nowrap;
+}
+
+.dashboard-acc-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 6px;
+}
+
+.dashboard-acc-track {
+    flex: 1;
+    height: 8px;
+    background: #eee;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.dashboard-acc-fill {
+    display: block;
+    height: 100%;
+    background: #43a047;
+    border-radius: 999px;
+}
+
+.dashboard-acc-pct {
+    font-size: 0.85em;
+    color: #666;
+    min-width: 34px;
+    text-align: right;
+}
+
+.dashboard-no-data {
+    margin-top: 6px;
+    font-size: 0.85em;
+    color: #999;
+    font-style: italic;
+}
+
+.dashboard-misses-title {
+    color: #4a3b7a;
+    font-size: 1.15em;
+    margin-bottom: 10px;
+}
+
+.dashboard-empty {
+    color: #666;
+    font-style: italic;
+}
+
+.dashboard-miss-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.dashboard-miss {
+    border: 2px solid #eee;
+    border-radius: 14px;
+    padding: 10px 14px;
+    background: #fff;
+}
+
+.dashboard-miss-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 6px;
+    font-size: 0.85em;
+}
+
+.dashboard-miss-date {
+    color: #999;
+}
+
+.dashboard-miss-skill {
+    font-weight: bold;
+    color: #5b3fa8;
+}
+
+.dashboard-miss-review {
+    background: #fff3e0;
+    color: #e65100;
+    border-radius: 999px;
+    padding: 2px 9px;
+    font-weight: bold;
+}
+
+.dashboard-miss-prompt {
+    margin-bottom: 6px;
+    color: #333;
+}
+
+.dashboard-miss-answers {
+    font-size: 0.9em;
+    color: #555;
+}
+
+.miss-given {
+    color: #c62828;
+    font-weight: bold;
+}
+
+.miss-correct {
+    color: #2e7d32;
+    font-weight: bold;
+}
+
+.dashboard-older {
+    text-align: center;
+    color: #999;
+    font-size: 0.9em;
+    font-style: italic;
+    padding-top: 4px;
+}
+
+@media (max-width: 560px) {
+    .dashboard-tile { flex: 1 1 45%; }
+    .dashboard-skill-top { gap: 6px; }
+    .dashboard-counts, .dashboard-chip, .dashboard-warn { font-size: 0.75em; }
+}

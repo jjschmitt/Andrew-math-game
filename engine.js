@@ -401,10 +401,10 @@ class MasteryEngine {
         });
         const accuracy = right + wrong > 0 ? Math.round(right / (right + wrong) * 100) + '%' : '—';
         let html = `<div class="dashboard-tiles">
-            <div class="dashboard-tile"><span class="tile-number">${this.state.totalAnswered}</span><span class="tile-label">problems answered</span></div>
-            <div class="dashboard-tile"><span class="tile-number">${right}</span><span class="tile-label">correct</span></div>
-            <div class="dashboard-tile"><span class="tile-number">${wrong}</span><span class="tile-label">missed</span></div>
-            <div class="dashboard-tile"><span class="tile-number">${accuracy}</span><span class="tile-label">accuracy</span></div>
+            <div class="dashboard-tile"><span class="tile-number">${this.state.totalAnswered}</span><span class="tile-label">Problems answered</span></div>
+            <div class="dashboard-tile"><span class="tile-number">${right}</span><span class="tile-label">Correct</span></div>
+            <div class="dashboard-tile"><span class="tile-number">${wrong}</span><span class="tile-label">Missed</span></div>
+            <div class="dashboard-tile"><span class="tile-number">${accuracy}</span><span class="tile-label">Accuracy</span></div>
         </div>`;
 
         this.visibleUnits().forEach(unit => {
@@ -455,7 +455,7 @@ class MasteryEngine {
                         ${m.review ? '<span class="dashboard-miss-review">🔄 flashback</span>' : ''}
                     </div>
                     <div class="dashboard-miss-prompt">${this.esc(m.prompt)}</div>
-                    <div class="dashboard-miss-answers">Answered: <span class="miss-given">${this.esc(m.given.join(', '))}</span> → Correct: <span class="miss-correct">${this.esc(m.answer)}</span></div>
+                    <div class="dashboard-miss-answers">Answered: <span class="miss-given">${this.esc(m.given.join(', '))}</span> · Correct answer: <span class="miss-correct">${this.esc(m.answer)}</span></div>
                 </div>`;
             });
             if (misses.length > 50) {
