@@ -109,7 +109,8 @@ class MasteryEngine {
             stars: 0,
             totalAnswered: 0,
             unlockedGrade: 2, // highest level tier ever opened — never goes back down
-            skills: {} // id -> {phase, learnCount, practiceCount, streak, wrongStreak, review:{due, interval}, refresh, reviewMisses}
+            skills: {}, // id -> {phase, learnCount, practiceCount, streak, wrongStreak, review:{due, interval}, refresh, reviewMisses}
+            misses: [] // log of missed problems, newest-last, capped at 200
         };
     }
 
@@ -131,10 +132,14 @@ class MasteryEngine {
         if (!this.state.skills[id]) {
             this.state.skills[id] = {
                 phase: 'learn', learnCount: 0, practiceCount: 0,
-                streak: 0, wrongStreak: 0, review: null, refresh: false, reviewMisses: 0
+                streak: 0, wrongStreak: 0, review: null, refresh: false, reviewMisses: 0,
+                right: 0, wrong: 0
             };
         }
-        return this.state.skills[id];
+        const st = this.state.skills[id];
+        if (st.right == null) st.right = 0;
+        if (st.wrong == null) st.wrong = 0;
+        return st;
     }
 
     // ---------- unlock / mastery rules ----------
@@ -224,7 +229,8 @@ class MasteryEngine {
             'answer-number', 'answer-text', 'choice-buttons', 'submit-btn', 'keypad',
             'hint-btn', 'hint-area', 'feedback', 'back-to-path-btn',
             'celebration', 'celebration-title', 'celebration-message', 'celebration-actions',
-            'number-input-row', 'text-input-row'
+            'number-input-row', 'text-input-row',
+            'dashboard-btn', 'dashboard-back-btn', 'dashboard-content'
         ].forEach(id => {
             this.el[id] = document.getElementById(id);
         });
@@ -238,6 +244,8 @@ class MasteryEngine {
         this.el['warmup-btn'].addEventListener('click', () => this.startWarmup());
         this.el['home-btn'].addEventListener('click', () => this.showStart());
         this.el['back-to-path-btn'].addEventListener('click', () => this.showPath());
+        this.el['dashboard-btn'].addEventListener('click', () => this.showDashboard());
+        this.el['dashboard-back-btn'].addEventListener('click', () => this.showStart());
         this.el['submit-btn'].addEventListener('click', () => this.submit());
         this.el['hint-btn'].addEventListener('click', () => this.showHint());
         this.el['answer-number'].addEventListener('keydown', e => {
@@ -308,6 +316,18 @@ class MasteryEngine {
         }
     }
 
+    plainText(html) {
+        const div = document.createElement('div');
+        div.innerHTML = html;
+        return div.textContent.replace(/\s+/g, ' ').trim();
+    }
+
+    esc(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
     destroyManipulative() {
         if (this.activeManipulative) {
             try { this.activeManipulative.destroy(); } catch (e) { /* ignore */ }
@@ -363,6 +383,88 @@ class MasteryEngine {
             ? 'Master a skill first to unlock'
             : (due > 0 ? `${due} flashback${due > 1 ? 's' : ''} waiting!` : 'Keep your skills strong');
         this.renderHeader();
+    }
+
+    // ---------- parent dashboard ----------
+
+    showDashboard() {
+        this.session = null;
+        this.showScreen('dashboard-screen');
+        this.renderDashboard();
+    }
+
+    renderDashboard() {
+        let right = 0, wrong = 0;
+        Object.values(this.state.skills).forEach(st => {
+            right += st.right || 0;
+            wrong += st.wrong || 0;
+        });
+        const accuracy = right + wrong > 0 ? Math.round(right / (right + wrong) * 100) + '%' : '—';
+        let html = `<div class="dashboard-tiles">
+            <div class="dashboard-tile"><span class="tile-number">${this.state.totalAnswered}</span><span class="tile-label">problems answered</span></div>
+            <div class="dashboard-tile"><span class="tile-number">${right}</span><span class="tile-label">correct</span></div>
+            <div class="dashboard-tile"><span class="tile-number">${wrong}</span><span class="tile-label">missed</span></div>
+            <div class="dashboard-tile"><span class="tile-number">${accuracy}</span><span class="tile-label">accuracy</span></div>
+        </div>`;
+
+        this.visibleUnits().forEach(unit => {
+            html += `<div class="dashboard-unit-card">
+                <div class="dashboard-unit-title">${unit.icon} ${unit.title}</div>`;
+            unit.skills.forEach(skill => {
+                const st = this.skillState(skill.id);
+                let chip;
+                if (st.phase === 'mastered') chip = '⭐ Mastered';
+                else if (st.phase === 'practice') chip = '💪 Practicing';
+                else if (st.learnCount + st.practiceCount > 0) chip = '📖 Learning';
+                else chip = '✨ Not started';
+                const total = st.right + st.wrong;
+                const pct = total > 0 ? Math.round(st.right / total * 100) : 0;
+                const needsPractice = total >= 3 && pct < 70;
+                html += `<div class="dashboard-skill-row">
+                    <div class="dashboard-skill-top">
+                        <span class="dashboard-skill-name">${skill.title}</span>
+                        <span class="dashboard-chip">${chip}</span>
+                        ${needsPractice ? '<span class="dashboard-warn">⚠️ needs practice</span>' : ''}
+                        <span class="dashboard-counts">✅ ${st.right} · ❌ ${st.wrong}</span>
+                    </div>
+                    ${total > 0
+                        ? `<div class="dashboard-acc-row">
+                            <span class="dashboard-acc-track"><span class="dashboard-acc-fill" style="width:${pct}%"></span></span>
+                            <span class="dashboard-acc-pct">${pct}%</span>
+                        </div>`
+                        : '<div class="dashboard-no-data">no data yet</div>'}
+                </div>`;
+            });
+            html += '</div>';
+        });
+
+        html += '<h3 class="dashboard-misses-title">❌ Recently missed problems</h3>';
+        const misses = (this.state.misses || []).slice().reverse();
+        if (misses.length === 0) {
+            html += '<p class="dashboard-empty">No missed problems yet — great job! 🎉</p>';
+        } else {
+            html += '<div class="dashboard-miss-list">';
+            misses.slice(0, 50).forEach(m => {
+                const entry = SKILL_INDEX[m.skillId];
+                const skillTitle = entry ? entry.skill.title : m.skillId;
+                const date = new Date(m.t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+                html += `<div class="dashboard-miss">
+                    <div class="dashboard-miss-meta">
+                        <span class="dashboard-miss-date">${date}</span>
+                        <span class="dashboard-miss-skill">${this.esc(skillTitle)}</span>
+                        ${m.review ? '<span class="dashboard-miss-review">🔄 flashback</span>' : ''}
+                    </div>
+                    <div class="dashboard-miss-prompt">${this.esc(m.prompt)}</div>
+                    <div class="dashboard-miss-answers">Answered: <span class="miss-given">${this.esc(m.given.join(', '))}</span> → Correct: <span class="miss-correct">${this.esc(m.answer)}</span></div>
+                </div>`;
+            });
+            if (misses.length > 50) {
+                html += `<div class="dashboard-older">…and ${misses.length - 50} older</div>`;
+            }
+            html += '</div>';
+        }
+
+        this.el['dashboard-content'].innerHTML = html;
     }
 
     // ---------- path screen ----------
@@ -484,6 +586,7 @@ class MasteryEngine {
         this.clearPending();
         const s = this.session;
         s.attemptsOnProblem = 0;
+        s.wrongAnswers = [];
         s.hintIndex = 0;
 
         if (s.mode === 'warmup') {
@@ -697,7 +800,7 @@ class MasteryEngine {
             this.setFeedback('Type your answer first! ✏️', 'nudge');
             return;
         }
-        this.grade(this.isCorrect(userAnswer));
+        this.grade(this.isCorrect(userAnswer), userAnswer);
     }
 
     submitChoice(choice, btn) {
@@ -708,7 +811,7 @@ class MasteryEngine {
         if (!correct) {
             setTimeout(() => btn.classList.remove('wrong'), 900);
         }
-        this.grade(correct);
+        this.grade(correct, choice);
     }
 
     setFeedback(msg, cls) {
@@ -717,16 +820,18 @@ class MasteryEngine {
         fb.className = 'feedback ' + (cls || '');
     }
 
-    grade(correct) {
+    grade(correct, userAnswer) {
         if (correct) {
             this.onCorrect();
         } else {
-            this.onWrong();
+            this.onWrong(userAnswer);
         }
     }
 
     onCorrect() {
         const s = this.session;
+        const activeSkillId = s.isReview ? s.reviewSkillId : s.skillId;
+        this.skillState(activeSkillId).right++;
         const theme = THEMES[this.state.theme];
         this.state.totalAnswered++;
         this.state.stars++;
@@ -767,12 +872,14 @@ class MasteryEngine {
         this.pendingTimeout = setTimeout(() => this.nextProblem(), 1300);
     }
 
-    onWrong() {
+    onWrong(userAnswer) {
         const s = this.session;
         const p = s.problem;
         const theme = THEMES[this.state.theme];
         s.attemptsOnProblem++;
         s.correctRun = 0;
+        if (!s.wrongAnswers) s.wrongAnswers = [];
+        s.wrongAnswers.push(String(userAnswer));
 
         if (s.attemptsOnProblem === 1 && p.answerType !== 'choice') {
             // First miss: encourage a second effortful attempt before revealing anything
@@ -792,6 +899,19 @@ class MasteryEngine {
             `The answer is <strong>${answerShown}</strong>.<br><span class="explain-note">${p.explain}</span>`,
             'reveal'
         );
+
+        const activeSkillId = s.isReview ? s.reviewSkillId : s.skillId;
+        this.skillState(activeSkillId).wrong++;
+        if (!this.state.misses) this.state.misses = [];
+        this.state.misses.push({
+            t: Date.now(),
+            skillId: activeSkillId,
+            prompt: this.plainText(p.prompt),
+            answer: String(p.answer),
+            given: s.wrongAnswers.slice(),
+            review: !!s.isReview
+        });
+        if (this.state.misses.length > 200) this.state.misses.splice(0, this.state.misses.length - 200);
 
         if (s.isReview) {
             this.recordReviewResult(s.reviewSkillId, false);
